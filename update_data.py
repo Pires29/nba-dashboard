@@ -18,6 +18,7 @@ Dependências:
 """
 
 import json
+import math
 import os
 import time
 import requests
@@ -40,14 +41,24 @@ from nba_api.stats.static import players as nba_players_static
 SEASON = "2025-26"
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "src", "app", "data")
 
-# Número de dias de jogos a buscar para o schedule (hoje + próximos N dias)
 SCHEDULE_DAYS_AHEAD = 7
+SLEEP_BETWEEN_REQUESTS = 1.0
 
-# Pausa entre requests para não sobrecarregar a NBA API
-SLEEP_BETWEEN_REQUESTS = 0.6
-
-# ESPN injuries URL
 ESPN_INJURIES_URL = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/injuries"
+
+# Headers para simular browser — necessário para evitar bloqueio do stats.nba.com
+NBA_HEADERS = {
+    "Host": "stats.nba.com",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Accept": "application/json, text/plain, */*",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Accept-Encoding": "gzip, deflate, br",
+    "x-nba-stats-origin": "stats",
+    "x-nba-stats-token": "true",
+    "Origin": "https://www.nba.com",
+    "Referer": "https://www.nba.com/",
+    "Connection": "keep-alive",
+}
 
 TEAM_ABBREV_MAP = {
     1610612737: "ATL", 1610612738: "BOS", 1610612739: "CLE", 1610612740: "NOP",
@@ -90,21 +101,31 @@ def save_json(data, filename):
     print(f"  ✅ Guardado: {filename} ({len(data) if isinstance(data, list) else '...'} entradas)")
 
 def py(v):
-    """Converte numpy types para Python nativos."""
     return v.item() if hasattr(v, "item") else v
 
+def fix_nan(obj):
+    """Substitui NaN por None recursivamente."""
+    if isinstance(obj, list):
+        return [fix_nan(i) for i in obj]
+    if isinstance(obj, dict):
+        return {k: fix_nan(v) for k, v in obj.items()}
+    if isinstance(obj, float) and math.isnan(obj):
+        return None
+    return obj
+
 # ============================================================
-# 1. PLAYER STATS (temporada atual, todos os jogadores)
+# 1. PLAYER STATS
 # ============================================================
 
 def fetch_player_stats():
     print("\n📊 A buscar player stats...")
 
-    # leaguedashplayerstats devolve todos os jogadores de uma vez (muito mais eficiente)
     endpoint = leaguedashplayerstats.LeagueDashPlayerStats(
         season=SEASON,
         season_type_all_star="Regular Season",
-        per_mode_detailed="Totals",  # totais como nos JSONs atuais
+        per_mode_detailed="Totals",
+        headers=NBA_HEADERS,
+        timeout=60,
     )
     df = endpoint.get_data_frames()[0]
 
@@ -131,7 +152,7 @@ def fetch_player_stats():
     save_json(result, "nba_active_players_stats.json")
 
 # ============================================================
-# 2. PLAYER GAME LOGS (todos os jogadores ativos)
+# 2. PLAYER GAME LOGS
 # ============================================================
 
 def fetch_player_game_logs():
@@ -150,6 +171,8 @@ def fetch_player_game_logs():
                 player_id=player_id,
                 season=SEASON,
                 season_type_all_star="Regular Season",
+                headers=NBA_HEADERS,
+                timeout=60,
             )
             result_set = gamelog.get_dict()["resultSets"][0]
             headers = result_set["headers"]
@@ -172,7 +195,7 @@ def fetch_player_game_logs():
     save_json(all_logs, "nba_active_players_game_logs.json")
 
 # ============================================================
-# 3. TEAM STATS (ofensivas + defensivas com rankings)
+# 3. TEAM STATS
 # ============================================================
 
 def fetch_team_stats():
@@ -184,6 +207,8 @@ def fetch_team_stats():
         measure_type_detailed_defense="Base",
         per_mode_detailed="PerGame",
         rank="Y",
+        headers=NBA_HEADERS,
+        timeout=60,
     ).get_data_frames()[0]
 
     df_def = leaguedashteamstats.LeagueDashTeamStats(
@@ -192,6 +217,8 @@ def fetch_team_stats():
         measure_type_detailed_defense="Opponent",
         per_mode_detailed="PerGame",
         rank="Y",
+        headers=NBA_HEADERS,
+        timeout=60,
     ).get_data_frames()[0]
 
     teams = []
@@ -203,12 +230,12 @@ def fetch_team_stats():
             "TEAM_ID": team_id,
             "TEAM_NAME": row["TEAM_NAME"],
             "offense": {
-                "PTS": py(row["PTS"]),       "PTS_RANK": py(row["PTS_RANK"]),
-                "AST": py(row["AST"]),       "AST_RANK": py(row["AST_RANK"]),
-                "REB": py(row["REB"]),       "REB_RANK": py(row["REB_RANK"]),
-                "OREB": py(row["OREB"]),     "OREB_RANK": py(row["OREB_RANK"]),
-                "DREB": py(row["DREB"]),     "DREB_RANK": py(row["DREB_RANK"]),
-                "FG_PCT": py(row["FG_PCT"]), "FG_PCT_RANK": py(row["FG_PCT_RANK"]),
+                "PTS": py(row["PTS"]),        "PTS_RANK": py(row["PTS_RANK"]),
+                "AST": py(row["AST"]),        "AST_RANK": py(row["AST_RANK"]),
+                "REB": py(row["REB"]),        "REB_RANK": py(row["REB_RANK"]),
+                "OREB": py(row["OREB"]),      "OREB_RANK": py(row["OREB_RANK"]),
+                "DREB": py(row["DREB"]),      "DREB_RANK": py(row["DREB_RANK"]),
+                "FG_PCT": py(row["FG_PCT"]),  "FG_PCT_RANK": py(row["FG_PCT_RANK"]),
                 "FG3_PCT": py(row["FG3_PCT"]),"FG3_PCT_RANK": py(row["FG3_PCT_RANK"]),
                 "FG2_PCT": py(row["FG_PCT"]), "FG2_PCT_RANK": py(row["FG_PCT_RANK"]),
             },
@@ -227,7 +254,7 @@ def fetch_team_stats():
     save_json(teams, "nba_team_stats.json")
 
 # ============================================================
-# 4. SCHEDULE (hoje + próximos N dias)
+# 4. SCHEDULE
 # ============================================================
 
 def fetch_schedule():
@@ -243,6 +270,8 @@ def fetch_schedule():
                 game_date=date,
                 league_id="00",
                 day_offset=0,
+                headers=NBA_HEADERS,
+                timeout=60,
             )
             games = scoreboard.get_normalized_dict()["GameHeader"]
 
@@ -264,12 +293,11 @@ def fetch_schedule():
     save_json(all_games, "nba_games_schedule.json")
 
 # ============================================================
-# 5. STANDINGS (temporada atual)
+# 5. STANDINGS
 # ============================================================
 
 def fetch_standings():
     print("\n🏆 A buscar standings...")
-    import math
 
     cols = [
         "LeagueID", "SeasonID", "TeamID", "TeamName", "Conference",
@@ -280,25 +308,25 @@ def fetch_standings():
     df = leaguestandings.LeagueStandings(
         league_id="00",
         season=SEASON,
+        headers=NBA_HEADERS,
+        timeout=60,
     ).get_data_frames()[0]
 
-    result = df[cols].to_dict(orient="records")
-    for row in result:
-        for key, val in row.items():
-            if isinstance(val, float) and math.isnan(val):
-                row[key] = None
+    result = fix_nan(df[cols].to_dict(orient="records"))
     save_json(result, "nba_standings.json")
 
 # ============================================================
-# 6. ROSTERS (temporada atual)
+# 6. ROSTERS
 # ============================================================
 
 def fetch_rosters():
     print("\n👥 A buscar rosters...")
 
-    # busca os team IDs a partir dos standings
     df_teams = leaguestandings.LeagueStandings(
-        league_id="00", season=SEASON
+        league_id="00",
+        season=SEASON,
+        headers=NBA_HEADERS,
+        timeout=60,
     ).get_data_frames()[0][["TeamID", "TeamName"]]
 
     rosters_list = []
@@ -310,17 +338,21 @@ def fetch_rosters():
 
         try:
             roster_df = commonteamroster.CommonTeamRoster(
-                team_id=team_id, season=SEASON
+                team_id=team_id,
+                season=SEASON,
+                headers=NBA_HEADERS,
+                timeout=60,
             ).get_data_frames()[0]
 
             for _, p in roster_df[["PLAYER_ID", "PLAYER", "NUM", "POSITION", "HEIGHT", "WEIGHT", "BIRTH_DATE"]].iterrows():
+                weight = p["WEIGHT"]
                 rosters_list.append({
                     "PLAYER_ID": int(p["PLAYER_ID"]),
                     "PLAYER": p["PLAYER"],
                     "NUM": p["NUM"],
                     "POSITION": p["POSITION"],
                     "HEIGHT": p["HEIGHT"],
-                    "WEIGHT": p["WEIGHT"],
+                    "WEIGHT": None if (isinstance(weight, float) and math.isnan(weight)) else str(weight),
                     "BIRTH_DATE": p["BIRTH_DATE"],
                     "TEAM_NAME": team_name,
                     "TEAM_ID": int(team_id),
@@ -334,15 +366,10 @@ def fetch_rosters():
 
         time.sleep(SLEEP_BETWEEN_REQUESTS)
 
-    import math
-    for player in rosters_list:
-        for key, val in player.items():
-            if isinstance(val, float) and math.isnan(val):
-                player[key] = None
     save_json(rosters_list, "nba_rosters.json")
 
 # ============================================================
-# 7. INJURIES (ESPN API — pública, sem key)
+# 7. INJURIES (ESPN API)
 # ============================================================
 
 def fetch_injuries():
@@ -356,7 +383,6 @@ def fetch_injuries():
         print(f"  ⚠️ Erro ao buscar injuries: {e}")
         return
 
-    # adiciona TeamID a cada equipa e a cada lesão individual
     for team_entry in data.get("injuries", []):
         team_name = team_entry.get("displayName", "").strip()
         team_id = TEAM_NAME_TO_ID.get(team_name)
@@ -367,12 +393,9 @@ def fetch_injuries():
         team_entry["TeamID"] = team_id
 
         for injury in team_entry.get("injuries", []):
-            # mantém apenas os campos essenciais para reduzir o tamanho do ficheiro
             injury["TeamID"] = team_id
 
-    # adiciona timestamp de atualização
     data["timestamp"] = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
-
     save_json(data, "nba_injuries.json")
 
 # ============================================================
