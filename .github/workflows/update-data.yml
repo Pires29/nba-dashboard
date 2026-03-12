@@ -1,0 +1,33 @@
+name: Update NBA Data
+
+on:
+  schedule:
+    - cron: "0 14 * * *" # corre todos os dias às 14h UTC (15h Portugal / 9h ET)
+  workflow_dispatch: # permite correr manualmente no GitHub
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repositório
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependências
+        run: pip install nba_api requests pandas
+
+      - name: Correr script de atualização
+        run: python update_data.py
+
+      - name: Commit e push dos JSONs atualizados
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add src/app/data/*.json
+          git diff --cached --quiet || git commit -m "chore: atualizar dados NBA [$(date +'%Y-%m-%d')]"
+          git push
