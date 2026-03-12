@@ -1,41 +1,5 @@
 [
   {
-    "date": "2026-03-11T00:00:00",
-    "visitor_team_id": 1610612739,
-    "home_team_id": 1610612753,
-    "status": "7:30 pm ET"
-  },
-  {
-    "date": "2026-03-11T00:00:00",
-    "visitor_team_id": 1610612761,
-    "home_team_id": 1610612740,
-    "status": "8:00 pm ET"
-  },
-  {
-    "date": "2026-03-11T00:00:00",
-    "visitor_team_id": 1610612752,
-    "home_team_id": 1610612762,
-    "status": "9:00 pm ET"
-  },
-  {
-    "date": "2026-03-11T00:00:00",
-    "visitor_team_id": 1610612745,
-    "home_team_id": 1610612743,
-    "status": "10:00 pm ET"
-  },
-  {
-    "date": "2026-03-11T00:00:00",
-    "visitor_team_id": 1610612766,
-    "home_team_id": 1610612758,
-    "status": "10:00 pm ET"
-  },
-  {
-    "date": "2026-03-11T00:00:00",
-    "visitor_team_id": 1610612750,
-    "home_team_id": 1610612746,
-    "status": "10:30 pm ET"
-  },
-  {
     "date": "2026-03-12T00:00:00",
     "visitor_team_id": 1610612755,
     "home_team_id": 1610612765,
@@ -358,5 +322,59 @@
     "visitor_team_id": 1610612759,
     "home_team_id": 1610612758,
     "status": "10:00 pm ET"
+  },
+  {
+    "date": "2026-03-18T00:00:00",
+    "visitor_team_id": 1610612744,
+    "home_team_id": 1610612738,
+    "status": "7:00 pm ET"
+  },
+  {
+    "date": "2026-03-18T00:00:00",
+    "visitor_team_id": 1610612760,
+    "home_team_id": 1610612751,
+    "status": "7:30 pm ET"
+  },
+  {
+    "date": "2026-03-18T00:00:00",
+    "visitor_team_id": 1610612757,
+    "home_team_id": 1610612754,
+    "status": "7:30 pm ET"
+  },
+  {
+    "date": "2026-03-18T00:00:00",
+    "visitor_team_id": 1610612761,
+    "home_team_id": 1610612741,
+    "status": "8:00 pm ET"
+  },
+  {
+    "date": "2026-03-18T00:00:00",
+    "visitor_team_id": 1610612762,
+    "home_team_id": 1610612750,
+    "status": "8:00 pm ET"
+  },
+  {
+    "date": "2026-03-18T00:00:00",
+    "visitor_team_id": 1610612746,
+    "home_team_id": 1610612740,
+    "status": "8:00 pm ET"
+  },
+  {
+    "date": "2026-03-18T00:00:00",
+    "visitor_team_id": 1610612743,
+    "home_team_id": 1610612763,
+    "status": "8:30 pm ET"
+  },
+  {
+    "date": "2026-03-18T00:00:00",
+    "visitor_team_id": 1610612737,
+    "home_team_id": 1610612742,
+    "status": "8:30 pm ET"
+  },
+  {
+    "date": "2026-03-18T00:00:00",
+    "visitor_team_id": 1610612747,
+    "home_team_id": 1610612745,
+    "status": "9:30 pm ET"
   }
 ]
