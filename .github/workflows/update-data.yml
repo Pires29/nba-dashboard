@@ -2,8 +2,8 @@ name: Update NBA Data
 
 on:
   schedule:
-    - cron: "0 14 * * *" # corre todos os dias às 14h UTC (15h Portugal / 9h ET)
-  workflow_dispatch: # permite correr manualmente no GitHub
+    - cron: "0 14 * * *"
+  workflow_dispatch:
 
 jobs:
   update-data:
@@ -13,16 +13,25 @@ jobs:
       - name: Checkout repositório
         uses: actions/checkout@v4
 
+      - name: Instalar e arrancar Tor
+        run: |
+          sudo apt-get install -y tor
+          sudo service tor start
+          sleep 10
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
       - name: Instalar dependências
-        run: pip install nba_api requests pandas
+        run: pip install nba_api requests pandas requests[socks]
 
       - name: Correr script de atualização
         run: python update_data.py
+        env:
+          HTTP_PROXY: socks5h://127.0.0.1:9050
+          HTTPS_PROXY: socks5h://127.0.0.1:9050
 
       - name: Commit e push dos JSONs atualizados
         run: |
