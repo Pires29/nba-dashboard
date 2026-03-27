@@ -1,23 +1,5 @@
 [
   {
-    "date": "2026-03-26T00:00:00",
-    "visitor_team_id": 1610612752,
-    "home_team_id": 1610612766,
-    "status": "7:00 pm ET"
-  },
-  {
-    "date": "2026-03-26T00:00:00",
-    "visitor_team_id": 1610612740,
-    "home_team_id": 1610612765,
-    "status": "7:00 pm ET"
-  },
-  {
-    "date": "2026-03-26T00:00:00",
-    "visitor_team_id": 1610612758,
-    "home_team_id": 1610612753,
-    "status": "7:00 pm ET"
-  },
-  {
     "date": "2026-03-27T00:00:00",
     "visitor_team_id": 1610612746,
     "home_team_id": 1610612754,
@@ -76,5 +58,41 @@
     "visitor_team_id": 1610612751,
     "home_team_id": 1610612747,
     "status": "10:30 pm ET"
+  },
+  {
+    "date": "2026-03-28T00:00:00",
+    "visitor_team_id": 1610612759,
+    "home_team_id": 1610612749,
+    "status": "3:00 pm ET"
+  },
+  {
+    "date": "2026-03-28T00:00:00",
+    "visitor_team_id": 1610612765,
+    "home_team_id": 1610612750,
+    "status": "5:30 pm ET"
+  },
+  {
+    "date": "2026-03-28T00:00:00",
+    "visitor_team_id": 1610612755,
+    "home_team_id": 1610612766,
+    "status": "6:00 pm ET"
+  },
+  {
+    "date": "2026-03-28T00:00:00",
+    "visitor_team_id": 1610612758,
+    "home_team_id": 1610612737,
+    "status": "7:30 pm ET"
+  },
+  {
+    "date": "2026-03-28T00:00:00",
+    "visitor_team_id": 1610612741,
+    "home_team_id": 1610612763,
+    "status": "8:00 pm ET"
+  },
+  {
+    "date": "2026-03-28T00:00:00",
+    "visitor_team_id": 1610612762,
+    "home_team_id": 1610612756,
+    "status": "10:00 pm ET"
   }
 ]
