@@ -1,92 +1,80 @@
 [
   {
-    "date": "2026-04-06T00:00:00",
-    "visitor_team_id": 1610612752,
-    "home_team_id": 1610612737,
+    "date": "2026-04-08T00:00:00",
+    "visitor_team_id": 1610612737,
+    "home_team_id": 1610612739,
     "status": "7:00 pm ET"
   },
   {
-    "date": "2026-04-06T00:00:00",
-    "visitor_team_id": 1610612765,
+    "date": "2026-04-08T00:00:00",
+    "visitor_team_id": 1610612750,
     "home_team_id": 1610612753,
     "status": "7:00 pm ET"
   },
   {
-    "date": "2026-04-06T00:00:00",
-    "visitor_team_id": 1610612739,
-    "home_team_id": 1610612763,
-    "status": "8:00 pm ET"
+    "date": "2026-04-08T00:00:00",
+    "visitor_team_id": 1610612749,
+    "home_team_id": 1610612765,
+    "status": "7:00 pm ET"
   },
   {
-    "date": "2026-04-06T00:00:00",
-    "visitor_team_id": 1610612755,
-    "home_team_id": 1610612759,
-    "status": "8:00 pm ET"
-  },
-  {
-    "date": "2026-04-06T00:00:00",
-    "visitor_team_id": 1610612757,
+    "date": "2026-04-08T00:00:00",
+    "visitor_team_id": 1610612763,
     "home_team_id": 1610612743,
     "status": "9:00 pm ET"
   },
   {
-    "date": "2026-04-07T00:00:00",
+    "date": "2026-04-08T00:00:00",
+    "visitor_team_id": 1610612757,
+    "home_team_id": 1610612759,
+    "status": "9:30 pm ET"
+  },
+  {
+    "date": "2026-04-08T00:00:00",
+    "visitor_team_id": 1610612760,
+    "home_team_id": 1610612746,
+    "status": "10:00 pm ET"
+  },
+  {
+    "date": "2026-04-08T00:00:00",
+    "visitor_team_id": 1610612742,
+    "home_team_id": 1610612756,
+    "status": "10:00 pm ET"
+  },
+  {
+    "date": "2026-04-09T00:00:00",
+    "visitor_team_id": 1610612748,
+    "home_team_id": 1610612761,
+    "status": "7:00 pm ET"
+  },
+  {
+    "date": "2026-04-09T00:00:00",
     "visitor_team_id": 1610612741,
     "home_team_id": 1610612764,
     "status": "7:00 pm ET"
   },
   {
-    "date": "2026-04-07T00:00:00",
-    "visitor_team_id": 1610612750,
-    "home_team_id": 1610612754,
-    "status": "7:00 pm ET"
-  },
-  {
-    "date": "2026-04-07T00:00:00",
-    "visitor_team_id": 1610612749,
+    "date": "2026-04-09T00:00:00",
+    "visitor_team_id": 1610612754,
     "home_team_id": 1610612751,
     "status": "7:30 pm ET"
   },
   {
-    "date": "2026-04-07T00:00:00",
-    "visitor_team_id": 1610612748,
-    "home_team_id": 1610612761,
+    "date": "2026-04-09T00:00:00",
+    "visitor_team_id": 1610612738,
+    "home_team_id": 1610612752,
     "status": "7:30 pm ET"
   },
   {
-    "date": "2026-04-07T00:00:00",
-    "visitor_team_id": 1610612766,
-    "home_team_id": 1610612738,
+    "date": "2026-04-09T00:00:00",
+    "visitor_team_id": 1610612755,
+    "home_team_id": 1610612745,
     "status": "8:00 pm ET"
   },
   {
-    "date": "2026-04-07T00:00:00",
-    "visitor_team_id": 1610612762,
-    "home_team_id": 1610612740,
-    "status": "8:00 pm ET"
-  },
-  {
-    "date": "2026-04-07T00:00:00",
-    "visitor_team_id": 1610612758,
+    "date": "2026-04-09T00:00:00",
+    "visitor_team_id": 1610612747,
     "home_team_id": 1610612744,
     "status": "10:00 pm ET"
-  },
-  {
-    "date": "2026-04-07T00:00:00",
-    "visitor_team_id": 1610612760,
-    "home_team_id": 1610612747,
-    "status": "10:30 pm ET"
-  },
-  {
-    "date": "2026-04-07T00:00:00",
-    "visitor_team_id": 1610612742,
-    "home_team_id": 1610612746,
-    "status": "10:30 pm ET"
-  },
-  {
-    "date": "2026-04-07T00:00:00",
-    "visitor_team_id": 1610612745,
-    "home_team_id": 1610612756,
-    "status": "11:00 pm ET"
   }
 ]
