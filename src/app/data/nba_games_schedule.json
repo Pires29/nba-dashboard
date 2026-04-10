@@ -1,41 +1,5 @@
 [
   {
-    "date": "2026-04-09T00:00:00",
-    "visitor_team_id": 1610612748,
-    "home_team_id": 1610612761,
-    "status": "7:00 pm ET"
-  },
-  {
-    "date": "2026-04-09T00:00:00",
-    "visitor_team_id": 1610612741,
-    "home_team_id": 1610612764,
-    "status": "7:00 pm ET"
-  },
-  {
-    "date": "2026-04-09T00:00:00",
-    "visitor_team_id": 1610612754,
-    "home_team_id": 1610612751,
-    "status": "7:30 pm ET"
-  },
-  {
-    "date": "2026-04-09T00:00:00",
-    "visitor_team_id": 1610612738,
-    "home_team_id": 1610612752,
-    "status": "7:30 pm ET"
-  },
-  {
-    "date": "2026-04-09T00:00:00",
-    "visitor_team_id": 1610612755,
-    "home_team_id": 1610612745,
-    "status": "8:00 pm ET"
-  },
-  {
-    "date": "2026-04-09T00:00:00",
-    "visitor_team_id": 1610612747,
-    "home_team_id": 1610612744,
-    "status": "10:00 pm ET"
-  },
-  {
     "date": "2026-04-10T00:00:00",
     "visitor_team_id": 1610612765,
     "home_team_id": 1610612766,
