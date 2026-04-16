@@ -1,11 +1,17 @@
-import { PrismaClient } from "../src/generated/prisma/index.js"; // usa o caminho certo para o generated
+import { PrismaClient } from "../src/generated/prisma/index.js";
 
-let prisma;
+const globalForPrisma = global;
 
-if (!global.prisma) {
-  global.prisma = new PrismaClient();
+if (!globalForPrisma.prisma) {
+  globalForPrisma.prisma = new PrismaClient({
+    datasources: {
+      db: {
+        url: process.env.DATABASE_URL,
+      },
+    },
+  });
 }
 
-prisma = global.prisma;
+const prisma = globalForPrisma.prisma;
 
 export default prisma;

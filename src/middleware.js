@@ -2,7 +2,6 @@ import { getToken } from "next-auth/jwt";
 import { NextResponse } from "next/server";
 
 export async function middleware(req) {
-  console.log("middleware chamado:", req.nextUrl.pathname);
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
   const { pathname } = req.nextUrl;
 
@@ -16,5 +15,12 @@ export async function middleware(req) {
 }
 
 export const config = {
-  matcher: ["/playersStats", "/playersStats/:path*"],
+  matcher: [
+    "/playersStats",
+    "/playersStats/:path*",
+    "/props",
+    "/props/:path*",
+    "/favorites",
+    "/favorites/:path*",
+  ],
 };

@@ -7,7 +7,7 @@ const Navbar = async () => {
   const isFreePlan = !session?.user?.plan || session?.user?.plan === "free";
 
   return (
-    <nav className="relative border-b border-white/[0.06] bg-gradient-to-b from-[#122040] to-[#0D1828]">
+    <nav className="relative sticky top-0 z-50 border-b border-white/6 bg-gradient-to-b from-[#122040] to-[#0D1828]">
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-orange-500 via-amber-400 to-transparent" />
 
       <div className="max-w-[1400px] mx-auto px-6 py-3 flex items-center justify-between">

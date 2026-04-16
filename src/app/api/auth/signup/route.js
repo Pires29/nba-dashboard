@@ -17,6 +17,13 @@ export async function POST(req) {
         { status: 400 },
       );
 
+    const emailRegex = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email))
+      return NextResponse.json(
+        { error: "Invalid email address" },
+        { status: 400 },
+      );
+
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing)
       return NextResponse.json(

@@ -22,10 +22,10 @@ const ProfileMenuClient = ({ session }) => {
       {/* Trigger button */}
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg bg-[#0D1828] border border-white/10 hover:border-white/20 transition-all duration-150 group"
+        className="flex items-center gap-2.5 px-1 py-1 sm:px-3 sm:py-1.5 sm:rounded-lg sm:bg-[#0D1828] sm:border sm:border-white/10 sm:hover:border-white/20 transition-all duration-150 group"
       >
         {/* Avatar */}
-        <div className="w-6 h-6 rounded-full bg-orange-500/20 border border-orange-500/30 flex items-center justify-center">
+        <div className="w-8 h-8 sm:w-6 sm:h-6 rounded-full bg-orange-500/20 border border-orange-500/30 flex items-center justify-center">
           {session?.user?.image ? (
             <img
               src={session.user.image}
@@ -51,15 +51,16 @@ const ProfileMenuClient = ({ session }) => {
           )}
         </div>
 
+        {/* Nome — escondido em mobile */}
         {session?.user?.name && (
-          <span className="text-[11px] font-mono text-slate-400 group-hover:text-slate-300 transition-colors max-w-[100px] truncate">
+          <span className="hidden sm:block text-[11px] font-mono text-slate-400 group-hover:text-slate-300 transition-colors max-w-[100px] truncate">
             {session.user.name.split(" ")[0]}
           </span>
         )}
 
-        {/* Chevron */}
+        {/* Chevron — escondido em mobile */}
         <svg
-          className={`w-3 h-3 text-slate-600 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          className={`hidden sm:block w-3 h-3 text-slate-600 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -82,7 +83,7 @@ const ProfileMenuClient = ({ session }) => {
           {/* User info */}
           {session && (
             <>
-              <div className="px-4 py-3 border-b border-white/[0.06]">
+              <div className="px-4 py-3 border-b border-white/6">
                 <p className="text-[12px] font-semibold text-slate-200 truncate">
                   {session.user.name}
                 </p>
@@ -92,6 +93,27 @@ const ProfileMenuClient = ({ session }) => {
               </div>
             </>
           )}
+
+          <Link
+            href="/favorites"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/[0.04] transition-colors group"
+          >
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              className="text-slate-600 group-hover:text-slate-400"
+            >
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+            </svg>
+            <span className="text-[12px] text-slate-400 group-hover:text-slate-200 transition-colors">
+              Favorites
+            </span>
+          </Link>
 
           {/* Menu items */}
           <div className="py-1">

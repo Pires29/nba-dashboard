@@ -220,4 +220,48 @@ Prisma
 - Noticias (?)
 - PWA ( ver opções )
 
+TODO:
 
+- Melhorar design
+  Referrals
+- Testar Performance
+
+  Colunas desfasadas injury em desktop
+  Melhorar design do Stripe payment checkout
+  Aumentar o tamanho do design em si
+
+- Adiconar email de suporte
+- Trocar web hooks depois de por em producao no stripe se nao nao funciona
+- Colocar termos de privacidade e politicas no stripe no pagamento
+
+- Há gato na autenticação nao sei o que, mas aquilo de vez em quando da erro
+- Por tipo pontos concedidos a PF (por posicao, etc)
+- Alguns jogadores nao tem logs, perceber porque
+
+- Performance
+- Publicidade (Mais para a frente)
+- Acrescentar BetLines no PlayerGraph
+- Trocar url params por url dinamico ( nao faz grande diferenca )
+- Tornar a página Static page generated
+- Loading states — quando navegas para um jogador não há nenhum indicador de carregamento
+- Breadcrumbs na página de playersStats para saber onde estás
+- Rever isto do schedule, mostrar so no gameSelector identificado por dias
+
+Tratamento de erros
+O teu risco principal é que os dados vêm de JSONs locais importados diretamente — se um JSON estiver mal formado ou vazio, o componente vai crashar sem aviso. O que falta:
+
+Error Boundaries — um componente React que captura erros e mostra uma mensagem em vez de crashar a página toda. O Next.js tem suporte nativo com error.tsx em cada pasta de rota.
+Validação dos dados — verificar se o JSON tem a estrutura esperada antes de o usar, em vez de assumir que está sempre correto.
+Estados vazios — quando um jogador não tem logs, mostrar uma mensagem clara em vez de render vazio ou erro silencioso.
+
+Segurança de pagamentos e utilizadores
+Aqui a pergunta é: como estás a gerir pagamentos atualmente? Stripe, LemonSqueezy, outro? Porque a segurança depende muito de como o plan é guardado no utilizador — se é um campo simples na base de dados que alguém pode manipular, ou se é verificado contra o provider de pagamentos.
+
+Escalabilidade
+O problema principal é que os JSONs são carregados em memória em cada request do servidor. Com poucos utilizadores não é problema, mas com muitos podes ter:
+
+Memória elevada
+Tempos de resposta lentos
+O Next.js a fazer cold starts pesados
+
+A solução a longo prazo seria mover os dados para uma base de dados, mas isso é um refactor grande.

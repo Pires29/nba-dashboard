@@ -67,8 +67,6 @@ export const authOptions = {
     },
 
     async session({ session }) {
-      if (!session.user?.email) return session;
-
       const dbUser = await prisma.user.findUnique({
         where: { email: session.user.email },
       });
@@ -76,6 +74,8 @@ export const authOptions = {
       if (dbUser) {
         session.user.id = dbUser.id;
         session.user.plan = dbUser.plan ?? "free";
+        session.user.planRenewsAt = dbUser.planRenewsAt ?? null;
+        session.user.planInterval = dbUser.planInterval
       }
 
       return session;

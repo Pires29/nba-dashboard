@@ -10,11 +10,55 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  name      String?
-  email     String   @unique
-  image     String?
-  password  String?
-  plan      String   @default("free")
-  createdAt DateTime @default(now())
+  id                   String     @id @default(cuid())
+  name                 String?
+  email                String     @unique
+  image                String?
+  password             String?
+  plan                 String     @default("free")
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+  hasUsedTrial         Boolean    @default(false)
+  trialStartedAt       DateTime?
+  planRenewsAt         DateTime?
+  planInterval         String?
+  createdAt            DateTime   @default(now())
+  favorites            Favorite[]
+  referralCode         ReferralCode?
+}
+
+model Favorite {
+  id         String   @id @default(cuid())
+  userId     String
+  playerId   Int
+  playerName String
+  team       String
+  stat       String
+  avg        Float
+  createdAt  DateTime @default(now())
+  gameDate   DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, playerId, stat])
+}
+
+model ReferralCode {
+  id                    String        @id @default(cuid())
+  code                  String        @unique
+  partnerId             String        @unique
+  partner               User          @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  uses                  ReferralUse[]
+  createdAt             DateTime      @default(now())
+}
+
+model ReferralUse {
+  id              String       @id @default(cuid())
+  referralCodeId  String
+  referralCode    ReferralCode @relation(fields: [referralCodeId], references: [id])
+  referredUserId  String       @unique
+  discountApplied Boolean      @default(false)
+  amountPaid      Int?
+  stripeSessionId String?
+  createdAt       DateTime     @default(now())
 }

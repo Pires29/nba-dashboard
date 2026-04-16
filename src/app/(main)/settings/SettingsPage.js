@@ -1,7 +1,9 @@
+// settings-page.tsx
 "use client";
 
 import { useState } from "react";
 import { signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 const SectionLabel = ({ children }) => (
   <div className="flex items-center gap-3 mb-6">
@@ -24,18 +26,13 @@ const InfoRow = ({ label, value }) => (
 
 const DeleteModal = ({ onConfirm, onCancel }) => (
   <div className="fixed inset-0 z-50 flex items-center justify-center">
-    {/* Backdrop */}
     <div
       className="absolute inset-0 bg-black/60 backdrop-blur-sm"
       onClick={onCancel}
     />
-
-    {/* Modal */}
     <div className="relative z-10 w-full max-w-sm mx-4 rounded-2xl border border-red-500/20 bg-[#0D1828] shadow-[0_0_60px_rgba(239,68,68,0.15)] overflow-hidden">
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-red-500 via-red-400 to-transparent" />
-
       <div className="p-6">
-        {/* Icon */}
         <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto mb-4">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
             <polyline
@@ -64,27 +61,61 @@ const DeleteModal = ({ onConfirm, onCancel }) => (
             />
           </svg>
         </div>
-
         <h2 className="text-lg font-black text-white text-center mb-2">
-          Apagar conta?
+          Delete account?
         </h2>
         <p className="text-[12px] font-mono text-slate-500 text-center leading-relaxed mb-6">
-          Esta ação é <span className="text-red-400">irreversível</span>. Todos
-          os teus dados serão permanentemente eliminados.
+          This action is <span className="text-red-400">irreversible</span>. All
+          your data will be permanently deleted.
         </p>
-
         <div className="flex gap-3">
           <button
             onClick={onCancel}
             className="flex-1 py-2.5 rounded-xl border border-white/10 hover:border-white/20 text-slate-400 hover:text-white text-[11px] font-mono uppercase tracking-widest transition-all"
           >
-            Cancelar
+            Cancel
           </button>
           <button
             onClick={onConfirm}
             className="flex-1 py-2.5 rounded-xl bg-red-500 hover:bg-red-400 text-white text-[11px] font-mono font-bold uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(239,68,68,0.3)]"
           >
-            Apagar
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+const CancelModal = ({ onConfirm, onCancel, loading }) => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div
+      className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+      onClick={onCancel}
+    />
+    <div className="relative z-10 w-full max-w-sm mx-4 rounded-2xl border border-orange-500/20 bg-[#0D1828] shadow-[0_0_60px_rgba(249,115,22,0.1)] overflow-hidden">
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-orange-500 to-transparent" />
+      <div className="p-6">
+        <h2 className="text-lg font-black text-white text-center mb-2">
+          Cancel subscription?
+        </h2>
+        <p className="text-[12px] font-mono text-slate-500 text-center leading-relaxed mb-6">
+          You'll keep Pro access until the end of your current period. After
+          that you'll switch to the Free plan.
+        </p>
+        <div className="flex gap-3">
+          <button
+            onClick={onCancel}
+            className="flex-1 py-2.5 rounded-xl border border-white/10 hover:border-white/20 text-slate-400 hover:text-white text-[11px] font-mono uppercase tracking-widest transition-all"
+          >
+            Keep Pro
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={loading}
+            className="flex-1 py-2.5 rounded-xl border border-orange-500/30 hover:bg-orange-500/10 text-orange-400 text-[11px] font-mono font-bold uppercase tracking-widest transition-all disabled:opacity-50"
+          >
+            {loading ? "Cancelling..." : "Confirm"}
           </button>
         </div>
       </div>
@@ -94,37 +125,57 @@ const DeleteModal = ({ onConfirm, onCancel }) => (
 
 export default function SettingsPage({ session }) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState(false);
+  const [cancelled, setCancelled] = useState(false);
+  const router = useRouter();
 
   const user = session?.user;
   const isGoogle = !!(user?.image && user.image.includes("google"));
   const plan = user?.plan ?? "free";
   const isPro = plan === "pro";
 
+  const renewsAt = user?.planRenewsAt
+    ? new Date(user.planRenewsAt).toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+      })
+    : null;
+
   const handleDeleteAccount = async () => {
     try {
       const res = await fetch("/api/user/delete", { method: "DELETE" });
       const data = await res.json();
-
       if (!res.ok) {
-        console.error(
-          "Erro ao apagar conta:",
-          data.error,
-          "status:",
-          res.status,
-        );
+        console.error("Error deleting account:", data.error);
         return;
       }
-
       setShowDeleteModal(false);
       await signOut({ callbackUrl: "/" });
     } catch (err) {
-      console.error("Erro:", err);
+      console.error("Error:", err);
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    setCancelLoading(true);
+    try {
+      const res = await fetch("/api/stripe/cancel", { method: "POST" });
+      if (res.ok) {
+        setCancelled(true);
+        setShowCancelModal(false);
+        router.refresh();
+      }
+    } catch (err) {
+      console.error("Error cancelling:", err);
+    } finally {
+      setCancelLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0D1B2E] to-[#060E1A] font-sans">
-      {/* Grid texture */}
+    <div className="bg-gradient-to-b from-[#0D1B2E] to-[#060E1A] font-sans">
       <div
         className="fixed inset-0 pointer-events-none opacity-10"
         style={{
@@ -136,10 +187,9 @@ export default function SettingsPage({ session }) {
       <div className="fixed top-1/3 left-1/2 -translate-x-1/2 w-[500px] h-[300px] rounded-full bg-orange-500/4 blur-[120px] pointer-events-none" />
 
       <div className="max-w-[640px] mx-auto px-6 py-12 relative z-10">
-        {/* Header */}
         <div className="mb-10">
           <p className="text-[10px] font-mono uppercase tracking-[0.25em] text-orange-400 mb-2">
-            Conta
+            Account
           </p>
           <h1 className="text-3xl font-black text-white tracking-tight">
             Settings
@@ -147,13 +197,10 @@ export default function SettingsPage({ session }) {
         </div>
 
         <div className="flex flex-col gap-5">
-          {/* ── SECÇÃO CONTA ── */}
-          <div className="relative rounded-2xl border border-white/[0.06] bg-gradient-to-b from-[#162035] to-[#0F1828] p-6 overflow-hidden">
+          {/* Account */}
+          <div className="relative rounded-2xl border border-white/6 bg-gradient-to-b from-[#162035] to-[#0F1828] p-6 overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-orange-500 via-amber-400 to-transparent" />
-
-            <SectionLabel>Informações da conta</SectionLabel>
-
-            {/* Avatar + nome */}
+            <SectionLabel>Account information</SectionLabel>
             <div className="flex items-center gap-4 mb-6 pb-6 border-b border-white/[0.04]">
               {user?.image ? (
                 <img
@@ -181,22 +228,20 @@ export default function SettingsPage({ session }) {
                 </div>
               </div>
             </div>
-
             <InfoRow label="Email" value={user?.email} />
             <InfoRow label="ID" value={user?.id} />
             <InfoRow
-              label="Método de login"
+              label="Login method"
               value={isGoogle ? "Google OAuth" : "Email + Password"}
             />
           </div>
 
-          {/* ── SECÇÃO PLANO ── */}
-          <div className="relative rounded-2xl border border-white/[0.06] bg-gradient-to-b from-[#162035] to-[#0F1828] p-6 overflow-hidden">
+          {/* Plan */}
+          <div className="relative rounded-2xl border border-white/6 bg-gradient-to-b from-[#162035] to-[#0F1828] p-6 overflow-hidden">
             <div
               className={`absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r ${isPro ? "from-orange-500 via-amber-400" : "from-slate-600 via-slate-500"} to-transparent`}
             />
-
-            <SectionLabel>Plano</SectionLabel>
+            <SectionLabel>Plan</SectionLabel>
 
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -206,75 +251,97 @@ export default function SettingsPage({ session }) {
                   >
                     {isPro ? "Pro" : "Free"}
                   </span>
-                  {isPro && (
+                  {isPro && !cancelled && (
                     <span className="text-[10px] font-mono text-slate-500">
-                      Plano ativo
+                      Active plan
+                    </span>
+                  )}
+                  {cancelled && (
+                    <span className="text-[10px] font-mono text-yellow-500">
+                      Cancels at end of period
                     </span>
                   )}
                 </div>
-                {isPro ? (
+                {isPro && renewsAt && !cancelled && (
                   <p className="text-[12px] font-mono text-slate-500">
-                    Renovação a <span className="text-slate-300">—</span>
-                    {/* TODO: substituir por data real do Stripe */}
+                    Renews on <span className="text-slate-300">{renewsAt}</span>
                   </p>
-                ) : (
+                )}
+                {isPro && renewsAt && cancelled && (
                   <p className="text-[12px] font-mono text-slate-500">
-                    Faz upgrade para aceder a todas as features
+                    Pro access until{" "}
+                    <span className="text-slate-300">{renewsAt}</span>
+                  </p>
+                )}
+                {!isPro && (
+                  <p className="text-[12px] font-mono text-slate-500">
+                    Upgrade to access all features
                   </p>
                 )}
               </div>
             </div>
 
-            {isPro ? (
-              <button
-                disabled
-                className="w-full py-2.5 rounded-xl border border-red-500/20 text-red-400/50 text-[11px] font-mono uppercase tracking-widest cursor-not-allowed opacity-50"
-              >
-                {/* TODO: ligar ao Stripe para cancelar subscrição */}
-                Cancelar subscrição
-              </button>
-            ) : (
+            {isPro && !cancelled ? (
+              <div className="flex flex-col gap-3">
+                <p className="text-[11px] font-mono text-slate-600 leading-relaxed">
+                  By cancelling, you'll keep Pro access until{" "}
+                  <span className="text-slate-400">
+                    {renewsAt ?? "the end of your current period"}
+                  </span>
+                  . After that, you'll automatically switch to the Free plan.
+                </p>
+                <button
+                  onClick={() => setShowCancelModal(true)}
+                  className="w-full py-2.5 rounded-xl border border-red-500/20 hover:border-red-500/30 hover:bg-red-500/5 text-red-400 text-[11px] font-mono uppercase tracking-widest transition-all"
+                >
+                  Cancel subscription
+                </button>
+              </div>
+            ) : !isPro ? (
               <a
                 href="/pricing"
                 className="block w-full py-2.5 rounded-xl text-center bg-orange-500 hover:bg-orange-400 text-white text-[11px] font-mono font-bold uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(249,115,22,0.25)] hover:shadow-[0_0_30px_rgba(249,115,22,0.4)]"
               >
-                Upgrade para Pro →
+                Upgrade to Pro →
               </a>
-            )}
+            ) : null}
           </div>
 
-          {/* ── DANGER ZONE ── */}
+          {/* Danger zone */}
           <div className="relative rounded-2xl border border-red-500/10 bg-gradient-to-b from-[#1a0f0f] to-[#0F1828] p-6 overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-red-500/50 to-transparent" />
-
             <SectionLabel>Danger zone</SectionLabel>
-
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-[13px] font-mono text-slate-300 mb-1">
-                  Apagar conta
+                  Delete account
                 </p>
                 <p className="text-[11px] font-mono text-slate-600">
-                  Remove permanentemente a tua conta e todos os dados
-                  associados.
+                  Permanently removes your account and all associated data.
                 </p>
               </div>
               <button
                 onClick={() => setShowDeleteModal(true)}
                 className="ml-4 flex-shrink-0 px-4 py-2 rounded-xl border border-red-500/20 hover:border-red-500/40 hover:bg-red-500/10 text-red-400 text-[11px] font-mono uppercase tracking-widest transition-all"
               >
-                Apagar
+                Delete
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Modal de confirmação */}
       {showDeleteModal && (
         <DeleteModal
           onConfirm={handleDeleteAccount}
           onCancel={() => setShowDeleteModal(false)}
+        />
+      )}
+      {showCancelModal && (
+        <CancelModal
+          onConfirm={handleCancelSubscription}
+          onCancel={() => setShowCancelModal(false)}
+          loading={cancelLoading}
         />
       )}
     </div>

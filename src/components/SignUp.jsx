@@ -25,6 +25,10 @@ export function SignupForm() {
     if (password.length < 8)
       return setError("Password deve ter pelo menos 8 caracteres");
 
+    const emailRegex = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email))
+      return setError("Please enter a valid email address");
+
     setLoading(true);
     setError(null);
 
@@ -111,6 +115,23 @@ export function SignupForm() {
         >
           {loading ? "Creating account..." : "Create Account"}
         </button>
+
+        <p className="text-center text-[10px] font-mono text-slate-600 leading-relaxed">
+          By creating an account, you agree to our{" "}
+          <Link
+            href="/terms"
+            className="text-orange-500/70 hover:text-orange-400 transition-colors"
+          >
+            Terms of Service
+          </Link>{" "}
+          and{" "}
+          <Link
+            href="/privacy"
+            className="text-orange-500/70 hover:text-orange-400 transition-colors"
+          >
+            Privacy Policy
+          </Link>
+        </p>
 
         <Divider />
 
