@@ -29,40 +29,39 @@ const formatValue = (value, isPercent) => {
 };
 
 const formatDate = (dateStr) => {
+  if (!dateStr) return "";
   const date = new Date(dateStr);
+  if (Number.isNaN(date.getTime())) return "";
   const day = String(date.getDate()).padStart(2, "0");
   const month = String(date.getMonth() + 1).padStart(2, "0");
   return `${day}/${month}`;
 };
 
-const PlayerContextGraph = ({ player, playerStats }) => {
+const PlayerContextGraph = ({ player }) => {
   const [selectedStat, setSelectedStat] = useState("fg_pct");
 
-  const teamAbbr = playerStats?.playerTeam;
   const hasData = player && player.games?.length > 0;
   const statMeta = STAT_OPTIONS.find((s) => s.key === selectedStat);
 
   const data = useMemo(() => {
     if (!hasData) return [];
     return player.games.map((game) => {
-      const matchup = game.MATCHUP || "";
-      const parts = matchup.includes(" @ ")
-        ? matchup.split(" @ ")
-        : matchup.split(" vs. ");
-      const opponent =
-        parts[0].trim() === teamAbbr ? parts[1]?.trim() : parts[0]?.trim();
+      const date = game.date ?? game.GAME_DATE ?? null;
+      const opponent = game.opp ?? game.opponent ?? "";
+      const minutes = game.min ?? game.MIN ?? null;
+
       return {
-        date: game.GAME_DATE,
-        label: `${opponent || ""}\n${formatDate(game.GAME_DATE)}`,
+        date,
+        label: `${opponent || ""}\n${formatDate(date)}`,
         opponent,
-        minutes: game.MIN,
-        fg_pct: game.FG_PCT ?? null,
-        fg3_pct: game.FG3_PCT ?? null,
-        ft_pct: game.FT_PCT ?? null,
-        fouls: game.PF ?? null,
+        minutes,
+        fg_pct: game.fg_pct ?? game.FG_PCT ?? null,
+        fg3_pct: game.fg3_pct ?? game.FG3_PCT ?? null,
+        ft_pct: game.ft_pct ?? game.FT_PCT ?? null,
+        fouls: game.pf ?? game.PF ?? null,
       };
     });
-  }, [player, teamAbbr, hasData]);
+  }, [player, hasData]);
 
   const dataFiltered = data.slice(0, 10);
 

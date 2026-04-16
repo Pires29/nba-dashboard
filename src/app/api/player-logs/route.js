@@ -12,16 +12,13 @@ export async function GET(req) {
 
   const { searchParams } = new URL(req.url);
   const playerId = Number(searchParams.get("playerId"));
-  const playerName = searchParams.get("playerName");
 
-  if (!playerId || !playerName || !allowedPlayerIds.has(playerId)) {
+  if (!playerId || !allowedPlayerIds.has(playerId)) {
     return NextResponse.json({ logs: [], logsPrev: [] });
   }
 
-  const logs = getPlayerLogs().filter((p) => p.player_name === playerName);
-  const logsPrev = getPrevPlayerLogs().filter(
-    (p) => p.player_name === playerName,
-  );
+  const { logs } = getPlayerLogs(playerId);
+  const logsPrev = getPrevPlayerLogs(playerId);
 
   return NextResponse.json({ logs, logsPrev });
 }

@@ -192,32 +192,12 @@ export async function buildPlayerStatsPageData({
         }
       : null;
 
-  const LOGS_FIELDS_TO_REMOVE = new Set([
-    "PLAYER_ID",
-    "PLAYER_NAME",
-    "TEAM_ID",
-    "TEAM_ABBREVIATION",
-    "SEASON_ID",
-    "VIDEO_AVAILABLE",
-    "GAME_ID",
-    "OREB",
-    "DREB",
-  ]);
-
-  const filterLog = (log) => {
-    const filtered = {};
-    for (const key in log) {
-      if (!LOGS_FIELDS_TO_REMOVE.has(key)) filtered[key] = log[key];
-    }
-    return filtered;
-  };
-
   const currentPlayerLogs = Array.isArray(playerLogs)
-    ? playerLogs.map(filterLog)
+    ? playerLogs
     : [];
 
   const previousPlayerLogs = Array.isArray(playerLogsPrev)
-    ? playerLogsPrev.map(filterLog)
+    ? playerLogsPrev
     : [];
   const playerPrev = previousPlayerLogs.length
     ? {

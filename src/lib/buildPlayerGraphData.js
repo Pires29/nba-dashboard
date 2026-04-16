@@ -101,8 +101,8 @@ export function buildPlayerGraphViews(graphData) {
     H2H: opponentAbbr
       ? data.filter((game) => game.opponent?.includes(opponentAbbr))
       : [],
-    HOME: data.filter((game) => game.isHome),
-    AWAY: data.filter((game) => !game.isHome),
+    HOME: data.filter((game) => game.isHome === true),
+    AWAY: data.filter((game) => game.isHome === false),
     PREV: dataPrev,
   };
 }

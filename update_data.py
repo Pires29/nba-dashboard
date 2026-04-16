@@ -438,8 +438,16 @@ def build_team_defense(df_off, df_def):
 def build_game_logs(df_logs):
     """
     game_logs_current.json / game_logs_prev.json
-    { "playerId": [{ gid, date, opp, pts, reb, ast, stl, blk, tov, min }] }
-    Minimal. No player name, team, shooting splits, or metadata.
+    {
+      "playerId": [{
+        gid, date, opp, matchup, isHome, wl, min,
+        pts, reb, ast, stl, blk, tov,
+        fgm, fga, fg_pct, fg3m, fg3a, fg3_pct, ftm, fta, ft_pct,
+        oreb, dreb, pf, plus_minus
+      }]
+    }
+    Compact but frontend-complete. Keeps the lean keyed-by-player shape while
+    preserving the shooting/context fields used by the player stats UI.
     Logs are sorted newest → oldest (consistent with L5/L10 window ordering).
     """
     grouped = defaultdict(list)
@@ -447,19 +455,36 @@ def build_game_logs(df_logs):
     for _, row in df_logs.iterrows():
         pid = str(int(row["PLAYER_ID"]))
         team_abbr = str(row["TEAM_ABBREVIATION"])
-        opp = parse_opponent_from_matchup(str(row["MATCHUP"]), team_abbr)
+        matchup = str(row["MATCHUP"])
+        opp = parse_opponent_from_matchup(matchup, team_abbr)
 
         grouped[pid].append({
-            "gid":  str(row["GAME_ID"]),
-            "date": str(row["GAME_DATE"]),
-            "opp":  opp,
-            "min":  py(row["MIN"]),
-            "pts":  py(row["PTS"]),
-            "reb":  py(row["REB"]),
-            "ast":  py(row["AST"]),
-            "stl":  py(row["STL"]),
-            "blk":  py(row["BLK"]),
-            "tov":  py(row["TOV"]),
+            "gid":        str(row["GAME_ID"]),
+            "date":       str(row["GAME_DATE"]),
+            "opp":        opp,
+            "matchup":    matchup,
+            "isHome":     " vs. " in matchup,
+            "wl":         str(row["WL"]) if row["WL"] is not None else None,
+            "min":        py(row["MIN"]),
+            "pts":        py(row["PTS"]),
+            "reb":        py(row["REB"]),
+            "ast":        py(row["AST"]),
+            "stl":        py(row["STL"]),
+            "blk":        py(row["BLK"]),
+            "tov":        py(row["TOV"]),
+            "fgm":        py(row["FGM"]),
+            "fga":        py(row["FGA"]),
+            "fg_pct":     py(row["FG_PCT"]),
+            "fg3m":       py(row["FG3M"]),
+            "fg3a":       py(row["FG3A"]),
+            "fg3_pct":    py(row["FG3_PCT"]),
+            "ftm":        py(row["FTM"]),
+            "fta":        py(row["FTA"]),
+            "ft_pct":     py(row["FT_PCT"]),
+            "oreb":       py(row["OREB"]),
+            "dreb":       py(row["DREB"]),
+            "pf":         py(row["PF"]),
+            "plus_minus": py(row["PLUS_MINUS"]),
         })
 
     # Sort each player's logs newest → oldest
