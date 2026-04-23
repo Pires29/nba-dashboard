@@ -1,8 +1,6 @@
-import { Suspense } from "react";
 import dynamic from "next/dynamic";
 
 const PlayerGraph = dynamic(() => import("../PlayerGraph"), {
-  ssr: false,
   loading: () => <PlayerGraphSkeleton />,
 });
 const PlayerContextGraph = dynamic(() => import("../PlayerContextGraph"), {
@@ -11,8 +9,13 @@ const PlayerContextGraph = dynamic(() => import("../PlayerContextGraph"), {
 });
 
 import SectionLabel from "@/components/ui/playerStats/SectionLabel";
-const Injuries = dynamic(() => import("../Injuries"));
-const TeamStats = dynamic(() => import("../TeamStats"));
+const Injuries = dynamic(() => import("../Injuries"), {
+  loading: () => null,
+});
+
+const TeamStats = dynamic(() => import("../TeamStats"), {
+  loading: () => null,
+});
 import PlayerContextGraphSkeleton from "@/components/ui/PlayerGraph/PlayerContextGraphSkeleton";
 import PlayerGraphSkeleton from "@/components/ui/PlayerGraph/PlayerGraphSkeleton";
 import Card from "@/components/ui/playerStats/Card";
@@ -65,25 +68,23 @@ const MobileLayout = ({
           <div className="h-px bg-white/[0.05] mx-4 flex-shrink-0" />
 
           <div className="min-h-[420px] flex-shrink-0">
-            <Suspense fallback={<PlayerGraphSkeleton />}>
-              <PlayerGraph
-                player={playerRaw}
-                playerPrev={playerPrev}
-                playerStats={playerStats}
-                selectedStat={selectedStat}
-                onStatChange={setSelectedStat}
-                selectedNumber={selectedNumber}
-                onNumberChange={setSelectedNumber}
-                activeFilter={activeFilter}
-                onFilterChange={setActiveFilter}
-                gameInfo={currentGame}
-                opponentAbbr={opponentAbbr}
-                playerLogs={playerLogs}
-                statGraphData={statGraphData}
-                periodOptions={periodOptions}
-                contextOptions={contextOptions}
-              />
-            </Suspense>
+            <PlayerGraph
+              player={playerRaw}
+              playerPrev={playerPrev}
+              playerStats={playerStats}
+              selectedStat={selectedStat}
+              onStatChange={setSelectedStat}
+              selectedNumber={selectedNumber}
+              onNumberChange={setSelectedNumber}
+              activeFilter={activeFilter}
+              onFilterChange={setActiveFilter}
+              gameInfo={currentGame}
+              opponentAbbr={opponentAbbr}
+              playerLogs={playerLogs}
+              statGraphData={statGraphData}
+              periodOptions={periodOptions}
+              contextOptions={contextOptions}
+            />
           </div>
 
           <DeferredRender

@@ -41,7 +41,7 @@ const GameDropdown = ({ plan, team1Id, team2Id, games, teams, onSelect }) => {
     );
   }
 
-  const teamMap = teamNameMap
+  const teamMap = teamNameMap;
   const selectedGameObj = games.find(
     (g) => `${g.date}-${g.home_team_id}-${g.visitor_team_id}` === selectedGame,
   );
@@ -67,6 +67,7 @@ const GameDropdown = ({ plan, team1Id, team2Id, games, teams, onSelect }) => {
                 alt=""
                 width={16}
                 height={16}
+                loading="lazy"
                 className="w-4 h-4 object-contain flex-shrink-0"
               />
               <span className="text-[11px] font-mono text-slate-300 font-bold">
@@ -78,6 +79,7 @@ const GameDropdown = ({ plan, team1Id, team2Id, games, teams, onSelect }) => {
                 alt=""
                 width={16}
                 height={16}
+                loading="lazy"
                 className="w-4 h-4 object-contain flex-shrink-0"
               />
               <span className="text-[11px] font-mono text-slate-300 font-bold">
@@ -130,6 +132,7 @@ const GameDropdown = ({ plan, team1Id, team2Id, games, teams, onSelect }) => {
                     alt=""
                     width={16}
                     height={16}
+                    loading="lazy"
                     className="w-4 h-4 object-contain"
                   />
                   <span className="text-[11px] font-mono text-slate-300 font-bold">
@@ -143,6 +146,7 @@ const GameDropdown = ({ plan, team1Id, team2Id, games, teams, onSelect }) => {
                     alt=""
                     width={16}
                     height={16}
+                    loading="lazy"
                     className="w-4 h-4 object-contain"
                   />
                   <span className="text-[11px] font-mono text-slate-300 font-bold">

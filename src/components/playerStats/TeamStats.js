@@ -144,6 +144,7 @@ const TeamStats = ({ homeTeamStats, awayTeamStats }) => {
             src={`https://cdn.nba.com/logos/nba/${homeTeamStats.teamID}/global/L/logo.svg`}
             width={20}
             height={20}
+            loading="lazy"
             alt={homeTeamStats.teamName}
             unoptimized
             className="w-5 h-5 min-w-[20px] min-h-[20px] object-contain flex-shrink-0"
@@ -178,6 +179,7 @@ const TeamStats = ({ homeTeamStats, awayTeamStats }) => {
             src={`https://cdn.nba.com/logos/nba/${awayTeamStats.teamID}/global/L/logo.svg`}
             width={20}
             height={20}
+            loading="lazy"
             alt={awayTeamStats.teamName}
             unoptimized
             className="w-5 h-5 min-w-[20px] min-h-[20px] object-contain flex-shrink-0"

@@ -1,7 +1,5 @@
 "use client";
 
-import UpgradeOverlay from "@/components/UpgradeOverlay";
-
 const INJURY_STYLES = {
   Out: "bg-red-500/15 text-red-400 border-red-500/30",
   "Day-To-Day": "bg-yellow-500/15 text-yellow-400 border-yellow-500/30",
@@ -73,11 +71,13 @@ const TeamRoster = ({
   injuryMap,
 }) => {
   const safeRoster = Array.isArray(teamRoster) ? teamRoster : [];
-  const sortedRoster = [...safeRoster].sort((a, b) => {
-    if (!a.NUM) return 1;
-    if (!b.NUM) return -1;
-    return parseInt(a.NUM) - parseInt(b.NUM);
-  });
+  const sortedRoster = useMemo(() => {
+    return [...safeRoster].sort((a, b) => {
+      if (!a.NUM) return 1;
+      if (!b.NUM) return -1;
+      return parseInt(a.NUM) - parseInt(b.NUM);
+    });
+  }, [safeRoster]);
 
   return (
     <div className="mt-1 overflow-y-auto scrollbar-thin">
