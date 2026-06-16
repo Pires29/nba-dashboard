@@ -40,6 +40,8 @@ const PlayerInfo = ({ playerData, injuryStatus, onAddProp, propSaved }) => {
             width={80}
             height={80}
             alt={playerData.PLAYER}
+            fetchPriority="high"
+            priority
             className="object-cover w-full h-full"
           />
         </div>
