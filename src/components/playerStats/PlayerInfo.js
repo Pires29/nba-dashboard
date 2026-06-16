@@ -10,25 +10,25 @@ const INJURY_STYLES = {
 };
 
 const PlayerInfo = ({ playerData, injuryStatus, onAddProp, propSaved }) => {
-  if (!playerData) return <PlayerInfoEmpty />;
-
   const injuryStyle = injuryStatus
     ? INJURY_STYLES[injuryStatus] || INJURY_STYLES["Out"]
     : null;
 
   const displayStats = useMemo(
     () => [
-      { key: "Position", value: playerData.POSITION },
-      { key: "Jersey", value: `#${playerData.NUM}` },
-      { key: "Height", value: playerData.HEIGHT },
+      { key: "Position", value: playerData?.POSITION },
+      { key: "Jersey", value: playerData?.NUM ? `#${playerData.NUM}` : "—" },
+      { key: "Height", value: playerData?.HEIGHT },
       {
         key: "Weight",
-        value: playerData.WEIGHT ? `${playerData.WEIGHT} lbs` : "—",
+        value: playerData?.WEIGHT ? `${playerData.WEIGHT} lbs` : "—",
       },
-      { key: "DOB", value: playerData.BIRTH_DATE },
+      { key: "DOB", value: playerData?.BIRTH_DATE },
     ],
     [playerData],
   );
+
+  if (!playerData) return <PlayerInfoEmpty />;
 
   return (
     <div className="flex items-center gap-5 p-4">
@@ -40,8 +40,6 @@ const PlayerInfo = ({ playerData, injuryStatus, onAddProp, propSaved }) => {
             width={80}
             height={80}
             alt={playerData.PLAYER}
-            fetchPriority="high"
-            priority
             className="object-cover w-full h-full"
           />
         </div>
@@ -53,7 +51,7 @@ const PlayerInfo = ({ playerData, injuryStatus, onAddProp, propSaved }) => {
           <h2 className="font-black text-xl text-white tracking-tight leading-none truncate">
             {playerData.PLAYER}
           </h2>
-          <span className="font-mono text-[11px] text-slate-500 uppercase tracking-widest">
+          <span className="font-mono text-[11px] text-slate-400 uppercase tracking-widest">
             {playerData.TEAM_ABBREVIATION}
           </span>
           {injuryStyle && (
@@ -72,7 +70,7 @@ const PlayerInfo = ({ playerData, injuryStatus, onAddProp, propSaved }) => {
                 ${
                   propSaved
                     ? "border-orange-500/40 bg-orange-500/10 text-orange-400"
-                    : "border-white/[0.08] bg-white/[0.03] text-slate-500 hover:text-slate-300 hover:border-white/[0.14]"
+                    : "border-white/[0.08] bg-white/[0.03] text-slate-400 hover:text-slate-300 hover:border-white/[0.14]"
                 }`}
             >
               {propSaved ? (
@@ -118,7 +116,7 @@ const PlayerInfo = ({ playerData, injuryStatus, onAddProp, propSaved }) => {
               key={key}
               className="flex items-center gap-1.5 bg-white/[0.04] border border-white/6 rounded-md px-2 py-1"
             >
-              <span className="text-[9px] font-bold tracking-widest uppercase text-slate-600">
+              <span className="text-[9px] font-bold tracking-widest uppercase text-slate-400">
                 {key}
               </span>
               <span className="text-[11px] font-semibold text-slate-300 font-mono">
@@ -165,7 +163,7 @@ const PlayerInfoEmpty = () => {
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
           <path
             d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-4.418 0-8 2.239-8 5v1h16v-1c0-2.761-3.582-5-8-5z"
-            stroke="#475569"
+            stroke="#94a3b8"
             strokeWidth="1.5"
           />
         </svg>
@@ -175,7 +173,7 @@ const PlayerInfoEmpty = () => {
           <p className="text-[13px] font-semibold text-slate-400">
             No player info available
           </p>
-          <p className="text-[10px] font-mono text-slate-600 max-w-[220px]">
+          <p className="text-[10px] font-mono text-slate-400 max-w-[220px]">
             We couldn&apos;t retrieve player details at this time
           </p>
         </div>
@@ -185,10 +183,10 @@ const PlayerInfoEmpty = () => {
               key={label}
               className="flex items-center gap-1.5 bg-white/[0.03] border border-white/6 rounded-md px-2 py-1"
             >
-              <span className="text-[9px] font-bold tracking-widest uppercase text-slate-600">
+              <span className="text-[9px] font-bold tracking-widest uppercase text-slate-400">
                 {label}
               </span>
-              <span className="text-[11px] font-semibold text-slate-500 font-mono">
+              <span className="text-[11px] font-semibold text-slate-400 font-mono">
                 —
               </span>
             </div>

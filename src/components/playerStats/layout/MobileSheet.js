@@ -39,8 +39,9 @@ const MobileSheet = ({
                 </span>
 
                 <button
+                  aria-label="Close filters"
                   onClick={() => setSheetOpen(false)}
-                  className="p-1.5 rounded-lg text-slate-600 hover:text-slate-300 transition-colors"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-300 transition-colors"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                     <path
@@ -55,7 +56,7 @@ const MobileSheet = ({
 
               {/* PLAYER DROPDOWN */}
               <div>
-                <p className="text-[9px] font-mono font-bold uppercase tracking-widest text-slate-600 mb-2.5">
+                <p className="text-[9px] font-mono font-bold uppercase tracking-widest text-slate-400 mb-2.5">
                   Player
                 </p>
 
@@ -68,7 +69,7 @@ const MobileSheet = ({
 
               {/* GAME DROPDOWN */}
               <div>
-                <p className="text-[9px] font-mono font-bold uppercase tracking-widest text-slate-600 mb-2.5">
+                <p className="text-[9px] font-mono font-bold uppercase tracking-widest text-slate-400 mb-2.5">
                   Game
                 </p>
 

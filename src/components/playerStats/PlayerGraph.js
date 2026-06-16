@@ -16,7 +16,7 @@ const statOptions = PLAYER_GRAPH_STATS;
 
 const rateColor = (rate) =>
   rate == null
-    ? "text-slate-500"
+    ? "text-slate-400"
     : rate >= 50
       ? "text-emerald-400"
       : "text-red-400";
@@ -96,7 +96,7 @@ const PeriodDropdown = ({
       {open && (
         <div className="absolute left-0 right-0 top-full mt-1 z-50 rounded-xl border border-white/[0.08] bg-[#0D1828] shadow-[0_8px_32px_rgba(0,0,0,0.6)] overflow-hidden">
           <div className="px-3 py-1.5 bg-white/[0.02] border-b border-white/[0.04]">
-            <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-slate-600">
+            <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-slate-400">
               Period
             </span>
           </div>
@@ -126,12 +126,12 @@ const PeriodDropdown = ({
                       >
                         {opt.rate}%
                       </span>
-                      <span className="text-[9px] font-mono text-slate-600">
+                      <span className="text-[9px] font-mono text-slate-400">
                         {opt.hits}/{opt.hits + opt.misses}
                       </span>
                     </>
                   ) : (
-                    <span className="text-[11px] font-mono text-slate-600">
+                    <span className="text-[11px] font-mono text-slate-400">
                       N/A
                     </span>
                   )}
@@ -140,7 +140,7 @@ const PeriodDropdown = ({
             );
           })}
           <div className="px-3 py-1.5 bg-white/[0.02] border-t border-white/[0.06] border-b border-b-white/[0.04]">
-            <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-slate-600">
+            <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-slate-400">
               Context
             </span>
           </div>
@@ -166,12 +166,12 @@ const PeriodDropdown = ({
                       >
                         {opt.rate}%
                       </span>
-                      <span className="text-[9px] font-mono text-slate-600">
+                      <span className="text-[9px] font-mono text-slate-400">
                         {opt.hits}/{opt.hits + opt.misses}
                       </span>
                     </>
                   ) : (
-                    <span className="text-[11px] font-mono text-slate-600">
+                    <span className="text-[11px] font-mono text-slate-400">
                       N/A
                     </span>
                   )}
@@ -213,7 +213,7 @@ const StatDropdown = ({ selectedStat, onStatChange }) => {
       {open && (
         <div className="absolute left-0 right-0 top-full mt-1 z-50 rounded-xl border border-white/[0.08] bg-[#0D1828] shadow-[0_8px_32px_rgba(0,0,0,0.6)] overflow-hidden">
           <div className="px-3 py-1.5 bg-white/[0.02] border-b border-white/[0.04]">
-            <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-slate-600">
+            <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-slate-400">
               Stat
             </span>
           </div>
@@ -386,7 +386,7 @@ const PlayerGraph = ({
               ${
                 selectedStat === option
                   ? "bg-slate-700 border-slate-500 text-white"
-                  : "bg-transparent border-white/6 text-slate-600 hover:text-slate-400 hover:border-white/10"
+                  : "bg-transparent border-white/6 text-slate-400 hover:text-slate-300 hover:border-white/10"
               }`}
           >
             {option}
@@ -414,7 +414,7 @@ const PlayerGraph = ({
           <span className="font-black text-2xl text-white font-mono">
             {betLine?.toFixed(1) ?? "—"}
           </span>
-          <span className="text-[10px] text-slate-500 uppercase tracking-widest">
+          <span className="text-[10px] text-slate-400 uppercase tracking-widest">
             over
           </span>
         </div>
@@ -425,7 +425,7 @@ const PlayerGraph = ({
           >
             {chartPoints.length && betLine != null ? `${hitRate}%` : "—%"}
           </span>
-          <span className="text-[10px] text-slate-500 uppercase tracking-widest">
+          <span className="text-[10px] text-slate-400 uppercase tracking-widest">
             hit rate
           </span>
         </div>
@@ -434,7 +434,7 @@ const PlayerGraph = ({
           <span className="font-black text-2xl text-white font-mono">
             {chartPoints.length}
           </span>
-          <span className="text-[10px] text-slate-500 uppercase tracking-widest">
+          <span className="text-[10px] text-slate-400 uppercase tracking-widest">
             games
           </span>
         </div>
@@ -503,7 +503,7 @@ const PlayerGraph = ({
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                   <path
                     d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10"
-                    stroke="#475569"
+                    stroke="#94a3b8"
                     strokeWidth="1.5"
                   />
                 </svg>
@@ -513,7 +513,7 @@ const PlayerGraph = ({
                   ? "Player logs unavailable"
                   : "No stats available"}
               </p>
-              <p className="text-[10px] font-mono text-slate-600 max-w-[200px]">
+              <p className="text-[10px] font-mono text-slate-400 max-w-[200px]">
                 {!hasValidArray
                   ? "We couldn't load this player's game logs right now"
                   : `This player has no games in ${isPrev ? "the 2024-25 season" : "the current season"}`}
@@ -534,7 +534,7 @@ const PlayerGraph = ({
                 : selectedNumber === number);
           const rc =
             rate == null
-              ? "text-slate-600"
+              ? "text-slate-400"
               : rate >= 50
                 ? "text-emerald-400"
                 : "text-red-400";
@@ -552,14 +552,14 @@ const PlayerGraph = ({
               className={`flex flex-col items-center gap-0.5 py-2 px-1 rounded-lg border transition-all duration-150
                 ${isActive ? "border-orange-500/40 bg-orange-500/10" : "border-white/[0.06] bg-white/[0.02] hover:border-white/10 hover:bg-white/[0.04]"}`}
             >
-              <span className="text-[9px] font-mono text-slate-600 uppercase tracking-widest">
+              <span className="text-[9px] font-mono text-slate-400 uppercase tracking-widest">
                 {label}
               </span>
               <span className={`text-[15px] font-black font-mono ${rc}`}>
                 {rate != null ? `${rate}%` : "N/A"}
               </span>
               {rate != null && (
-                <span className="text-[8px] font-mono text-slate-500">
+                <span className="text-[8px] font-mono text-slate-400">
                   {hits}/{hits + misses}
                 </span>
               )}

@@ -23,7 +23,7 @@ const Injuries = ({ injuriesTeam1, injuriesTeam2 }) => {
 
   if (!teams.length) {
     return (
-      <p className="text-slate-600 text-xs text-center py-4">
+      <p className="text-slate-400 text-xs text-center py-4">
         Injury data unavailable
       </p>
     );
@@ -44,7 +44,7 @@ const Injuries = ({ injuriesTeam1, injuriesTeam2 }) => {
           {/* Injuries da equipa */}
           <div className="flex flex-col gap-1">
             {(team.injuries || []).length === 0 ? (
-              <p className="text-slate-600 text-xs py-2">No injury reports</p>
+              <p className="text-slate-400 text-xs py-2">No injury reports</p>
             ) : (
               (team.injuries || []).map((player, index) => (
                 <div
@@ -55,7 +55,7 @@ const Injuries = ({ injuriesTeam1, injuriesTeam2 }) => {
                     <p className="text-[13px] font-semibold text-slate-200 truncate leading-tight">
                       {player.athlete.displayName}
                     </p>
-                    <p className="text-[10px] text-slate-600 font-mono mt-0.5 truncate">
+                    <p className="text-[10px] text-slate-400 font-mono mt-0.5 truncate">
                       {player.details?.type}
                       {player.details?.detail
                         ? ` · ${player.details.detail}`

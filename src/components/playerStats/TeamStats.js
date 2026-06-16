@@ -2,7 +2,7 @@ import Image from "next/image";
 import { useState } from "react";
 
 const getRankColor = (rank, side) => {
-  if (!rank) return "text-slate-600";
+  if (!rank) return "text-slate-400";
   const lowerIsBetter = side === "defense";
   if (lowerIsBetter) {
     if (rank <= 10) return "text-emerald-400";
@@ -77,9 +77,10 @@ const Chevron = ({ open }) => (
   </svg>
 );
 
-const SideToggle = ({ side, onChange }) => (
+const SideToggle = ({ side, onChange, label }) => (
   <div className="relative">
     <select
+      aria-label={label}
       value={side}
       onChange={(e) => onChange(e.target.value)}
       className="appearance-none min-w-0 w-full px-2 py-1.5 pr-5 rounded-lg border border-white/[0.06] bg-[#0D1828] items-center text-[9px] font-mono font-bold text-slate-300 uppercase tracking-widest focus:outline-none focus:border-orange-500/40 cursor-pointer"
@@ -120,7 +121,7 @@ const TeamStats = ({ homeTeamStats, awayTeamStats }) => {
 
   if (!homeTeamStats?.offense || !awayTeamStats?.offense) {
     return (
-      <p className="text-slate-600 text-xs text-center py-4">
+      <p className="text-slate-400 text-xs text-center py-4">
         Loading team stats…
       </p>
     );
@@ -150,14 +151,19 @@ const TeamStats = ({ homeTeamStats, awayTeamStats }) => {
             className="w-5 h-5 min-w-[20px] min-h-[20px] object-contain flex-shrink-0"
           />
           <div className="min-w-0 shrink">
-            <SideToggle side={homeSide} onChange={setHomeSide} />
+            <SideToggle
+              side={homeSide}
+              onChange={setHomeSide}
+              label={`${homeTeamStats.teamName} stats side`}
+            />
           </div>
         </div>
 
         {/* Swap icon */}
         <button
+          aria-label="Swap offense and defense views"
           onClick={handleSwap}
-          className="w-7 h-7 rounded-lg border border-white/[0.06] bg-[#0D1828] flex items-center justify-center hover:border-orange-500/30 hover:text-orange-400 text-slate-600 transition-all flex-shrink-0"
+          className="w-7 h-7 rounded-lg border border-white/[0.06] bg-[#0D1828] flex items-center justify-center hover:border-orange-500/30 hover:text-orange-400 text-slate-400 transition-all flex-shrink-0"
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
             <path
@@ -173,7 +179,11 @@ const TeamStats = ({ homeTeamStats, awayTeamStats }) => {
         {/* Away toggle + logo */}
         <div className="flex justify-end items-center gap-2 min-w-0 flex-1">
           <div className="min-w-0 shrink">
-            <SideToggle side={awaySide} onChange={setAwaySide} />
+            <SideToggle
+              side={awaySide}
+              onChange={setAwaySide}
+              label={`${awayTeamStats.teamName} stats side`}
+            />
           </div>
           <Image
             src={`https://cdn.nba.com/logos/nba/${awayTeamStats.teamID}/global/L/logo.svg`}
@@ -188,7 +198,7 @@ const TeamStats = ({ homeTeamStats, awayTeamStats }) => {
       </div>
 
       {/* Column headers */}
-      <div className="flex items-center text-[9px] font-mono text-slate-600 uppercase tracking-widest">
+      <div className="flex items-center text-[9px] font-mono text-slate-400 uppercase tracking-widest">
         <div className="flex-1 flex items-center gap-3">
           <span className="w-10">Avg</span>
           <span>Rank</span>
@@ -232,7 +242,7 @@ const TeamStats = ({ homeTeamStats, awayTeamStats }) => {
               </div>
 
               {/* Stat label */}
-              <span className="flex-1 text-[8px] font-mono text-slate-500 uppercase tracking-wider text-center px-1">
+              <span className="flex-1 text-[8px] font-mono text-slate-400 uppercase tracking-wider text-center px-1">
                 {label}
               </span>
 

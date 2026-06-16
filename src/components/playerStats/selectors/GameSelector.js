@@ -59,7 +59,7 @@ const GameSelector = ({ plan, team1Id, team2Id, games, teams }) => {
             />
           </svg>
         )}
-        <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest flex-1 truncate">
+        <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest flex-1 truncate">
           {message}
         </span>
         {isLocked && (
@@ -71,7 +71,7 @@ const GameSelector = ({ plan, team1Id, team2Id, games, teams }) => {
     );
   }
 
-  const teamMap = teamNameMap;
+  const teamMap = teams;
   const selectedGameObj = games.find(
     (g) => `${g.date}-${g.home_team_id}-${g.visitor_team_id}` === selectedGame,
   );
@@ -88,6 +88,9 @@ const GameSelector = ({ plan, team1Id, team2Id, games, teams }) => {
   return (
     <div className="relative">
       <button
+        aria-label="Select game"
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex items-center gap-2 px-3 h-[42px] rounded-lg border border-white/[0.06] bg-[#0D1828] hover:border-orange-500/30 transition-all duration-200"
       >
@@ -105,7 +108,7 @@ const GameSelector = ({ plan, team1Id, team2Id, games, teams }) => {
               <span className="text-[11px] font-mono text-slate-300 font-bold truncate">
                 {teamMap[selectedGameObj.home_team_id]?.split(" ").pop()}
               </span>
-              <span className="text-[9px] text-slate-600 font-mono">vs</span>
+              <span className="text-[9px] text-slate-400 font-mono">vs</span>
               <Image
                 src={`https://cdn.nba.com/logos/nba/${selectedGameObj.visitor_team_id}/global/L/logo.svg`}
                 alt=""
@@ -119,7 +122,7 @@ const GameSelector = ({ plan, team1Id, team2Id, games, teams }) => {
               </span>
             </div>
           ) : (
-            <span className="text-[10px] font-mono text-slate-600 uppercase tracking-widest">
+            <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">
               Select game
             </span>
           )}
@@ -133,7 +136,7 @@ const GameSelector = ({ plan, team1Id, team2Id, games, teams }) => {
         >
           <path
             d="M6 9l6 6 6-6"
-            stroke="#475569"
+            stroke="#94a3b8"
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -143,7 +146,7 @@ const GameSelector = ({ plan, team1Id, team2Id, games, teams }) => {
       {isOpen && (
         <div className="absolute left-0 right-0 top-full mt-1 z-50 rounded-xl border border-white/[0.06] bg-[#0D1828] shadow-[0_8px_32px_rgba(0,0,0,0.5)] overflow-hidden">
           <div className="px-3 py-2 border-b border-white/[0.04]">
-            <p className="text-[9px] font-mono text-slate-600 uppercase tracking-widest">
+            <p className="text-[9px] font-mono text-slate-400 uppercase tracking-widest">
               Today&apos;s Games
             </p>
           </div>
@@ -152,6 +155,7 @@ const GameSelector = ({ plan, team1Id, team2Id, games, teams }) => {
             const isSelected = gameId === selectedGame;
             return (
               <button
+                aria-label={`Select ${teamMap[game.home_team_id] ?? game.home_team_id} versus ${teamMap[game.visitor_team_id] ?? game.visitor_team_id}`}
                 key={gameId}
                 onClick={() => handleSelect(game)}
                 className={`w-full flex items-center gap-2 px-3 py-2.5 hover:bg-white/[0.04] transition-colors border-b border-white/[0.03] last:border-0 ${isSelected ? "bg-orange-500/10" : ""}`}
@@ -167,7 +171,7 @@ const GameSelector = ({ plan, team1Id, team2Id, games, teams }) => {
                 <span className="text-[11px] font-mono text-slate-300 font-bold">
                   {teamMap[game.home_team_id]?.split(" ").pop()}
                 </span>
-                <span className="text-[9px] text-slate-600 font-mono">vs</span>
+                <span className="text-[9px] text-slate-400 font-mono">vs</span>
                 <Image
                   src={`https://cdn.nba.com/logos/nba/${game.visitor_team_id}/global/L/logo.svg`}
                   alt=""
@@ -179,7 +183,7 @@ const GameSelector = ({ plan, team1Id, team2Id, games, teams }) => {
                 <span className="text-[11px] font-mono text-slate-300 font-bold">
                   {teamMap[game.visitor_team_id]?.split(" ").pop()}
                 </span>
-                <span className="ml-auto text-[9px] font-mono text-slate-600">
+                <span className="ml-auto text-[9px] font-mono text-slate-400">
                   {game.status}
                 </span>
               </button>

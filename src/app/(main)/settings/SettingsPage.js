@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import { signOut } from "next-auth/react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 const SectionLabel = ({ children }) => (
@@ -100,8 +101,8 @@ const CancelModal = ({ onConfirm, onCancel, loading }) => (
           Cancel subscription?
         </h2>
         <p className="text-[12px] font-mono text-slate-500 text-center leading-relaxed mb-6">
-          You'll keep Pro access until the end of your current period. After
-          that you'll switch to the Free plan.
+          You&apos;ll keep Pro access until the end of your current period.
+          After that you&apos;ll switch to the Free plan.
         </p>
         <div className="flex gap-3">
           <button
@@ -203,9 +204,11 @@ export default function SettingsPage({ session }) {
             <SectionLabel>Account information</SectionLabel>
             <div className="flex items-center gap-4 mb-6 pb-6 border-b border-white/[0.04]">
               {user?.image ? (
-                <img
+                <Image
                   src={user.image}
                   alt={user.name}
+                  width={56}
+                  height={56}
                   className="w-14 h-14 rounded-full border-2 border-white/10 object-cover"
                 />
               ) : (
@@ -284,11 +287,11 @@ export default function SettingsPage({ session }) {
             {isPro && !cancelled ? (
               <div className="flex flex-col gap-3">
                 <p className="text-[11px] font-mono text-slate-600 leading-relaxed">
-                  By cancelling, you'll keep Pro access until{" "}
+                  By cancelling, you&apos;ll keep Pro access until{" "}
                   <span className="text-slate-400">
                     {renewsAt ?? "the end of your current period"}
                   </span>
-                  . After that, you'll automatically switch to the Free plan.
+                  . After that, you&apos;ll automatically switch to the Free plan.
                 </p>
                 <button
                   onClick={() => setShowCancelModal(true)}

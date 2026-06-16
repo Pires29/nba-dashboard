@@ -1,5 +1,7 @@
 "use client";
 
+import { useMemo } from "react";
+
 const INJURY_STYLES = {
   Out: "bg-red-500/15 text-red-400 border-red-500/30",
   "Day-To-Day": "bg-yellow-500/15 text-yellow-400 border-yellow-500/30",
@@ -34,7 +36,7 @@ const PlayerRow = ({
       <span
         className={`
         font-mono text-[10px] w-6 h-6 flex items-center justify-center
-        rounded border text-center leading-none border-white/10 text-slate-600 group-hover:text-slate-400
+        rounded border text-center leading-none border-white/10 text-slate-400 group-hover:text-slate-300
         
       `}
       >
@@ -46,7 +48,7 @@ const PlayerRow = ({
         >
           {player.PLAYER}
         </p>
-        <p className="text-[10px] text-slate-600 font-mono uppercase tracking-wider mt-0.5">
+        <p className="text-[10px] text-slate-400 font-mono uppercase tracking-wider mt-0.5">
           {player.POSITION}
         </p>
       </div>
@@ -70,14 +72,14 @@ const TeamRoster = ({
   selectedName,
   injuryMap,
 }) => {
-  const safeRoster = Array.isArray(teamRoster) ? teamRoster : [];
   const sortedRoster = useMemo(() => {
+    const safeRoster = Array.isArray(teamRoster) ? teamRoster : [];
     return [...safeRoster].sort((a, b) => {
       if (!a.NUM) return 1;
       if (!b.NUM) return -1;
       return parseInt(a.NUM) - parseInt(b.NUM);
     });
-  }, [safeRoster]);
+  }, [teamRoster]);
 
   return (
     <div className="mt-1 overflow-y-auto scrollbar-thin">

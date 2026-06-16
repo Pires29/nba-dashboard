@@ -903,7 +903,7 @@ export default function PricingPage({ userPlan }) {
                   ))}
                 </div>
                 <p className="text-[13px] text-slate-300 leading-relaxed mb-4 font-mono">
-                  "{t.text}"
+                  &ldquo;{t.text}&rdquo;
                 </p>
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-orange-500/20 border border-orange-500/30 flex items-center justify-center">
@@ -1008,7 +1008,7 @@ export default function PricingPage({ userPlan }) {
             </div>
             {!isTrial && selectedBilling === "trial" && (
               <p className="text-center text-[9px] font-mono text-slate-600 mt-2 leading-relaxed">
-                After 7 days, you'll be charged €3.99/mo automatically.{" "}
+                After 7 days, you&apos;ll be charged €3.99/mo automatically.{" "}
                 <Link
                   href="/terms"
                   className="text-orange-500/60 hover:text-orange-400"

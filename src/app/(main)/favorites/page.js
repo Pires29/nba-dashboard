@@ -2,6 +2,7 @@
 
 import { useFavorites } from "@/hooks/useFavorites";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useState } from "react";
 
 const HIT_RATE_COLOR = (rate) => {
@@ -194,12 +195,14 @@ export default function FavoritesPage() {
                           </div>
                         )}
                         <div className="w-8 h-8 rounded-lg overflow-hidden bg-[#0D1828] border border-white/[0.06] flex-shrink-0">
-                          <img
+                          <Image
                             src={`https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/${fav.playerId}.png`}
                             alt={fav.playerName}
+                            width={32}
+                            height={32}
                             className="w-full h-full object-cover"
                             onError={(e) => {
-                              e.target.style.opacity = 0.2;
+                              e.currentTarget.style.opacity = 0.2;
                             }}
                           />
                         </div>

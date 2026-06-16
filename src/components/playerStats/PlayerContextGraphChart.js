@@ -33,7 +33,7 @@ const CustomXAxisTick = ({ x, y, payload }) => {
         y={0}
         dy={22}
         textAnchor="middle"
-        fill="#475569"
+        fill="#94a3b8"
         fontSize={8}
         fontFamily="monospace"
       >
@@ -56,9 +56,9 @@ const CustomTooltip = ({ active, payload, statMeta }) => {
       <p className="text-white font-bold">
         {statMeta?.label}: <span className="text-slate-200">{display}</span>
       </p>
-      <p className="text-slate-500">{entry?.date}</p>
+      <p className="text-slate-400">{entry?.date}</p>
       <p>vs {entry?.opponent}</p>
-      {entry?.minutes && <p className="text-slate-600">{entry.minutes} min</p>}
+      {entry?.minutes && <p className="text-slate-400">{entry.minutes} min</p>}
     </div>
   );
 };
@@ -83,7 +83,7 @@ const PlayerContextGraphChart = ({
           interval={0}
         />
         <YAxis
-          tick={{ fontSize: 9, fill: "#475569", fontFamily: "monospace" }}
+          tick={{ fontSize: 9, fill: "#94a3b8", fontFamily: "monospace" }}
           tickLine={false}
           axisLine={false}
           ticks={yTicks}

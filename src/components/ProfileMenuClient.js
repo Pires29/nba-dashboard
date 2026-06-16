@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { signOut } from "next-auth/react";
+import Image from "next/image";
 import Link from "next/link";
 
 const ProfileMenuClient = ({ session }) => {
@@ -21,15 +22,20 @@ const ProfileMenuClient = ({ session }) => {
     <div className="relative" ref={ref}>
       {/* Trigger button */}
       <button
+        aria-label="Open profile menu"
+        aria-expanded={open}
+        aria-haspopup="menu"
         onClick={() => setOpen(!open)}
         className="flex items-center gap-2.5 px-1 py-1 sm:px-3 sm:py-1.5 sm:rounded-lg sm:bg-[#0D1828] sm:border sm:border-white/10 sm:hover:border-white/20 transition-all duration-150 group"
       >
         {/* Avatar */}
         <div className="w-8 h-8 sm:w-6 sm:h-6 rounded-full bg-orange-500/20 border border-orange-500/30 flex items-center justify-center">
           {session?.user?.image ? (
-            <img
+            <Image
               src={session.user.image}
               alt=""
+              width={32}
+              height={32}
               className="w-full h-full rounded-full object-cover"
             />
           ) : (
@@ -60,7 +66,7 @@ const ProfileMenuClient = ({ session }) => {
 
         {/* Chevron — escondido em mobile */}
         <svg
-          className={`hidden sm:block w-3 h-3 text-slate-600 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          className={`hidden sm:block w-3 h-3 text-slate-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -77,6 +83,7 @@ const ProfileMenuClient = ({ session }) => {
       {/* Dropdown */}
       {open && (
         <div
+          role="menu"
           className="absolute right-0 top-full mt-2 w-52 z-50
           bg-[#0F1828] border border-white/10 rounded-xl shadow-2xl overflow-hidden"
         >
@@ -87,7 +94,7 @@ const ProfileMenuClient = ({ session }) => {
                 <p className="text-[12px] font-semibold text-slate-200 truncate">
                   {session.user.name}
                 </p>
-                <p className="text-[10px] font-mono text-slate-600 truncate mt-0.5">
+                <p className="text-[10px] font-mono text-slate-400 truncate mt-0.5">
                   {session.user.email}
                 </p>
               </div>
@@ -106,7 +113,7 @@ const ProfileMenuClient = ({ session }) => {
               fill="none"
               stroke="currentColor"
               strokeWidth="1.8"
-              className="text-slate-600 group-hover:text-slate-400"
+              className="text-slate-400 group-hover:text-slate-300"
             >
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
             </svg>
@@ -130,7 +137,7 @@ const ProfileMenuClient = ({ session }) => {
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="1.8"
-                className="text-slate-600 group-hover:text-orange-400"
+                className="text-slate-400 group-hover:text-orange-400"
               >
                 <path
                   strokeLinecap="round"
@@ -163,7 +170,7 @@ const ProfileMenuClient = ({ session }) => {
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="1.8"
-                className="text-slate-600 group-hover:text-slate-400"
+                className="text-slate-400 group-hover:text-slate-300"
               >
                 <circle cx="12" cy="12" r="3" />
                 <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
@@ -190,7 +197,7 @@ const ProfileMenuClient = ({ session }) => {
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="1.8"
-                  className="text-slate-600 group-hover:text-red-400"
+                  className="text-slate-400 group-hover:text-red-400"
                 >
                   <path
                     strokeLinecap="round"
@@ -215,7 +222,7 @@ const ProfileMenuClient = ({ session }) => {
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="1.8"
-                  className="text-slate-600 group-hover:text-orange-400"
+                  className="text-slate-400 group-hover:text-orange-400"
                 >
                   <path
                     strokeLinecap="round"

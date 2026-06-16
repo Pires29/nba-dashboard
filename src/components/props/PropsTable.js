@@ -398,22 +398,28 @@ export default function PropsTable({
                       }}
                       className={`flex items-center gap-2 px-3 py-2 rounded-lg text-[11px] font-mono transition-all text-left ${filterGame === key ? "bg-orange-500/10 border border-orange-500/30 text-orange-400" : "hover:bg-white/[0.04] text-slate-400 border border-transparent"}`}
                     >
-                      <img
+                      <Image
                         src={`https://cdn.nba.com/logos/nba/${game.home_team_id}/global/L/logo.svg`}
                         alt=""
+                        width={16}
+                        height={16}
+                        unoptimized
                         className="w-4 h-4 object-contain"
                         onError={(e) => {
-                          e.target.style.display = "none";
+                          e.currentTarget.style.display = "none";
                         }}
                       />
                       <span className="font-bold">{home}</span>
                       <span className="text-slate-600 text-[9px]">vs</span>
-                      <img
+                      <Image
                         src={`https://cdn.nba.com/logos/nba/${game.visitor_team_id}/global/L/logo.svg`}
                         alt=""
+                        width={16}
+                        height={16}
+                        unoptimized
                         className="w-4 h-4 object-contain"
                         onError={(e) => {
-                          e.target.style.display = "none";
+                          e.currentTarget.style.display = "none";
                         }}
                       />
                       <span className="font-bold">{away}</span>

@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export const AuthLayout = ({ title, subtitle, children }) => (
   <div className="min-h-screen bg-gradient-to-b from-[#0D1B2E] to-[#060E1A] flex items-center justify-center px-4 relative">
     <div
@@ -12,7 +14,7 @@ export const AuthLayout = ({ title, subtitle, children }) => (
 
     <div className="relative z-10 w-full max-w-sm">
       {/* Back button */}
-      <a
+      <Link
         href="/"
         className="flex items-center gap-1.5 mb-6 text-slate-600 hover:text-slate-400 transition-colors w-fit group"
       >
@@ -32,7 +34,7 @@ export const AuthLayout = ({ title, subtitle, children }) => (
         <span className="text-[11px] font-mono uppercase tracking-widest">
           Back
         </span>
-      </a>
+      </Link>
 
       {/* Logo */}
       <div className="flex items-center justify-center gap-2.5 mb-8">

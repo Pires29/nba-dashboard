@@ -90,13 +90,14 @@ const PlayerContextGraph = ({ player }) => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-1 h-4 rounded-sm bg-slate-600" />
-          <span className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest">
+          <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest">
             Context
           </span>
         </div>
 
         <div className="lg:hidden relative flex items-center">
           <select
+            aria-label="Select context stat"
             value={selectedStat}
             onChange={(e) => setSelectedStat(e.target.value)}
             className="text-[10px] font-mono font-bold uppercase bg-transparent border border-white/[0.06] text-white rounded px-2 py-1 pr-6 outline-none appearance-none cursor-pointer"
@@ -113,7 +114,7 @@ const PlayerContextGraph = ({ player }) => {
             height="12"
             viewBox="0 0 24 24"
             fill="none"
-            stroke="#475569"
+            stroke="#94a3b8"
             strokeWidth="2.5"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -130,7 +131,7 @@ const PlayerContextGraph = ({ player }) => {
                 key={key}
                 onClick={() => setSelectedStat(key)}
                 className={`px-2.5 py-1 rounded-md text-[10px] font-mono font-bold uppercase tracking-wider transition-all duration-150
-                  ${isActive ? "bg-slate-600/60 text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]" : "text-slate-500 hover:text-slate-300 hover:bg-white/[0.04]"}`}
+                  ${isActive ? "bg-slate-600/60 text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]" : "text-slate-400 hover:text-slate-300 hover:bg-white/[0.04]"}`}
               >
                 {label}
               </button>
@@ -143,7 +144,7 @@ const PlayerContextGraph = ({ player }) => {
         <span className="font-black text-xl text-white font-mono">
           {avg != null ? formatValue(avg, statMeta?.isPercent) : "—"}
         </span>
-        <span className="text-[10px] text-slate-500 uppercase tracking-widest">
+        <span className="text-[10px] text-slate-400 uppercase tracking-widest">
           avg L10
         </span>
       </div>

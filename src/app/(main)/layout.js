@@ -7,9 +7,9 @@ export default function MainLayout({ children }) {
   return (
     <div className="h-screen flex flex-col overflow-hidden">
       <Navbar />
-      <div className="flex-1 min-h-0 overflow-auto lg:overflow-hidden">
+      <main className="flex-1 min-h-0 overflow-auto lg:overflow-hidden">
         {children}
-      </div>
+      </main>
       <Toaster
         theme="dark"
         position="bottom-right"

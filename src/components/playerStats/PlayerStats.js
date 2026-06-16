@@ -97,7 +97,7 @@ const PlayerStats = ({ data, plan, stat }) => {
                 key={idx}
                 onClick={() => setActiveTeam(idx)}
                 className={`flex-1 py-2 text-xs font-bold font-condensed tracking-wider uppercase transition-all duration-200
-                  ${activeTeam === idx ? "bg-orange-500 text-white shadow-[0_0_12px_rgba(232,93,4,0.3)]" : "text-slate-500 hover:text-slate-300"}`}
+                  ${activeTeam === idx ? "bg-orange-500 text-white shadow-[0_0_12px_rgba(232,93,4,0.3)]" : "text-slate-400 hover:text-slate-300"}`}
               >
                 {name.length > 10 ? name.split(" ").pop() : name}
               </button>
@@ -127,7 +127,7 @@ const PlayerStats = ({ data, plan, stat }) => {
             <p className="text-[12px] font-mono text-slate-400">
               No players available
             </p>
-            <p className="text-[10px] font-mono text-slate-600">
+            <p className="text-[10px] font-mono text-slate-400">
               Data could not be loaded
             </p>
           </div>

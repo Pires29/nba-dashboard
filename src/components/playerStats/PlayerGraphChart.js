@@ -24,7 +24,7 @@ const CustomXAxisTick = ({ x, y, payload }) => {
         y={0}
         dy={22}
         textAnchor="middle"
-        fill="#475569"
+        fill="#94a3b8"
         fontSize={8}
         fontFamily="monospace"
       >
@@ -43,15 +43,15 @@ const CustomTooltip = ({ active, payload, selectedStat }) => {
       <p className="text-white font-bold">
         {stat}: <span className="text-orange-400">{payload[0]?.value}</span>
       </p>
-      <p className="text-slate-500">{payload[0]?.payload?.date}</p>
+      <p className="text-slate-400">{payload[0]?.payload?.date}</p>
       <p>vs {payload[0]?.payload?.opponent}</p>
       {payload[0]?.payload?.isHome != null && (
-        <p className="text-slate-600">
+        <p className="text-slate-400">
           {payload[0]?.payload?.isHome ? "Home" : "Away"}
         </p>
       )}
       {payload[0]?.payload?.minutes && (
-        <p className="text-slate-600">{payload[0]?.payload?.minutes} min</p>
+        <p className="text-slate-400">{payload[0]?.payload?.minutes} min</p>
       )}
     </div>
   );
@@ -71,7 +71,7 @@ const PlayerGraphChart = ({ points, selectedStat, betLine, yTicks }) => {
           axisLine={false}
         />
         <YAxis
-          tick={{ fontSize: 9, fill: "#475569", fontFamily: "monospace" }}
+          tick={{ fontSize: 9, fill: "#94a3b8", fontFamily: "monospace" }}
           tickLine={false}
           axisLine={false}
           allowDecimals={false}

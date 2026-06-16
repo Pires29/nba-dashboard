@@ -41,6 +41,9 @@ const PlayerDropdown = ({
   return (
     <div ref={ref} className="relative">
       <button
+        aria-label="Select player"
+        aria-expanded={open}
+        aria-haspopup="listbox"
         onClick={() => setOpen((v) => !v)}
         className="w-full flex items-center gap-2 px-3 h-[42px] rounded-lg border border-white/[0.08] bg-[#060E1A] hover:border-orange-500/30 transition-all"
       >
@@ -66,7 +69,7 @@ const PlayerDropdown = ({
         >
           <path
             d="M6 9l6 6 6-6"
-            stroke="#475569"
+            stroke="#94a3b8"
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -78,19 +81,20 @@ const PlayerDropdown = ({
         <div className="absolute left-0 right-0 bottom-full mb-1 z-50 rounded-xl border border-white/[0.08] bg-[#0D1828] shadow-[0_-8px_32px_rgba(0,0,0,0.6)] overflow-hidden">
           <div className="p-2 border-b border-white/[0.06]">
             <input
+              aria-label="Search player"
               autoFocus
               type="text"
               placeholder="Search player…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="w-full bg-[#060E1A] border border-white/[0.06] rounded-lg px-3 py-2 text-[12px] font-mono text-slate-300 placeholder-slate-600 outline-none focus:border-orange-500/40"
+              className="w-full bg-[#060E1A] border border-white/[0.06] rounded-lg px-3 py-2 text-[12px] font-mono text-slate-300 placeholder-slate-400 outline-none focus:border-orange-500/40"
             />
           </div>
           <div className="max-h-[220px] overflow-y-auto">
             {Object.entries(grouped).map(([teamLabel, players]) => (
               <div key={teamLabel}>
                 <div className="px-3 py-1.5 bg-white/[0.02] border-b border-white/[0.04]">
-                  <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-slate-600">
+                  <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-slate-400">
                     {teamLabel}
                   </span>
                 </div>
@@ -100,7 +104,7 @@ const PlayerDropdown = ({
                   return (
                     <button
                       key={p.PLAYER_ID}
-                      aria-label="Player selector"
+                      aria-label={`Select ${p.PLAYER}`}
                       onClick={() => {
                         onSelect(p.PLAYER);
                         setOpen(false);
@@ -117,7 +121,7 @@ const PlayerDropdown = ({
                         loading="lazy"
                         className="h-6 w-6 rounded-full object-cover bg-white/[0.04] flex-shrink-0"
                       />
-                      <span className="text-[9px] font-mono text-slate-600 w-5 flex-shrink-0">
+                      <span className="text-[9px] font-mono text-slate-400 w-5 flex-shrink-0">
                         #{p.NUM}
                       </span>
                       <span
@@ -136,7 +140,7 @@ const PlayerDropdown = ({
               </div>
             ))}
             {filtered.length === 0 && (
-              <p className="text-center text-[11px] font-mono text-slate-600 py-6">
+              <p className="text-center text-[11px] font-mono text-slate-400 py-6">
                 No players found
               </p>
             )}
