@@ -244,8 +244,6 @@ const StatDropdown = ({ selectedStat, onStatChange }) => {
 };
 
 const PlayerGraph = ({
-  player,
-  playerPrev,
   playerStats,
   opponentAbbr,
   selectedStat,
@@ -257,9 +255,8 @@ const PlayerGraph = ({
   gameInfo,
   onOpenSheet,
   playerLogs,
+  playerLogsPrev,
   statGraphData,
-  periodOptions: initialPeriodOptions = [],
-  contextOptions: initialContextOptions = [],
 }) => {
   const { hasLoaded, isFavorite, toggleFavorite, fetchFavorites } =
     useFavorites({ enabled: false });
@@ -319,12 +316,12 @@ const PlayerGraph = ({
         : "text-red-400";
 
   const periodOptions = useMemo(
-    () => selectedStatGraphData?.periodOptions ?? initialPeriodOptions,
-    [selectedStatGraphData, initialPeriodOptions],
+    () => selectedStatGraphData?.periodOptions ?? [],
+    [selectedStatGraphData],
   );
   const contextOptions = useMemo(
-    () => selectedStatGraphData?.contextOptions ?? initialContextOptions,
-    [selectedStatGraphData, initialContextOptions],
+    () => selectedStatGraphData?.contextOptions ?? [],
+    [selectedStatGraphData],
   );
   const allHitRates = useMemo(
     () => [...periodOptions, ...contextOptions],
@@ -357,9 +354,8 @@ const PlayerGraph = ({
   const isPrev = activeFilter === "PREV";
   const hasGamesArray = Array.isArray(playerLogs);
   const hasGames = hasGamesArray && playerLogs.length > 0;
-  const hasPrevGames =
-    Array.isArray(playerPrev?.games) && playerPrev.games.length > 0;
-  const prevDataReceived = playerPrev !== undefined;
+  const hasPrevGames = Array.isArray(playerLogsPrev) && playerLogsPrev.length > 0;
+  const prevDataReceived = playerLogsPrev !== undefined;
   const hasValidArray = isPrev ? prevDataReceived : hasGamesArray;
   const shouldShowChart = isPrev ? hasPrevGames : hasGames;
 

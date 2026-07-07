@@ -10,8 +10,8 @@ import SectionLabel from "@/components/ui/playerStats/SectionLabel";
 const ResponsiveLayout = ({
   player,
   playerStats,
-  playerPrev,
   playerLogs,
+  playerLogsPrev,
   injuryMap,
   plan,
   currentGame,
@@ -19,7 +19,6 @@ const ResponsiveLayout = ({
   teamNameMap,
   homeRoster,
   awayRoster,
-  combinedRoster,
   team1Formatted,
   team2Formatted,
   injuriesTeam1,
@@ -28,8 +27,6 @@ const ResponsiveLayout = ({
   initialActiveTeam,
   opponentAbbr,
   statGraphData,
-  periodOptions,
-  contextOptions,
   initialStat,
 }) => {
   return (
@@ -55,7 +52,6 @@ const ResponsiveLayout = ({
                 teamNameMap={teamNameMap}
                 homeRoster={homeRoster}
                 awayRoster={awayRoster}
-                combinedRoster={combinedRoster}
                 injuryStatusMap={injuryMap}
                 team1Formatted={team1Formatted}
                 team2Formatted={team2Formatted}
@@ -65,14 +61,12 @@ const ResponsiveLayout = ({
 
               <PlayerGraphSection
                 player={player}
-                playerPrev={playerPrev}
                 playerStats={playerStats}
                 playerLogs={playerLogs}
+                playerLogsPrev={playerLogsPrev}
                 currentGame={currentGame}
                 opponentAbbr={opponentAbbr}
                 statGraphData={statGraphData}
-                periodOptions={periodOptions}
-                contextOptions={contextOptions}
                 initialStat={initialStat}
               />
             </div>

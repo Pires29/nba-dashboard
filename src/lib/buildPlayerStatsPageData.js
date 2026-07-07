@@ -168,42 +168,19 @@ export async function buildPlayerStatsPageData({
     ? awayRoster[0]?.TEAM_ABBREVIATION
     : homeRoster[0]?.TEAM_ABBREVIATION;
 
-  const playerInfo = player
-    ? [
-        { key: "Birth Date", value: player.BIRTH_DATE },
-        { key: "Height", value: player.HEIGHT },
-        { key: "Jersey", value: player.NUM },
-        { key: "Name", value: player.PLAYER },
-        { key: "Position", value: player.POSITION },
-        { key: "Team Abbreviation", value: player.TEAM_ABBREVIATION },
-        { key: "Team ID", value: player.TEAM_ID },
-        { key: "Player ID", value: player.PLAYER_ID },
-        { key: "Weight", value: player.WEIGHT },
-      ]
-    : [];
-
-  const playerStats =
-    rawStats?.[String(player?.PLAYER_ID)] && player
-      ? {
-          ...rawStats[String(player.PLAYER_ID)],
-          playerId: player.PLAYER_ID,
-          playerName: player.PLAYER,
-          playerTeam: player.TEAM_ABBREVIATION,
-        }
-      : null;
+  const playerStats = player
+    ? {
+        playerId: player.PLAYER_ID,
+        playerName: player.PLAYER,
+        playerTeam: player.TEAM_ABBREVIATION,
+      }
+    : null;
 
   const currentPlayerLogs = Array.isArray(playerLogs)
     ? playerLogs
     : [];
 
-  const previousPlayerLogs = Array.isArray(playerLogsPrev)
-    ? playerLogsPrev
-    : [];
-  const playerPrev = previousPlayerLogs.length
-    ? {
-        games: previousPlayerLogs,
-      }
-    : null;
+  const previousPlayerLogs = Array.isArray(playerLogsPrev) ? playerLogsPrev : [];
 
   const initialSelectedName = (() => {
     if (playerId) {
@@ -229,24 +206,17 @@ export async function buildPlayerStatsPageData({
   });
   const graphViews = buildPlayerGraphViews(graphData);
   const statGraphData = buildPlayerGraphStatDataMap(graphViews);
-  const selectedStatGraphData = statGraphData[stat] ?? statGraphData.points ?? null;
-  const periodOptions = selectedStatGraphData?.periodOptions ?? [];
-  const contextOptions = selectedStatGraphData?.contextOptions ?? [];
-
   return {
     player,
-    playerInfo,
     playerStats,
     playerLogs: currentPlayerLogs,
-    playerPrev,
+    playerLogsPrev: previousPlayerLogs,
     currentGame,
     gamesSchedule,
     teamNameMap,
     opponentAbbr,
-    selectedStat: stat,
     homeRoster,
     awayRoster,
-    combinedRoster,
     injuryStatusMap,
     injuriesTeam1,
     injuriesTeam2,
@@ -255,7 +225,5 @@ export async function buildPlayerStatsPageData({
     initialSelectedName,
     initialActiveTeam,
     statGraphData,
-    periodOptions,
-    contextOptions,
   };
 }

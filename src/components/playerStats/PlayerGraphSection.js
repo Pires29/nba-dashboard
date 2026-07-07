@@ -17,15 +17,12 @@ const PlayerContextGraph = dynamic(() => import("./PlayerContextGraph"), {
 });
 
 const PlayerGraphSection = ({
-  player,
-  playerPrev,
   playerStats,
   playerLogs,
+  playerLogsPrev,
   currentGame,
   opponentAbbr,
   statGraphData,
-  periodOptions,
-  contextOptions,
   initialStat = "points",
 }) => {
   const [selectedStat, setSelectedStat] = useState(initialStat || "points");
@@ -37,8 +34,6 @@ const PlayerGraphSection = ({
       <div className="min-h-[420px] flex-shrink-0">
         <Suspense fallback={<PlayerGraphSkeleton />}>
           <PlayerGraph
-            player={player}
-            playerPrev={playerPrev}
             playerStats={playerStats}
             selectedStat={selectedStat}
             onStatChange={setSelectedStat}
@@ -49,9 +44,8 @@ const PlayerGraphSection = ({
             gameInfo={currentGame}
             opponentAbbr={opponentAbbr}
             playerLogs={playerLogs}
+            playerLogsPrev={playerLogsPrev}
             statGraphData={statGraphData}
-            periodOptions={periodOptions}
-            contextOptions={contextOptions}
           />
         </Suspense>
       </div>
@@ -61,10 +55,7 @@ const PlayerGraphSection = ({
         fallback={<PlayerContextGraphSkeleton />}
       >
         <Suspense fallback={<PlayerContextGraphSkeleton />}>
-          <PlayerContextGraph
-            player={{ games: playerLogs }}
-            playerStats={playerStats}
-          />
+          <PlayerContextGraph player={{ games: playerLogs }} />
         </Suspense>
       </DeferredRender>
     </Card>

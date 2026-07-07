@@ -15,8 +15,8 @@ const PlayerStats = ({ data, plan, stat }) => {
       <ResponsiveLayout
         player={data.player}
         playerStats={data.playerStats}
-        playerPrev={data.playerPrev}
         playerLogs={data.playerLogs}
+        playerLogsPrev={data.playerLogsPrev}
         injuryMap={data.injuryStatusMap}
         plan={plan}
         currentGame={data.currentGame}
@@ -24,7 +24,6 @@ const PlayerStats = ({ data, plan, stat }) => {
         teamNameMap={data.teamNameMap}
         homeRoster={data.homeRoster}
         awayRoster={data.awayRoster}
-        combinedRoster={data.combinedRoster}
         team1Formatted={data.team1Formatted}
         team2Formatted={data.team2Formatted}
         injuriesTeam1={data.injuriesTeam1}
@@ -33,8 +32,6 @@ const PlayerStats = ({ data, plan, stat }) => {
         initialActiveTeam={data.initialActiveTeam}
         opponentAbbr={data.opponentAbbr}
         statGraphData={data.statGraphData}
-        periodOptions={data.periodOptions}
-        contextOptions={data.contextOptions}
         initialStat={stat}
       />
     </div>

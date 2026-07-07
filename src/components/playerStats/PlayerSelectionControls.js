@@ -22,7 +22,6 @@ const PlayerSelectionControls = ({
   teamNameMap,
   homeRoster,
   awayRoster,
-  combinedRoster,
   injuryStatusMap,
   team1Formatted,
   team2Formatted,
@@ -34,16 +33,16 @@ const PlayerSelectionControls = ({
   const [activeTeam, setActiveTeam] = useState(initialActiveTeam);
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  const safeHomeRoster = homeRoster ?? [];
-  const safeAwayRoster = awayRoster ?? [];
+  const safeHomeRoster = useMemo(() => homeRoster ?? [], [homeRoster]);
+  const safeAwayRoster = useMemo(() => awayRoster ?? [], [awayRoster]);
 
   const rosterForDropdown = useMemo(
     () =>
-      (combinedRoster ?? []).map((rosterPlayer) => ({
+      [...safeHomeRoster, ...safeAwayRoster].map((rosterPlayer) => ({
         ...rosterPlayer,
         _teamLabel: teamNameMap?.[rosterPlayer.TEAM_ID] ?? "Team",
       })),
-    [combinedRoster, teamNameMap],
+    [safeHomeRoster, safeAwayRoster, teamNameMap],
   );
 
   const handleSelectPlayer = useCallback(
