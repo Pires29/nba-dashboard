@@ -41,7 +41,7 @@ const GameDropdown = ({ plan, team1Id, team2Id, games, teams, onSelect }) => {
     );
   }
 
-  const teamMap = teamNameMap;
+  const teamMap = teams ?? {};
   const selectedGameObj = games.find(
     (g) => `${g.date}-${g.home_team_id}-${g.visitor_team_id}` === selectedGame,
   );

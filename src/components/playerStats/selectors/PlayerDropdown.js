@@ -106,7 +106,7 @@ const PlayerDropdown = ({
                       key={p.PLAYER_ID}
                       aria-label={`Select ${p.PLAYER}`}
                       onClick={() => {
-                        onSelect(p.PLAYER);
+                        onSelect(p);
                         setOpen(false);
                         setQuery("");
                       }}

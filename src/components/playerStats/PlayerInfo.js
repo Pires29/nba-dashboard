@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { useMemo } from "react";
 
 const INJURY_STYLES = {
   Out: "bg-red-500/15 text-red-400 border-red-500/30",
@@ -14,19 +13,16 @@ const PlayerInfo = ({ playerData, injuryStatus, onAddProp, propSaved }) => {
     ? INJURY_STYLES[injuryStatus] || INJURY_STYLES["Out"]
     : null;
 
-  const displayStats = useMemo(
-    () => [
-      { key: "Position", value: playerData?.POSITION },
-      { key: "Jersey", value: playerData?.NUM ? `#${playerData.NUM}` : "—" },
-      { key: "Height", value: playerData?.HEIGHT },
-      {
-        key: "Weight",
-        value: playerData?.WEIGHT ? `${playerData.WEIGHT} lbs` : "—",
-      },
-      { key: "DOB", value: playerData?.BIRTH_DATE },
-    ],
-    [playerData],
-  );
+  const displayStats = [
+    { key: "Position", value: playerData?.POSITION },
+    { key: "Jersey", value: playerData?.NUM ? `#${playerData.NUM}` : "—" },
+    { key: "Height", value: playerData?.HEIGHT },
+    {
+      key: "Weight",
+      value: playerData?.WEIGHT ? `${playerData.WEIGHT} lbs` : "—",
+    },
+    { key: "DOB", value: playerData?.BIRTH_DATE },
+  ];
 
   if (!playerData) return <PlayerInfoEmpty />;
 

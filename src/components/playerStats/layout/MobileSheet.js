@@ -4,6 +4,7 @@ import PlayerDropdown from "../selectors/PlayerDropdown";
 const MobileSheet = ({
   combinedRoster,
   selectedName,
+  injuryMap,
 
   plan,
   team1Id,
@@ -63,6 +64,7 @@ const MobileSheet = ({
                 <PlayerDropdown
                   combinedRoster={combinedRoster}
                   selectedName={selectedName}
+                  injuryMap={injuryMap}
                   onSelect={handleSelectPlayer}
                 />
               </div>
