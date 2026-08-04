@@ -1,5 +1,6 @@
 "use client";
 
+import AppToaster from "@/components/AppToaster";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -41,17 +42,18 @@ export default function FavoritesPage() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-b from-[#0D1B2E] to-[#060E1A] font-sans overflow-hidden">
-      <div
-        className="fixed inset-0 pointer-events-none opacity-20"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(26,42,62,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(26,42,62,0.4) 1px, transparent 1px)",
-          backgroundSize: "40px 40px",
-        }}
-      />
+    <>
+      <div className="flex flex-col h-full bg-gradient-to-b from-[#0D1B2E] to-[#060E1A] font-sans overflow-hidden">
+        <div
+          className="fixed inset-0 pointer-events-none opacity-20"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(26,42,62,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(26,42,62,0.4) 1px, transparent 1px)",
+            backgroundSize: "40px 40px",
+          }}
+        />
 
-      <div className="relative z-10 flex flex-col h-full max-w-[1400px] mx-auto w-full px-6 py-5 gap-4">
+        <div className="relative z-10 flex flex-col h-full max-w-[1400px] mx-auto w-full px-6 py-5 gap-4">
         {/* Header */}
         <div className="flex items-center gap-3 flex-shrink-0">
           <div className="w-1 h-5 rounded-sm bg-orange-500" />
@@ -268,7 +270,9 @@ export default function FavoritesPage() {
             </table>
           </div>
         )}
+        </div>
       </div>
-    </div>
+      <AppToaster />
+    </>
   );
 }

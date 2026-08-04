@@ -3,8 +3,6 @@ import { buildPlayerStatsPageData } from "@/lib/buildPlayerStatsPageData";
 import getGamesSchedule from "@/lib/getGamesSchedule";
 import getInjuries from "@/lib/getInjuries";
 import getRosters from "@/lib/getRosters";
-import getStandings from "@/lib/getStandings";
-import getStats from "@/lib/getStats";
 import getTeamStats from "@/lib/getTeamStats";
 import getPlayerLogs from "@/lib/getPlayerLogs";
 import getPrevPlayerLogs from "@/lib/getPrevPlayerLogs";
@@ -19,18 +17,14 @@ export default async function Page({ searchParams }) {
 
   const [
     rawRosterData,
-    rawStats,
     rawGamesSchedule,
-    rawStandings,
     rawInjuries,
     rawTeamStats,
     { logs },
     logsPrev,
   ] = await Promise.all([
     getRosters(),
-    getStats(),
     getGamesSchedule(),
-    getStandings(),
     getInjuries(),
     getTeamStats(),
     playerId ? getPlayerLogs(playerId) : Promise.resolve({ logs: [] }),
@@ -43,9 +37,7 @@ export default async function Page({ searchParams }) {
     team2Id,
     stat,
     rawRosterData,
-    rawStats,
     rawGamesSchedule,
-    rawStandings,
     rawInjuries,
     rawTeamStats,
     playerLogs: logs,

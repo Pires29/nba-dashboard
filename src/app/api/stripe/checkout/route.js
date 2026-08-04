@@ -1,7 +1,7 @@
 export const runtime = "nodejs";
 
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/authOptions";
 import Stripe from "stripe";
 import prisma from "../../../../../prisma/prismaClient";
 

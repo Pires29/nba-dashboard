@@ -1,6 +1,7 @@
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/authOptions";
 import { getServerSession } from "next-auth";
 import Link from "next/link";
+import ProfileMenuClient from "./ProfileMenuClient";
 
 const Navbar = async () => {
   const session = await getServerSession(authOptions);
@@ -59,13 +60,6 @@ const Navbar = async () => {
       </div>
     </nav>
   );
-};
-
-// Client component for the dropdown
-import ProfileMenuClient from "./ProfileMenuClient";
-
-const ProfileMenu = ({ session }) => {
-  return <ProfileMenuClient session={session} />;
 };
 
 export default Navbar;

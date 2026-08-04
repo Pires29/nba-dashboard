@@ -2,7 +2,7 @@ import { getAvailablePlayers } from "@/lib/getAvailablePlayers";
 import getPlayerLogs from "@/lib/getPlayerLogs";
 import getPrevPlayerLogs from "@/lib/getPrevPlayerLogs";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/authOptions";
 import { NextResponse } from "next/server";
 
 export async function GET(req) {

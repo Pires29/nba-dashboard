@@ -1,11 +1,20 @@
+"use client";
+
+import dynamic from "next/dynamic";
 import Card from "@/components/ui/playerStats/Card";
 import DeferredRender from "@/components/ui/DeferredRender";
 import PlayerInfo from "../PlayerInfo";
 import Injuries from "../Injuries";
-import TeamStats from "../TeamStats";
 import PlayerGraphSection from "../PlayerGraphSection";
 import PlayerSelectionControls from "../PlayerSelectionControls";
 import SectionLabel from "@/components/ui/playerStats/SectionLabel";
+
+const TeamStats = dynamic(() => import("../TeamStats"), {
+  ssr: false,
+  loading: () => (
+    <div className="min-h-[260px] bg-white/[0.02] animate-pulse rounded-xl" />
+  ),
+});
 
 const ResponsiveLayout = ({
   player,

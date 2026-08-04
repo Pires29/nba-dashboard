@@ -5,13 +5,16 @@ import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Card from "@/components/ui/playerStats/Card";
 import GameSelector from "./selectors/GameSelector";
-import MobileSheet from "./layout/MobileSheet";
 
 const TeamRoster = dynamic(() => import("./TeamRoster"), {
   ssr: false,
 });
 
 const UpgradeOverlay = dynamic(() => import("../UpgradeOverlay"), {
+  ssr: false,
+});
+
+const MobileSheet = dynamic(() => import("./layout/MobileSheet"), {
   ssr: false,
 });
 
@@ -49,6 +52,7 @@ const PlayerSelectionControls = ({
     (selectedPlayer) => {
       if (!selectedPlayer?.PLAYER_ID) return;
       setSelectedName(selectedPlayer.PLAYER);
+      setSheetOpen(false);
       router.push(
         `/playersStats?team1Id=${currentGame?.home_team_id}&team2Id=${currentGame?.visitor_team_id}&playerId=${selectedPlayer.PLAYER_ID}`,
       );
@@ -59,7 +63,7 @@ const PlayerSelectionControls = ({
   const handleGameSelect = useCallback(
     (game) => {
       if (!game) return;
-
+      setSheetOpen(false);
       router.push(
         `/playersStats?team1Id=${game.home_team_id}&team2Id=${game.visitor_team_id}`,
       );
@@ -166,7 +170,6 @@ const PlayerSelectionControls = ({
           sheetOpen={sheetOpen}
           handleSelectPlayer={handleSelectPlayer}
           handleGameSelect={handleGameSelect}
-          handleSheetApply={() => setSheetOpen(false)}
           setSheetOpen={setSheetOpen}
         />
       )}

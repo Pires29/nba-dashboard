@@ -1,4 +1,5 @@
 "use client";
+import AppToaster from "@/components/AppToaster";
 import PropsTable from "@/components/props/PropsTable";
 
 export default function PropsTableWrapper({
@@ -12,15 +13,18 @@ export default function PropsTableWrapper({
   initialFilters,
 }) {
   return (
-    <PropsTable
-      basePath={basePath}
-      enrichedProps={enrichedProps}
-      allTeams={allTeams}
-      standings={standings}
-      schedule={schedule}
-      injuries={injuries}
-      totalPropsCount={totalPropsCount}
-      initialFilters={initialFilters}
-    />
+    <>
+      <PropsTable
+        basePath={basePath}
+        enrichedProps={enrichedProps}
+        allTeams={allTeams}
+        standings={standings}
+        schedule={schedule}
+        injuries={injuries}
+        totalPropsCount={totalPropsCount}
+        initialFilters={initialFilters}
+      />
+      <AppToaster />
+    </>
   );
 }

@@ -1,251 +1,24 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState, useMemo, useRef, useEffect } from "react";
-import { useFavorites } from "@/hooks/useFavorites";
-import {
-  getActiveHitRateOption,
-  PLAYER_GRAPH_STATS,
-} from "@/lib/buildPlayerGraphData";
+import { useState, useMemo, useEffect } from "react";
+import { PLAYER_GRAPH_STATS } from "@/lib/buildPlayerGraphData";
 
 const PlayerGraphChart = dynamic(() => import("./PlayerGraphChart"), {
   ssr: false,
 });
 
+const FavoritePropButton = dynamic(() => import("./FavoritePropButton"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-[34px] w-[98px] rounded-lg border border-white/[0.08] bg-white/[0.03]" />
+  ),
+});
+
 const statOptions = PLAYER_GRAPH_STATS;
-
-const rateColor = (rate) =>
-  rate == null
-    ? "text-slate-400"
-    : rate >= 50
-      ? "text-emerald-400"
-      : "text-red-400";
-
-const Chevron = ({ open }) => (
-  <svg
-    width="10"
-    height="10"
-    viewBox="0 0 24 24"
-    fill="none"
-    className={`flex-shrink-0 transition-transform text-slate-400 ${open ? "rotate-180" : ""}`}
-  >
-    <path
-      d="M6 9l6 6 6-6"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
-
-// ── PERIOD DROPDOWN ──
-const PeriodDropdown = ({
-  activeOption,
-  periodOptions,
-  contextOptions,
-  selectedNumber,
-  activeFilter,
-  onNumberChange,
-  onFilterChange,
-}) => {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-
-  useEffect(() => {
-    const handleClick = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
-    };
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
-
-  const handleSelect = ({ filter, number }) => {
-    if (filter) onFilterChange(activeFilter === filter ? null : filter);
-    else {
-      onFilterChange(null);
-      onNumberChange(number);
-    }
-    setOpen(false);
-  };
-
-  return (
-    <div ref={ref} className="relative flex-1 min-w-0">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-white/[0.06] bg-white/[0.03] hover:bg-white/[0.05] hover:border-white/[0.10] transition-all"
-      >
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="text-[11px] font-mono font-bold uppercase tracking-widest text-slate-400 truncate">
-            {activeOption?.label}
-          </span>
-          {activeOption?.rate != null && (
-            <>
-              <div className="w-px h-3 bg-white/10 flex-shrink-0" />
-              <span
-                className={`text-[11px] font-black font-mono flex-shrink-0 ${rateColor(activeOption.rate)}`}
-              >
-                {activeOption.rate}%
-              </span>
-            </>
-          )}
-        </div>
-        <Chevron open={open} />
-      </button>
-
-      {open && (
-        <div className="absolute left-0 right-0 top-full mt-1 z-50 rounded-xl border border-white/[0.08] bg-[#0D1828] shadow-[0_8px_32px_rgba(0,0,0,0.6)] overflow-hidden">
-          <div className="px-3 py-1.5 bg-white/[0.02] border-b border-white/[0.04]">
-            <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-slate-400">
-              Period
-            </span>
-          </div>
-          {periodOptions.map((opt) => {
-            const isActive =
-              activeFilter === null &&
-              (opt.label === "Full"
-                ? selectedNumber === "Full"
-                : selectedNumber === opt.number);
-            return (
-              <button
-                key={opt.label}
-                onClick={() => handleSelect(opt)}
-                className={`w-full flex items-center justify-between px-3 py-2.5 border-b border-white/[0.03] transition-colors
-                  ${isActive ? "bg-orange-500/10" : "hover:bg-white/[0.03]"}`}
-              >
-                <span
-                  className={`text-[12px] font-mono font-bold uppercase ${isActive ? "text-orange-400" : "text-slate-300"}`}
-                >
-                  {opt.label}
-                </span>
-                <div className="flex items-center gap-2">
-                  {opt.rate != null ? (
-                    <>
-                      <span
-                        className={`text-[12px] font-black font-mono ${rateColor(opt.rate)}`}
-                      >
-                        {opt.rate}%
-                      </span>
-                      <span className="text-[9px] font-mono text-slate-400">
-                        {opt.hits}/{opt.hits + opt.misses}
-                      </span>
-                    </>
-                  ) : (
-                    <span className="text-[11px] font-mono text-slate-400">
-                      N/A
-                    </span>
-                  )}
-                </div>
-              </button>
-            );
-          })}
-          <div className="px-3 py-1.5 bg-white/[0.02] border-t border-white/[0.06] border-b border-b-white/[0.04]">
-            <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-slate-400">
-              Context
-            </span>
-          </div>
-          {contextOptions.map((opt) => {
-            const isActive = activeFilter === opt.filter;
-            return (
-              <button
-                key={opt.label}
-                onClick={() => handleSelect(opt)}
-                className={`w-full flex items-center justify-between px-3 py-2.5 border-b border-white/[0.03] last:border-0 transition-colors
-                  ${isActive ? "bg-orange-500/10" : "hover:bg-white/[0.03]"}`}
-              >
-                <span
-                  className={`text-[12px] font-mono font-bold uppercase ${isActive ? "text-orange-400" : "text-slate-300"}`}
-                >
-                  {opt.label}
-                </span>
-                <div className="flex items-center gap-2">
-                  {opt.rate != null ? (
-                    <>
-                      <span
-                        className={`text-[12px] font-black font-mono ${rateColor(opt.rate)}`}
-                      >
-                        {opt.rate}%
-                      </span>
-                      <span className="text-[9px] font-mono text-slate-400">
-                        {opt.hits}/{opt.hits + opt.misses}
-                      </span>
-                    </>
-                  ) : (
-                    <span className="text-[11px] font-mono text-slate-400">
-                      N/A
-                    </span>
-                  )}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-};
-
-// ── STAT DROPDOWN ──
-const StatDropdown = ({ selectedStat, onStatChange }) => {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-
-  useEffect(() => {
-    const handleClick = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
-    };
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
-
-  return (
-    <div ref={ref} className="relative flex-1 min-w-0">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-white/[0.06] bg-white/[0.03] hover:bg-white/[0.05] hover:border-white/[0.10] transition-all"
-      >
-        <span className="text-[11px] font-mono font-bold uppercase tracking-widest text-slate-400 truncate">
-          {selectedStat}
-        </span>
-        <Chevron open={open} />
-      </button>
-
-      {open && (
-        <div className="absolute left-0 right-0 top-full mt-1 z-50 rounded-xl border border-white/[0.08] bg-[#0D1828] shadow-[0_8px_32px_rgba(0,0,0,0.6)] overflow-hidden">
-          <div className="px-3 py-1.5 bg-white/[0.02] border-b border-white/[0.04]">
-            <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-slate-400">
-              Stat
-            </span>
-          </div>
-          {statOptions.map((option) => {
-            const isActive = selectedStat === option;
-            return (
-              <button
-                key={option}
-                onClick={() => {
-                  onStatChange(option);
-                  setOpen(false);
-                }}
-                className={`w-full flex items-center px-3 py-2.5 border-b border-white/[0.03] last:border-0 transition-colors
-                  ${isActive ? "bg-orange-500/10" : "hover:bg-white/[0.03]"}`}
-              >
-                <span
-                  className={`text-[12px] font-mono font-bold uppercase ${isActive ? "text-orange-400" : "text-slate-300"}`}
-                >
-                  {option}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-};
 
 const PlayerGraph = ({
   playerStats,
-  opponentAbbr,
   selectedStat,
   onStatChange,
   selectedNumber,
@@ -253,13 +26,10 @@ const PlayerGraph = ({
   activeFilter,
   onFilterChange,
   gameInfo,
-  onOpenSheet,
   playerLogs,
   playerLogsPrev,
   statGraphData,
 }) => {
-  const { hasLoaded, isFavorite, toggleFavorite, fetchFavorites } =
-    useFavorites({ enabled: false });
   const [shouldRenderChart, setShouldRenderChart] = useState(false);
 
   useEffect(() => {
@@ -278,23 +48,6 @@ const PlayerGraph = ({
     const timeoutId = window.setTimeout(scheduleChartRender, 1);
     return () => window.clearTimeout(timeoutId);
   }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return undefined;
-
-    const loadFavorites = () => fetchFavorites();
-
-    if ("requestIdleCallback" in window) {
-      const id = window.requestIdleCallback(loadFavorites, {
-        timeout: 2000,
-      });
-
-      return () => window.cancelIdleCallback(id);
-    }
-
-    const timeoutId = window.setTimeout(loadFavorites, 1200);
-    return () => window.clearTimeout(timeoutId);
-  }, [fetchFavorites]);
 
   const selectedViewKey =
     activeFilter ?? (selectedNumber === "Full" ? "FULL" : `L${selectedNumber}`);
@@ -327,29 +80,31 @@ const PlayerGraph = ({
     () => [...periodOptions, ...contextOptions],
     [periodOptions, contextOptions],
   );
-  const activeHitRateOption = useMemo(
-    () =>
-      getActiveHitRateOption({
-        periodOptions,
-        contextOptions,
-        selectedNumber,
-        activeFilter,
-      }),
-    [periodOptions, contextOptions, selectedNumber, activeFilter],
+  const mobileViewOptions = useMemo(
+    () => [
+      ...periodOptions.map((opt) => ({
+        value: opt.label === "Full" ? "period:Full" : `period:${opt.number}`,
+        label:
+          opt.rate != null
+            ? `${opt.label} · ${opt.rate}% · ${opt.hits}/${opt.hits + opt.misses}`
+            : `${opt.label} · N/A`,
+      })),
+      ...contextOptions.map((opt) => ({
+        value: `filter:${opt.filter}`,
+        label:
+          opt.rate != null
+            ? `${opt.label} · ${opt.rate}% · ${opt.hits}/${opt.hits + opt.misses}`
+            : `${opt.label} · N/A`,
+      })),
+    ],
+    [periodOptions, contextOptions],
   );
-
-  const playerObj = playerStats
-    ? {
-        player_id: playerStats.playerId,
-        player_name: playerStats.playerName,
-        team: playerStats.playerTeam,
-      }
-    : null;
-
-  const isFav =
-    hasLoaded && playerObj
-      ? isFavorite(playerObj.player_id, selectedStat)
-      : false;
+  const mobileViewValue =
+    activeFilter != null
+      ? `filter:${activeFilter}`
+      : selectedNumber === "Full"
+        ? "period:Full"
+        : `period:${selectedNumber}`;
 
   const isPrev = activeFilter === "PREV";
   const hasGamesArray = Array.isArray(playerLogs);
@@ -392,16 +147,45 @@ const PlayerGraph = ({
 
       {/* ── Mobile dropdowns — hidden on desktop ── */}
       <div className="lg:hidden flex gap-2">
-        <PeriodDropdown
-          activeOption={activeHitRateOption}
-          periodOptions={periodOptions}
-          contextOptions={contextOptions}
-          selectedNumber={selectedNumber}
-          activeFilter={activeFilter}
-          onNumberChange={onNumberChange}
-          onFilterChange={onFilterChange}
-        />
-        <StatDropdown selectedStat={selectedStat} onStatChange={onStatChange} />
+        <label className="flex-1 min-w-0">
+          <span className="sr-only">Select period</span>
+          <select
+            value={mobileViewValue}
+            onChange={(event) => {
+              const value = event.target.value;
+
+              if (value.startsWith("filter:")) {
+                onFilterChange(value.slice("filter:".length));
+                return;
+              }
+
+              const nextNumber = value.slice("period:".length);
+              onFilterChange(null);
+              onNumberChange(nextNumber === "Full" ? "Full" : Number(nextNumber));
+            }}
+            className="w-full rounded-lg border border-white/[0.06] bg-white/[0.03] px-3 py-2 text-[11px] font-mono font-bold uppercase tracking-widest text-slate-300"
+          >
+            {mobileViewOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex-1 min-w-0">
+          <span className="sr-only">Select stat</span>
+          <select
+            value={selectedStat}
+            onChange={(event) => onStatChange(event.target.value)}
+            className="w-full rounded-lg border border-white/[0.06] bg-white/[0.03] px-3 py-2 text-[11px] font-mono font-bold uppercase tracking-widest text-slate-300"
+          >
+            {statOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
 
       {/* ── Line stats + Add prop ── */}
@@ -435,57 +219,12 @@ const PlayerGraph = ({
           </span>
         </div>
 
-        {/* Add prop button */}
-        {playerObj && (
-          <button
-            onClick={() =>
-              toggleFavorite(playerObj, selectedStat, betLine, gameInfo)
-            }
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[10px] font-mono font-bold transition-all
-              ${
-                isFav
-                  ? "border-orange-500/40 bg-orange-500/10 text-orange-400"
-                  : "border-white/[0.08] bg-white/[0.03] text-slate-400 hover:text-slate-200 hover:border-white/[0.14]"
-              }`}
-          >
-            {isFav ? (
-              <>
-                <svg
-                  width="11"
-                  height="11"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                >
-                  <polyline
-                    points="20 6 9 17 4 12"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    fill="none"
-                  />
-                </svg>
-                Saved
-              </>
-            ) : (
-              <>
-                <svg
-                  width="11"
-                  height="11"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                >
-                  <line x1="12" y1="5" x2="12" y2="19" />
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
-                Add prop
-              </>
-            )}
-          </button>
-        )}
+        <FavoritePropButton
+          playerStats={playerStats}
+          selectedStat={selectedStat}
+          betLine={betLine}
+          gameInfo={gameInfo}
+        />
       </div>
 
       {/* ── Chart ── */}

@@ -1,7 +1,6 @@
 // app/(public)/layout.js
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Toaster } from "sonner";
 
 export default function PublicLayout({ children }) {
   return (
@@ -9,25 +8,6 @@ export default function PublicLayout({ children }) {
       <Navbar />
       <div className="flex-1 overflow-y-auto">{children}</div>
       <Footer />
-      <Toaster
-        theme="dark"
-        position="bottom-right"
-        toastOptions={{
-          style: {
-            background: "#0D1828",
-            border: "1px solid rgba(255,255,255,0.06)",
-            color: "#cbd5e1",
-            fontFamily: "monospace",
-            fontSize: "12px",
-            borderRadius: "12px",
-          },
-          classNames: {
-            success: "!border-emerald-500/20",
-            error: "!border-red-500/20",
-            description: "!text-slate-600 !text-[11px]",
-          },
-        }}
-      />
     </div>
   );
 }

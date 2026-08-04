@@ -10,7 +10,6 @@ export async function buildPlayerStatsPageData({
   team2Id,
   stat,
   rawRosterData,
-  rawStats,
   rawGamesSchedule,
   rawInjuries,
   rawTeamStats,

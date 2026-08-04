@@ -15,7 +15,6 @@ const MobileSheet = ({
   sheetOpen,
   handleSelectPlayer,
   handleGameSelect,
-  handleSheetApply,
   setSheetOpen,
 }) => {
   return (
@@ -84,14 +83,6 @@ const MobileSheet = ({
                   onSelect={handleGameSelect}
                 />
               </div>
-
-              {/* APPLY */}
-              <button
-                onClick={handleSheetApply}
-                className="w-full py-3.5 rounded-xl bg-orange-500 text-white text-[12px] font-bold uppercase tracking-widest font-mono shadow-[0_0_20px_rgba(232,93,4,0.3)] active:scale-[0.98] transition-transform"
-              >
-                Apply
-              </button>
             </div>
           </div>
         </>
