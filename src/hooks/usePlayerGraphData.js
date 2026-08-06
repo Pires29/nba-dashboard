@@ -8,6 +8,7 @@ import {
 export const usePlayerGraphData = ({
   currentGames = [],
   previousGames = [],
+  playoffGames = [],
   player,
   opponentAbbr,
   selectedStat,
@@ -30,6 +31,14 @@ export const usePlayerGraphData = ({
       buildGameEntry(g, player?.teamAbbreviation ?? player?.playerTeam),
     );
   }, [previousGames, player?.teamAbbreviation, player?.playerTeam]);
+
+  const dataPlayoffs = useMemo(() => {
+    if (!Array.isArray(playoffGames)) return [];
+
+    return playoffGames.map((g) =>
+      buildGameEntry(g, player?.teamAbbreviation ?? player?.playerTeam),
+    );
+  }, [playoffGames, player?.teamAbbreviation, player?.playerTeam]);
 
   // 2. filters
   const homeData = useMemo(() => data.filter((g) => g.isHome), [data]);
@@ -56,6 +65,7 @@ export const usePlayerGraphData = ({
     if (activeFilter === "AWAY") base = awayData;
     if (activeFilter === "H2H") base = h2hData;
     if (activeFilter === "PREV") base = dataPrev;
+    if (activeFilter === "PLAYOFFS") base = dataPlayoffs;
 
     if (selectedNumber && selectedNumber !== "Full") {
       base = base.slice(0, selectedNumber);
@@ -68,6 +78,7 @@ export const usePlayerGraphData = ({
     awayData,
     h2hData,
     dataPrev,
+    dataPlayoffs,
     activeFilter,
     selectedNumber,
   ]);
@@ -84,6 +95,7 @@ export const usePlayerGraphData = ({
   return {
     data,
     dataPrev,
+    dataPlayoffs,
     homeData,
     awayData,
     h2hData,

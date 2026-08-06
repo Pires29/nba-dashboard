@@ -30,6 +30,7 @@ const CONTEXT_OPTIONS = [
   { key: "H2H", label: "H2H", filter: "H2H" },
   { key: "HOME", label: "Home", filter: "HOME" },
   { key: "AWAY", label: "Away", filter: "AWAY" },
+  { key: "PLAYOFFS", label: "Playoffs", filter: "PLAYOFFS" },
   { key: "PREV", label: "24/25", filter: "PREV", usesPrevBetLine: true },
 ];
 
@@ -62,7 +63,9 @@ function buildChartYAxisTicks(points, stat) {
 
 function buildChartPayload(points, stat, betLine) {
   return {
-    points,
+    // Os logs chegam do mais recente para o mais antigo; o gráfico deve ler
+    // naturalmente da esquerda (mais antigo) para a direita (mais recente).
+    points: [...points].reverse(),
     yTicks: buildChartYAxisTicks(points, stat),
     betLine,
   };
@@ -71,6 +74,7 @@ function buildChartPayload(points, stat, betLine) {
 export function buildPlayerGraphData({
   currentGames = [],
   previousGames = [],
+  playoffGames = [],
   player,
   opponentAbbr,
 }) {
@@ -83,6 +87,9 @@ export function buildPlayerGraphData({
     previousGames: Array.isArray(previousGames)
       ? previousGames.map((game) => buildGameEntry(game, teamAbbr))
       : [],
+    playoffGames: Array.isArray(playoffGames)
+      ? playoffGames.map((game) => buildGameEntry(game, teamAbbr))
+      : [],
     opponentAbbr: opponentAbbr ?? null,
   };
 }
@@ -90,6 +97,7 @@ export function buildPlayerGraphData({
 export function buildPlayerGraphViews(graphData) {
   const data = graphData?.currentGames ?? [];
   const dataPrev = graphData?.previousGames ?? [];
+  const dataPlayoffs = graphData?.playoffGames ?? [];
   const opponentAbbr = graphData?.opponentAbbr;
 
   return {
@@ -103,6 +111,7 @@ export function buildPlayerGraphViews(graphData) {
       : [],
     HOME: data.filter((game) => game.isHome === true),
     AWAY: data.filter((game) => game.isHome === false),
+    PLAYOFFS: dataPlayoffs,
     PREV: dataPrev,
   };
 }

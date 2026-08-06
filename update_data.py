@@ -14,6 +14,7 @@ OUTPUT (minified JSON):
   injuries.json             → { [teamId]: [{ pid, status, type, detail, returnDate }] }
   game_logs_current.json    → { [playerId]: [{ gid, date, opp, pts, reb, ast, stl, blk, tov, min }] }
   game_logs_prev.json       → { [playerId]: [{ gid, date, opp, pts, reb, ast, stl, blk, tov, min }] }
+  game_logs_playoffs.json   → { [playerId]: [{ gid, date, opp, pts, reb, ast, stl, blk, tov, min }] }
 
 Dependências:
   pip install nba_api requests pandas
@@ -202,11 +203,11 @@ def fetch_raw_team_stats():
     ).get_data_frames()[0]
     return df_off, df_def
 
-def fetch_raw_game_logs(season):
-    print(f"\n🎮 Fetching all game logs ({season}) in 1 request...")
+def fetch_raw_game_logs(season, season_type="Regular Season"):
+    print(f"\n🎮 Fetching {season_type.lower()} game logs ({season}) in 1 request...")
     df = leaguegamelog.LeagueGameLog(
         season=season,
-        season_type_all_star="Regular Season",
+        season_type_all_star=season_type,
         player_or_team_abbreviation="P",
         headers=NBA_HEADERS,
         timeout=REQUEST_TIMEOUT,
@@ -709,7 +710,8 @@ def run():
     schedule              = fetch_raw_schedule()          # has its own sleep
     raw_injuries          = fetch_raw_injuries();         random_sleep()
     df_logs_current       = fetch_raw_game_logs(SEASON);  random_sleep()
-    df_logs_prev          = fetch_raw_game_logs(PREV_SEASON)
+    df_logs_prev          = fetch_raw_game_logs(PREV_SEASON); random_sleep()
+    df_logs_playoffs      = fetch_raw_game_logs(SEASON, "Playoffs")
 
     # ── 2. Build + save each output file ──────────────────────────────────
     print("\n💾 Building output files...")
@@ -745,6 +747,10 @@ def run():
     # game_logs_prev.json
     logs_prev = build_game_logs(df_logs_prev)
     save_json(logs_prev, "game_logs_prev.json")
+
+    # game_logs_playoffs.json
+    logs_playoffs = build_game_logs(df_logs_playoffs)
+    save_json(logs_playoffs, "game_logs_playoffs.json")
 
     # props.json  (depends on schedule + rosters + stats + current logs)
     props = build_props(schedule, raw_rosters, df_player_stats, df_logs_current)

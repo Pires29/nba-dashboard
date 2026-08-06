@@ -2,7 +2,7 @@ import ResponsiveLayout from "./layout/ResponsiveLayout";
 
 const PlayerStats = ({ data, plan, stat }) => {
   return (
-    <div className="flex h-full flex-col bg-gradient-to-b from-[#0D1B2E] to-[#060E1A] font-sans lg:overflow-hidden">
+    <div className="flex min-h-full flex-col bg-gradient-to-b from-[#0D1B2E] to-[#060E1A] font-sans lg:h-full lg:overflow-hidden">
       <div
         className="pointer-events-none fixed inset-0 opacity-20"
         style={{
@@ -17,6 +17,7 @@ const PlayerStats = ({ data, plan, stat }) => {
         playerStats={data.playerStats}
         playerLogs={data.playerLogs}
         playerLogsPrev={data.playerLogsPrev}
+        playerLogsPlayoffs={data.playerLogsPlayoffs}
         injuryMap={data.injuryStatusMap}
         plan={plan}
         currentGame={data.currentGame}

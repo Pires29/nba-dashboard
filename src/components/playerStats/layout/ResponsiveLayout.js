@@ -21,6 +21,7 @@ const ResponsiveLayout = ({
   playerStats,
   playerLogs,
   playerLogsPrev,
+  playerLogsPlayoffs,
   injuryMap,
   plan,
   currentGame,
@@ -73,6 +74,7 @@ const ResponsiveLayout = ({
                 playerStats={playerStats}
                 playerLogs={playerLogs}
                 playerLogsPrev={playerLogsPrev}
+                playerLogsPlayoffs={playerLogsPlayoffs}
                 currentGame={currentGame}
                 opponentAbbr={opponentAbbr}
                 statGraphData={statGraphData}

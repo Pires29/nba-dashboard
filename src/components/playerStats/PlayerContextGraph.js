@@ -64,6 +64,7 @@ const PlayerContextGraph = ({ player }) => {
   }, [player, hasData]);
 
   const dataFiltered = data.slice(0, 10);
+  const chartData = useMemo(() => [...dataFiltered].reverse(), [dataFiltered]);
 
   const avg = useMemo(() => {
     const valid = dataFiltered.filter((d) => d[selectedStat] != null);
@@ -151,7 +152,7 @@ const PlayerContextGraph = ({ player }) => {
 
       <div className="w-full h-[160px]">
         <PlayerContextGraphChart
-          dataFiltered={dataFiltered}
+          dataFiltered={chartData}
           selectedStat={selectedStat}
           statMeta={statMeta}
           yTicks={yTicks}

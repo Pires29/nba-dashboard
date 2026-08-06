@@ -14,11 +14,11 @@ export async function GET(req) {
   const playerId = Number(searchParams.get("playerId"));
 
   if (!playerId || !allowedPlayerIds.has(playerId)) {
-    return NextResponse.json({ logs: [], logsPrev: [] });
+    return NextResponse.json({ logs: [], logsPlayoffs: [], logsPrev: [] });
   }
 
-  const { logs } = getPlayerLogs(playerId);
+  const { logs, logsPlayoffs } = getPlayerLogs(playerId);
   const logsPrev = getPrevPlayerLogs(playerId);
 
-  return NextResponse.json({ logs, logsPrev });
+  return NextResponse.json({ logs, logsPlayoffs, logsPrev });
 }

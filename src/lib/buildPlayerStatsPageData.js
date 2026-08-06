@@ -15,6 +15,7 @@ export async function buildPlayerStatsPageData({
   rawTeamStats,
   playerLogs,
   playerLogsPrev,
+  playerLogsPlayoffs,
 }) {
   const formatTeamStats = (teamStatsEntry) => {
     if (!teamStatsEntry) return null;
@@ -180,6 +181,9 @@ export async function buildPlayerStatsPageData({
     : [];
 
   const previousPlayerLogs = Array.isArray(playerLogsPrev) ? playerLogsPrev : [];
+  const playoffPlayerLogs = Array.isArray(playerLogsPlayoffs)
+    ? playerLogsPlayoffs
+    : [];
 
   const initialSelectedName = (() => {
     if (playerId) {
@@ -200,6 +204,7 @@ export async function buildPlayerStatsPageData({
   const graphData = buildPlayerGraphData({
     currentGames: playerLogs,
     previousGames: playerLogsPrev,
+    playoffGames: playerLogsPlayoffs,
     player: playerStats,
     opponentAbbr,
   });
@@ -210,6 +215,7 @@ export async function buildPlayerStatsPageData({
     playerStats,
     playerLogs: currentPlayerLogs,
     playerLogsPrev: previousPlayerLogs,
+    playerLogsPlayoffs: playoffPlayerLogs,
     currentGame,
     gamesSchedule,
     teamNameMap,

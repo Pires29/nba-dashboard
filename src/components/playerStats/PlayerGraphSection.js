@@ -20,6 +20,7 @@ const PlayerGraphSection = ({
   playerStats,
   playerLogs,
   playerLogsPrev,
+  playerLogsPlayoffs,
   currentGame,
   opponentAbbr,
   statGraphData,
@@ -30,7 +31,7 @@ const PlayerGraphSection = ({
   const [activeFilter, setActiveFilter] = useState(null);
 
   return (
-    <Card className="flex flex-col" accent="orange">
+    <Card className="flex flex-col lg:self-start" accent="orange">
       <div className="min-h-[420px] flex-shrink-0">
         <Suspense fallback={<PlayerGraphSkeleton />}>
           <PlayerGraph
@@ -45,6 +46,7 @@ const PlayerGraphSection = ({
             opponentAbbr={opponentAbbr}
             playerLogs={playerLogs}
             playerLogsPrev={playerLogsPrev}
+            playerLogsPlayoffs={playerLogsPlayoffs}
             statGraphData={statGraphData}
           />
         </Suspense>

@@ -20,7 +20,7 @@ export default async function Page({ searchParams }) {
     rawGamesSchedule,
     rawInjuries,
     rawTeamStats,
-    { logs },
+    { logs, logsPlayoffs },
     logsPrev,
   ] = await Promise.all([
     getRosters(),
@@ -42,6 +42,7 @@ export default async function Page({ searchParams }) {
     rawTeamStats,
     playerLogs: logs,
     playerLogsPrev: logsPrev,
+    playerLogsPlayoffs: logsPlayoffs,
   });
 
   return (

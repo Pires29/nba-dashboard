@@ -28,6 +28,7 @@ const PlayerGraph = ({
   gameInfo,
   playerLogs,
   playerLogsPrev,
+  playerLogsPlayoffs,
   statGraphData,
 }) => {
   const [shouldRenderChart, setShouldRenderChart] = useState(false);
@@ -107,12 +108,24 @@ const PlayerGraph = ({
         : `period:${selectedNumber}`;
 
   const isPrev = activeFilter === "PREV";
+  const isPlayoffs = activeFilter === "PLAYOFFS";
   const hasGamesArray = Array.isArray(playerLogs);
   const hasGames = hasGamesArray && playerLogs.length > 0;
   const hasPrevGames = Array.isArray(playerLogsPrev) && playerLogsPrev.length > 0;
+  const hasPlayoffGames =
+    Array.isArray(playerLogsPlayoffs) && playerLogsPlayoffs.length > 0;
   const prevDataReceived = playerLogsPrev !== undefined;
-  const hasValidArray = isPrev ? prevDataReceived : hasGamesArray;
-  const shouldShowChart = isPrev ? hasPrevGames : hasGames;
+  const playoffsDataReceived = playerLogsPlayoffs !== undefined;
+  const hasValidArray = isPrev
+    ? prevDataReceived
+    : isPlayoffs
+      ? playoffsDataReceived
+      : hasGamesArray;
+  const shouldShowChart = isPrev
+    ? hasPrevGames
+    : isPlayoffs
+      ? hasPlayoffGames
+      : hasGames;
 
   const chartContent = !shouldRenderChart ? (
     <div className="w-full h-[300px] rounded-xl border border-white/[0.06] bg-white/[0.02] animate-pulse" />
@@ -251,7 +264,7 @@ const PlayerGraph = ({
               <p className="text-[10px] font-mono text-slate-400 max-w-[200px]">
                 {!hasValidArray
                   ? "We couldn't load this player's game logs right now"
-                  : `This player has no games in ${isPrev ? "the 2024-25 season" : "the current season"}`}
+                  : `This player has no games in ${isPrev ? "the 2024-25 season" : isPlayoffs ? "the current playoffs" : "the current season"}`}
               </p>
             </div>
           </div>
@@ -259,7 +272,7 @@ const PlayerGraph = ({
       </div>
 
       {/* ── Hit Rate Cards — desktop only ── */}
-      <div className="hidden lg:grid grid-cols-9 gap-1.5">
+      <div className="hidden lg:grid grid-cols-10 gap-1.5">
         {allHitRates.map(({ label, filter, number, rate, hits, misses }) => {
           const isActive = filter
             ? activeFilter === filter
