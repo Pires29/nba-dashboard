@@ -225,12 +225,23 @@ export async function buildPlayerStatsPageData({
   });
   const graphViews = buildPlayerGraphViews(graphData);
   const statGraphData = buildPlayerGraphStatDataMap(graphViews);
+  const contextGames = currentSeasonPlayerLogs.slice(0, 10).map((game) => ({
+    date: game.date ?? game.GAME_DATE ?? null,
+    opponent: game.opp ?? game.opponent ?? "",
+    minutes: game.min ?? game.MIN ?? null,
+    fg_pct: game.fg_pct ?? game.FG_PCT ?? null,
+    fg3_pct: game.fg3_pct ?? game.FG3_PCT ?? null,
+    ft_pct: game.ft_pct ?? game.FT_PCT ?? null,
+    fouls: game.pf ?? game.PF ?? null,
+  }));
+
   return {
     player,
     playerStats,
-    playerLogs: currentSeasonPlayerLogs,
-    playerLogsPrev: previousPlayerLogs,
-    playerLogsPlayoffs: playoffPlayerLogs,
+    contextGames,
+    hasCurrentGames: currentSeasonPlayerLogs.length > 0,
+    hasPreviousGames: previousPlayerLogs.length > 0,
+    hasPlayoffGames: playoffPlayerLogs.length > 0,
     currentGame,
     gamesSchedule,
     teamNameMap,

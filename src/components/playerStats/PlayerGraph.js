@@ -26,9 +26,9 @@ const PlayerGraph = ({
   activeFilter,
   onFilterChange,
   gameInfo,
-  playerLogs,
-  playerLogsPrev,
-  playerLogsPlayoffs,
+  hasCurrentGames,
+  hasPreviousGames,
+  hasPlayoffGames: hasPlayoffGamesFlag,
   statGraphData,
 }) => {
   const [shouldRenderChart, setShouldRenderChart] = useState(false);
@@ -109,18 +109,16 @@ const PlayerGraph = ({
 
   const isPrev = activeFilter === "PREV";
   const isPlayoffs = activeFilter === "PLAYOFFS";
-  const hasGamesArray = Array.isArray(playerLogs);
-  const hasGames = hasGamesArray && playerLogs.length > 0;
-  const hasPrevGames = Array.isArray(playerLogsPrev) && playerLogsPrev.length > 0;
-  const hasPlayoffGames =
-    Array.isArray(playerLogsPlayoffs) && playerLogsPlayoffs.length > 0;
-  const prevDataReceived = playerLogsPrev !== undefined;
-  const playoffsDataReceived = playerLogsPlayoffs !== undefined;
+  const hasGames = Boolean(hasCurrentGames);
+  const hasPrevGames = Boolean(hasPreviousGames);
+  const hasPlayoffGames = Boolean(hasPlayoffGamesFlag);
+  const prevDataReceived = hasPreviousGames !== undefined;
+  const playoffsDataReceived = hasPlayoffGamesFlag !== undefined;
   const hasValidArray = isPrev
     ? prevDataReceived
     : isPlayoffs
       ? playoffsDataReceived
-      : hasGamesArray;
+      : hasCurrentGames !== undefined;
   const shouldShowChart = isPrev
     ? hasPrevGames
     : isPlayoffs

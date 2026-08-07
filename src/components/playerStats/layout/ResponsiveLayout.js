@@ -19,9 +19,10 @@ const TeamStats = dynamic(() => import("../TeamStats"), {
 const ResponsiveLayout = ({
   player,
   playerStats,
-  playerLogs,
-  playerLogsPrev,
-  playerLogsPlayoffs,
+  contextGames,
+  hasCurrentGames,
+  hasPreviousGames,
+  hasPlayoffGames,
   injuryMap,
   plan,
   currentGame,
@@ -72,9 +73,10 @@ const ResponsiveLayout = ({
               <PlayerGraphSection
                 player={player}
                 playerStats={playerStats}
-                playerLogs={playerLogs}
-                playerLogsPrev={playerLogsPrev}
-                playerLogsPlayoffs={playerLogsPlayoffs}
+                contextGames={contextGames}
+                hasCurrentGames={hasCurrentGames}
+                hasPreviousGames={hasPreviousGames}
+                hasPlayoffGames={hasPlayoffGames}
                 currentGame={currentGame}
                 opponentAbbr={opponentAbbr}
                 statGraphData={statGraphData}

@@ -15,9 +15,10 @@ const PlayerStats = ({ data, plan, stat }) => {
       <ResponsiveLayout
         player={data.player}
         playerStats={data.playerStats}
-        playerLogs={data.playerLogs}
-        playerLogsPrev={data.playerLogsPrev}
-        playerLogsPlayoffs={data.playerLogsPlayoffs}
+        contextGames={data.contextGames}
+        hasCurrentGames={data.hasCurrentGames}
+        hasPreviousGames={data.hasPreviousGames}
+        hasPlayoffGames={data.hasPlayoffGames}
         injuryMap={data.injuryStatusMap}
         plan={plan}
         currentGame={data.currentGame}

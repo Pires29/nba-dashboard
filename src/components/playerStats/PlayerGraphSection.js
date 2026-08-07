@@ -18,9 +18,10 @@ const PlayerContextGraph = dynamic(() => import("./PlayerContextGraph"), {
 
 const PlayerGraphSection = ({
   playerStats,
-  playerLogs,
-  playerLogsPrev,
-  playerLogsPlayoffs,
+  contextGames,
+  hasCurrentGames,
+  hasPreviousGames,
+  hasPlayoffGames,
   currentGame,
   opponentAbbr,
   statGraphData,
@@ -47,9 +48,9 @@ const PlayerGraphSection = ({
             onFilterChange={setActiveFilter}
             gameInfo={currentGame}
             opponentAbbr={opponentAbbr}
-            playerLogs={playerLogs}
-            playerLogsPrev={playerLogsPrev}
-            playerLogsPlayoffs={playerLogsPlayoffs}
+            hasCurrentGames={hasCurrentGames}
+            hasPreviousGames={hasPreviousGames}
+            hasPlayoffGames={hasPlayoffGames}
             statGraphData={statGraphData}
           />
         </Suspense>
@@ -60,7 +61,7 @@ const PlayerGraphSection = ({
         fallback={<PlayerContextGraphSkeleton />}
       >
         <Suspense fallback={<PlayerContextGraphSkeleton />}>
-          <PlayerContextGraph player={{ games: playerLogs }} />
+          <PlayerContextGraph games={contextGames} />
         </Suspense>
       </DeferredRender>
     </Card>

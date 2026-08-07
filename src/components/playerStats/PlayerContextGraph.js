@@ -37,44 +37,43 @@ const formatDate = (dateStr) => {
   return `${day}/${month}`;
 };
 
-const PlayerContextGraph = ({ player }) => {
+const PlayerContextGraph = ({ games = [] }) => {
   const [selectedStat, setSelectedStat] = useState("fg_pct");
 
-  const hasData = player && player.games?.length > 0;
+  const hasData = games.length > 0;
   const statMeta = STAT_OPTIONS.find((s) => s.key === selectedStat);
 
   const data = useMemo(() => {
     if (!hasData) return [];
-    return player.games.map((game) => {
-      const date = game.date ?? game.GAME_DATE ?? null;
-      const opponent = game.opp ?? game.opponent ?? "";
-      const minutes = game.min ?? game.MIN ?? null;
+    return games.map((game) => {
+      const date = game.date ?? null;
+      const opponent = game.opponent ?? "";
+      const minutes = game.minutes ?? null;
 
       return {
         date,
         label: `${opponent || ""}\n${formatDate(date)}`,
         opponent,
         minutes,
-        fg_pct: game.fg_pct ?? game.FG_PCT ?? null,
-        fg3_pct: game.fg3_pct ?? game.FG3_PCT ?? null,
-        ft_pct: game.ft_pct ?? game.FT_PCT ?? null,
-        fouls: game.pf ?? game.PF ?? null,
+        fg_pct: game.fg_pct ?? null,
+        fg3_pct: game.fg3_pct ?? null,
+        ft_pct: game.ft_pct ?? null,
+        fouls: game.fouls ?? null,
       };
     });
-  }, [player, hasData]);
+  }, [games, hasData]);
 
-  const dataFiltered = data.slice(0, 10);
-  const chartData = useMemo(() => [...dataFiltered].reverse(), [dataFiltered]);
+  const chartData = useMemo(() => [...data].reverse(), [data]);
 
   const avg = useMemo(() => {
-    const valid = dataFiltered.filter((d) => d[selectedStat] != null);
+    const valid = data.filter((d) => d[selectedStat] != null);
     if (!valid.length) return null;
     return valid.reduce((sum, d) => sum + d[selectedStat], 0) / valid.length;
-  }, [dataFiltered, selectedStat]);
+  }, [data, selectedStat]);
 
   const yTicks = useMemo(() => {
-    if (!dataFiltered.length) return [];
-    const values = dataFiltered.map((d) => d[selectedStat] ?? 0);
+    if (!data.length) return [];
+    const values = data.map((d) => d[selectedStat] ?? 0);
     const max = Math.max(...values);
     if (statMeta?.isPercent) return [0, 0.25, 0.5, 0.75, 1.0];
     const step = max <= 10 ? 2 : max <= 30 ? 5 : 10;
@@ -82,7 +81,7 @@ const PlayerContextGraph = ({ player }) => {
     const ticks = [];
     for (let i = 0; i <= topTick; i += step) ticks.push(i);
     return ticks;
-  }, [dataFiltered, selectedStat, statMeta]);
+  }, [data, selectedStat, statMeta]);
 
   if (!hasData) return null;
 
