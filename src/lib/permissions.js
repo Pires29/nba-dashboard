@@ -18,3 +18,7 @@ export function getPlan(plan) {
 export function isLimited(plan) {
   return !plan || plan === "free";
 }
+
+export function hasProAccess(plan) {
+  return plan === "pro" || plan === "trial";
+}

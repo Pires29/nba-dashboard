@@ -10,6 +10,7 @@ export default function PropsTableWrapper({
   schedule,
   injuries,
   totalPropsCount,
+  isFreePlan,
   initialFilters,
 }) {
   return (
@@ -22,6 +23,7 @@ export default function PropsTableWrapper({
         schedule={schedule}
         injuries={injuries}
         totalPropsCount={totalPropsCount}
+        isFreePlan={isFreePlan}
         initialFilters={initialFilters}
       />
       <AppToaster />

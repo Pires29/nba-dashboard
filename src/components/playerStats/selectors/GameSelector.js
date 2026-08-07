@@ -1,13 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { hasProAccess } from "@/lib/permissions";
 
 const buildGameValue = (game) =>
   `${game.date}-${game.home_team_id}-${game.visitor_team_id}`;
 
 const GameSelector = ({ plan, team1Id, team2Id, games, teams }) => {
   const router = useRouter();
-  const isPro = plan === "pro";
+  const isPro = hasProAccess(plan);
   const hasGamesData = games !== null && games !== undefined;
   const hasTeamsData = teams !== null && teams !== undefined;
   const hasGames = games?.length > 0;

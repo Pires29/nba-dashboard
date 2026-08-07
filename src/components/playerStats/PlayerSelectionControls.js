@@ -112,14 +112,22 @@ const PlayerSelectionControls = ({
           </div>
         )}
 
-        <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className="min-h-0 flex flex-1 flex-col overflow-y-auto">
           {safeHomeRoster.length > 0 && safeAwayRoster.length > 0 ? (
-            <TeamRoster
-              teamRoster={desktopRoster}
-              setSelectedName={handleSelectPlayer}
-              injuryMap={injuryStatusMap}
-              selectedName={selectedName}
-            />
+            <>
+              <TeamRoster
+                teamRoster={desktopRoster}
+                setSelectedName={handleSelectPlayer}
+                injuryMap={injuryStatusMap}
+                selectedName={selectedName}
+              />
+
+              {plan === "free" && (
+                <div className="relative min-h-44 flex-1">
+                  <UpgradeOverlay message="Upgrade to Pro to see more players." />
+                </div>
+              )}
+            </>
           ) : plan === "pro" ? (
             <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
               <p className="text-[12px] font-mono text-slate-400">
@@ -133,6 +141,7 @@ const PlayerSelectionControls = ({
             <UpgradeOverlay />
           )}
         </div>
+
       </Card>
 
       <button

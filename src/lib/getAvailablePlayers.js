@@ -2,6 +2,7 @@
 import rostersData from "@/app/data/nba_rosters.json";
 import propsData from "@/app/data/nba_props.json";
 import getInjuries from "./getInjuries";
+import { hasProAccess } from "./permissions";
 
 function seededShuffle(array, seed) {
   let hash = 0;
@@ -35,7 +36,7 @@ const CANDIDATE_POOL = 60;
 export function getAvailablePlayers(plan) {
   if (!rostersData?.length) return new Set(); // sem dados = ninguém
 
-  if (plan === "pro") {
+  if (hasProAccess(plan)) {
     return new Set(rostersData.map((p) => p.PLAYER_ID));
   }
 

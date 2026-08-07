@@ -609,8 +609,9 @@ export default function PricingPage({ userPlan }) {
                             Roster completo das equipas
                           </p>
                           <p className="text-slate-500 font-mono text-[11px] leading-relaxed">
-                            No Free tens acesso a apenas 15 jogadores por
-                            equipa. Com Pro vês o roster completo, sem limites.
+                            No Free tens acesso a apenas 15 jogadores no total,
+                            atualizados diariamente. Com Pro vês o roster
+                            completo, sem limites.
                           </p>
                         </div>
                       </div>

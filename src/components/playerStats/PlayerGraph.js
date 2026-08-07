@@ -128,7 +128,7 @@ const PlayerGraph = ({
       : hasGames;
 
   const chartContent = !shouldRenderChart ? (
-    <div className="w-full h-[300px] rounded-xl border border-white/[0.06] bg-white/[0.02] animate-pulse" />
+    <div className="h-full w-full rounded-xl border border-white/[0.06] bg-white/[0.02] animate-pulse" />
   ) : (
     <PlayerGraphChart
       points={chartPoints}
@@ -139,7 +139,7 @@ const PlayerGraph = ({
   );
 
   return (
-    <div className="flex flex-col p-4 gap-4 h-full">
+    <div className="flex h-full w-full min-w-0 flex-col gap-4 p-4">
       {/* ── Stat selector — desktop only ── */}
       <div className="hidden lg:flex gap-1.5 overflow-x-auto pb-2 [&::-webkit-scrollbar]:h-[5px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full">
         {statOptions.map((option) => (
@@ -241,7 +241,7 @@ const PlayerGraph = ({
       </div>
 
       {/* ── Chart ── */}
-      <div className="w-full flex-1 min-h-[220px] relative">
+      <div className="relative h-[300px] w-full min-w-0 flex-none lg:h-auto lg:min-h-[220px] lg:flex-1">
         {shouldShowChart ? (
           chartContent
         ) : (
@@ -272,7 +272,7 @@ const PlayerGraph = ({
       </div>
 
       {/* ── Hit Rate Cards — desktop only ── */}
-      <div className="hidden lg:grid grid-cols-10 gap-1.5">
+      <div className="hidden min-w-0 lg:grid lg:grid-cols-[repeat(10,minmax(0,1fr))] lg:gap-1.5">
         {allHitRates.map(({ label, filter, number, rate, hits, misses }) => {
           const isActive = filter
             ? activeFilter === filter
@@ -297,7 +297,7 @@ const PlayerGraph = ({
                   onNumberChange(number);
                 }
               }}
-              className={`flex flex-col items-center gap-0.5 py-2 px-1 rounded-lg border transition-all duration-150
+              className={`flex min-w-0 flex-col items-center gap-0.5 rounded-lg border px-1 py-2 transition-all duration-150
                 ${isActive ? "border-orange-500/40 bg-orange-500/10" : "border-white/[0.06] bg-white/[0.02] hover:border-white/10 hover:bg-white/[0.04]"}`}
             >
               <span className="text-[9px] font-mono text-slate-400 uppercase tracking-widest">

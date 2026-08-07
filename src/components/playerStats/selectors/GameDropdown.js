@@ -1,8 +1,10 @@
+import { hasProAccess } from "@/lib/permissions";
+
 const buildGameValue = (game) =>
   `${game.date}-${game.home_team_id}-${game.visitor_team_id}`;
 
 const GameDropdown = ({ plan, team1Id, team2Id, games, teams, onSelect }) => {
-  const isPro = plan === "pro";
+  const isPro = hasProAccess(plan);
   const hasGames = games?.length > 0;
 
   if (!isPro || !hasGames) {

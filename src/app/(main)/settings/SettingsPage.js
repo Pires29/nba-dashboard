@@ -176,7 +176,7 @@ export default function SettingsPage({ session }) {
   };
 
   return (
-    <div className="bg-gradient-to-b from-[#0D1B2E] to-[#060E1A] font-sans">
+    <div className="min-h-full bg-gradient-to-b from-[#0D1B2E] to-[#060E1A] font-sans">
       <div
         className="fixed inset-0 pointer-events-none opacity-10"
         style={{

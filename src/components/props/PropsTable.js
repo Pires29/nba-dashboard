@@ -4,6 +4,7 @@ import { useMemo, useState, useRef, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useFavorites } from "@/hooks/useFavorites";
 import Image from "next/image";
+import Link from "next/link";
 
 const STATS = [
   "points",
@@ -153,6 +154,7 @@ export default function PropsTable({
   schedule,
   injuries,
   totalPropsCount,
+  isFreePlan = false,
   initialFilters,
 }) {
   const { isFavorite, toggleFavorite } = useFavorites();
@@ -336,6 +338,31 @@ export default function PropsTable({
           <span className="text-[10px] font-mono text-slate-600 border border-white/[0.06] rounded px-2 py-0.5">
             {enrichedProps.length} props
           </span>
+          {isFreePlan && (
+            <Link
+              href="/pricing"
+              className="ml-1 flex items-center gap-1.5 rounded-lg border border-orange-500/30 bg-orange-500/10 px-2.5 py-1.5 transition-all hover:border-orange-500/50 hover:bg-orange-500/20"
+            >
+              <svg
+                width="10"
+                height="10"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#f97316"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              <span className="text-[10px] font-mono text-slate-400">
+                Free plan: 15 players/day
+              </span>
+              <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-orange-400">
+                Upgrade
+              </span>
+            </Link>
+          )}
         </div>
 
         {/* Filters */}

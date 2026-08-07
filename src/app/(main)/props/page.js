@@ -2,6 +2,9 @@ import getGamesSchedule from "@/lib/getGamesSchedule";
 import getInjuries from "@/lib/getInjuries";
 import getProps from "@/lib/getProps";
 import getStandings from "@/lib/getStandings";
+import { getAvailablePlayers } from "@/lib/getAvailablePlayers";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/authOptions";
 import PropsTableWrapper from "./PropsTableWrapper";
 
 const STATS = new Set([
@@ -99,6 +102,9 @@ const STAT_MATCHUP_RANK = (stat, matchup) => {
 
 export default async function PropsPage({ searchParams }) {
   const resolvedSearchParams = await searchParams;
+  const session = await getServerSession(authOptions);
+  const plan = session?.user?.plan ?? "free";
+  const allowedPlayerIds = getAvailablePlayers(plan);
   const selectedStatParam = getSingleParam(resolvedSearchParams?.stat);
   const sortPeriodParam = getSingleParam(resolvedSearchParams?.sortPeriod);
   const filterTeam = getSingleParam(resolvedSearchParams?.team) ?? "";
@@ -124,7 +130,9 @@ export default async function PropsPage({ searchParams }) {
     getInjuries(),
   ]);
 
-  const safeProps = Array.isArray(rawProps) ? rawProps : [];
+  const safeProps = (Array.isArray(rawProps) ? rawProps : []).filter((prop) =>
+    allowedPlayerIds.has(Number(prop.player_id)),
+  );
   const safeStandings = Array.isArray(standings) ? standings : [];
   const safeSchedule = Array.isArray(schedule) ? schedule : [];
   const safeInjuries = Array.isArray(injuries) ? injuries : [];
@@ -247,6 +255,7 @@ export default async function PropsPage({ searchParams }) {
       schedule={slimSchedule}
       injuries={slimInjuries}
       totalPropsCount={safeProps.length}
+      isFreePlan={plan === "free"}
       initialFilters={{
         selectedStat,
         sortPeriod,

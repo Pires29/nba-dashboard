@@ -184,6 +184,21 @@ export async function buildPlayerStatsPageData({
   const playoffPlayerLogs = Array.isArray(playerLogsPlayoffs)
     ? playerLogsPlayoffs
     : [];
+  // Os endpoints devolvem regular season e playoffs separadamente. Para a
+  // experiência do gráfico, ambos fazem parte da época atual: assim L5/L10 e
+  // restantes contextos usam sempre os jogos mais recentes, seja qual for a
+  // fase da competição.
+  const currentSeasonPlayerLogs = [...currentPlayerLogs, ...playoffPlayerLogs]
+    .map((game, index) => ({ game, index }))
+    .sort((a, b) => {
+      const aDate = new Date(a.game?.GAME_DATE ?? a.game?.date ?? 0).getTime();
+      const bDate = new Date(b.game?.GAME_DATE ?? b.game?.date ?? 0).getTime();
+      const aTimestamp = Number.isNaN(aDate) ? 0 : aDate;
+      const bTimestamp = Number.isNaN(bDate) ? 0 : bDate;
+
+      return bTimestamp - aTimestamp || a.index - b.index;
+    })
+    .map(({ game }) => game);
 
   const initialSelectedName = (() => {
     if (playerId) {
@@ -202,9 +217,9 @@ export async function buildPlayerStatsPageData({
   })();
 
   const graphData = buildPlayerGraphData({
-    currentGames: playerLogs,
+    currentGames: currentSeasonPlayerLogs,
     previousGames: playerLogsPrev,
-    playoffGames: playerLogsPlayoffs,
+    playoffGames: playoffPlayerLogs,
     player: playerStats,
     opponentAbbr,
   });
@@ -213,7 +228,7 @@ export async function buildPlayerStatsPageData({
   return {
     player,
     playerStats,
-    playerLogs: currentPlayerLogs,
+    playerLogs: currentSeasonPlayerLogs,
     playerLogsPrev: previousPlayerLogs,
     playerLogsPlayoffs: playoffPlayerLogs,
     currentGame,

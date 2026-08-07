@@ -59,7 +59,7 @@ const CustomTooltip = ({ active, payload, selectedStat }) => {
 
 const PlayerGraphChart = ({ points, selectedStat, betLine, yTicks }) => {
   return (
-    <ResponsiveContainer width="100%" height={300}>
+    <ResponsiveContainer width="100%" height="100%">
       <BarChart
         data={points}
         margin={{ top: 20, right: 4, left: -20, bottom: 0 }}
@@ -90,7 +90,7 @@ const PlayerGraphChart = ({ points, selectedStat, betLine, yTicks }) => {
             strokeWidth={1.5}
           />
         )}
-        <Bar dataKey={selectedStat} radius={[3, 3, 0, 0]} barSize={100}>
+        <Bar dataKey={selectedStat} radius={[3, 3, 0, 0]} maxBarSize={90}>
           {points.map((entry, index) => (
             <Cell
               key={`cell-${index}`}

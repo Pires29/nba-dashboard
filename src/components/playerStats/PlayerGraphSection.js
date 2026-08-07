@@ -31,8 +31,11 @@ const PlayerGraphSection = ({
   const [activeFilter, setActiveFilter] = useState(null);
 
   return (
-    <Card className="flex flex-col lg:self-start" accent="orange">
-      <div className="min-h-[420px] flex-shrink-0">
+    <Card
+      className="flex flex-col lg:h-full lg:min-h-0 lg:min-w-0 lg:flex-1 lg:overflow-x-hidden lg:overflow-y-auto"
+      accent="orange"
+    >
+      <div className="min-h-[420px] min-w-0 flex-shrink-0 lg:flex lg:min-h-0 lg:w-full lg:flex-1">
         <Suspense fallback={<PlayerGraphSkeleton />}>
           <PlayerGraph
             playerStats={playerStats}

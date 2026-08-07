@@ -52,9 +52,9 @@ const ResponsiveLayout = ({
           </Card>
         </div>
 
-        <div className="grid gap-4 lg:min-h-0 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-5">
+        <div className="grid gap-4 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-5">
           <div className="flex flex-col gap-4 lg:min-h-0 lg:gap-5">
-            <div className="flex flex-col gap-4 lg:min-h-0 lg:flex-row lg:gap-5">
+            <div className="flex flex-col gap-4 lg:min-h-0 lg:h-full lg:flex-row lg:gap-5">
               <PlayerSelectionControls
                 plan={plan}
                 currentGame={currentGame}
@@ -83,7 +83,7 @@ const ResponsiveLayout = ({
             </div>
           </div>
 
-          <div className="flex flex-col gap-4 lg:gap-5">
+          <div className="flex flex-col gap-4 lg:min-h-0 lg:h-full lg:gap-5 lg:overflow-y-auto">
             <DeferredRender
               rootMargin="300px 0px"
               fallback={
