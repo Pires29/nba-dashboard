@@ -1,8 +1,7 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/authOptions";
+import { getCurrentSession } from "@/lib/getCurrentSession";
 import SettingsPage from "./SettingsPage";
 
 export default async function Page() {
-  const session = await getServerSession(authOptions);
+  const session = await getCurrentSession();
   return <SettingsPage session={session} />;
 }

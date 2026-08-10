@@ -137,14 +137,14 @@ const PlayerGraph = ({
   );
 
   return (
-    <div className="flex h-full w-full min-w-0 flex-col gap-4 p-4">
+    <div className="flex h-full w-full min-w-0 flex-col gap-5 p-4 sm:p-5">
       {/* ── Stat selector — desktop only ── */}
-      <div className="hidden lg:flex gap-1.5 overflow-x-auto pb-2 [&::-webkit-scrollbar]:h-[5px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full">
+      <div className="hidden lg:grid grid-cols-6 gap-2 xl:grid-cols-11">
         {statOptions.map((option) => (
           <button
             key={option}
             onClick={() => onStatChange(option)}
-            className={`px-3 py-1 rounded text-[10px] font-bold uppercase tracking-widest border transition-all duration-150 font-mono
+            className={`min-w-0 rounded-lg border px-2 py-2 text-[10px] font-bold uppercase tracking-wider transition-all duration-150 font-mono
               ${
                 selectedStat === option
                   ? "bg-slate-700 border-slate-500 text-white"
@@ -200,7 +200,7 @@ const PlayerGraph = ({
       </div>
 
       {/* ── Line stats + Add prop ── */}
-      <div className="flex justify-center md:justify-between items-center gap-4 flex-wrap">
+      <div className="flex items-center gap-x-5 gap-y-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3">
         <div className="flex items-baseline gap-1.5">
           <span className="font-black text-2xl text-white font-mono">
             {betLine?.toFixed(1) ?? "—"}
@@ -230,16 +230,18 @@ const PlayerGraph = ({
           </span>
         </div>
 
-        <FavoritePropButton
-          playerStats={playerStats}
-          selectedStat={selectedStat}
-          betLine={betLine}
-          gameInfo={gameInfo}
-        />
+        <div className="ml-auto">
+          <FavoritePropButton
+            playerStats={playerStats}
+            selectedStat={selectedStat}
+            betLine={betLine}
+            gameInfo={gameInfo}
+          />
+        </div>
       </div>
 
       {/* ── Chart ── */}
-      <div className="relative h-[300px] w-full min-w-0 flex-none lg:h-auto lg:min-h-[220px] lg:flex-1">
+      <div className="relative h-[300px] w-full min-w-0 flex-none lg:h-auto lg:min-h-[300px] lg:flex-1">
         {shouldShowChart ? (
           chartContent
         ) : (
@@ -270,7 +272,7 @@ const PlayerGraph = ({
       </div>
 
       {/* ── Hit Rate Cards — desktop only ── */}
-      <div className="hidden min-w-0 lg:grid lg:grid-cols-[repeat(10,minmax(0,1fr))] lg:gap-1.5">
+      <div className="hidden min-w-0 lg:grid lg:grid-cols-5 lg:gap-2 xl:grid-cols-10">
         {allHitRates.map(({ label, filter, number, rate, hits, misses }) => {
           const isActive = filter
             ? activeFilter === filter

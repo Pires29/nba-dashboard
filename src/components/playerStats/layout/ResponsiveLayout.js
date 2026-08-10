@@ -3,7 +3,6 @@
 import dynamic from "next/dynamic";
 import Card from "@/components/ui/playerStats/Card";
 import DeferredRender from "@/components/ui/DeferredRender";
-import PlayerInfo from "../PlayerInfo";
 import Injuries from "../Injuries";
 import PlayerGraphSection from "../PlayerGraphSection";
 import PlayerSelectionControls from "../PlayerSelectionControls";
@@ -41,51 +40,40 @@ const ResponsiveLayout = ({
   initialStat,
 }) => {
   return (
-    <div className="relative z-10 mx-auto flex w-full max-w-[1400px] flex-1 flex-col px-4 lg:min-h-0 lg:px-6">
-      <div className="flex flex-1 flex-col gap-4 py-4 lg:min-h-0 lg:gap-5 lg:py-5">
-        <div className="sticky top-0 z-20 -mx-4 border-b border-white/[0.08] bg-[#0D1B2E] px-4 lg:static lg:mx-0 lg:border-b-0 lg:bg-transparent lg:px-0">
-          <Card accent="orange" className="overflow-hidden border-0 lg:border">
-            <div className="absolute left-0 right-0 top-0 h-[2px] bg-gradient-to-r from-orange-500 via-amber-400 to-transparent lg:hidden" />
-            <PlayerInfo
-              playerData={player}
-              injuryStatus={injuryMap?.[player?.PLAYER]}
+    <div className="relative z-10 mx-auto flex w-full max-w-[1440px] flex-1 flex-col px-4 sm:px-5 lg:px-6">
+      <div className="flex flex-1 flex-col gap-4 py-4 lg:gap-6 lg:py-6">
+        <div className="flex min-w-0 flex-col gap-4 lg:gap-6">
+          <div className="grid min-w-0 items-stretch gap-4 lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-6">
+            <PlayerSelectionControls
+              plan={plan}
+              currentGame={currentGame}
+              gamesSchedule={gamesSchedule}
+              teamNameMap={teamNameMap}
+              homeRoster={homeRoster}
+              awayRoster={awayRoster}
+              injuryStatusMap={injuryMap}
+              team1Formatted={team1Formatted}
+              team2Formatted={team2Formatted}
+              initialSelectedName={initialSelectedName}
+              initialActiveTeam={initialActiveTeam}
             />
-          </Card>
-        </div>
 
-        <div className="grid gap-4 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-5">
-          <div className="flex flex-col gap-4 lg:min-h-0 lg:gap-5">
-            <div className="flex flex-col gap-4 lg:min-h-0 lg:h-full lg:flex-row lg:gap-5">
-              <PlayerSelectionControls
-                plan={plan}
-                currentGame={currentGame}
-                gamesSchedule={gamesSchedule}
-                teamNameMap={teamNameMap}
-                homeRoster={homeRoster}
-                awayRoster={awayRoster}
-                injuryStatusMap={injuryMap}
-                team1Formatted={team1Formatted}
-                team2Formatted={team2Formatted}
-                initialSelectedName={initialSelectedName}
-                initialActiveTeam={initialActiveTeam}
-              />
-
-              <PlayerGraphSection
-                player={player}
-                playerStats={playerStats}
-                contextGames={contextGames}
-                hasCurrentGames={hasCurrentGames}
-                hasPreviousGames={hasPreviousGames}
-                hasPlayoffGames={hasPlayoffGames}
-                currentGame={currentGame}
-                opponentAbbr={opponentAbbr}
-                statGraphData={statGraphData}
-                initialStat={initialStat}
-              />
-            </div>
+            <PlayerGraphSection
+              player={player}
+              injuryStatus={injuryMap?.[player?.PLAYER]}
+              playerStats={playerStats}
+              contextGames={contextGames}
+              hasCurrentGames={hasCurrentGames}
+              hasPreviousGames={hasPreviousGames}
+              hasPlayoffGames={hasPlayoffGames}
+              currentGame={currentGame}
+              opponentAbbr={opponentAbbr}
+              statGraphData={statGraphData}
+              initialStat={initialStat}
+            />
           </div>
 
-          <div className="flex flex-col gap-4 lg:min-h-0 lg:h-full lg:gap-5 lg:overflow-y-auto">
+          <aside className="grid min-w-0 items-stretch gap-4 lg:grid-cols-2 lg:gap-6">
             <DeferredRender
               rootMargin="300px 0px"
               fallback={
@@ -94,7 +82,7 @@ const ResponsiveLayout = ({
                 </Card>
               }
             >
-              <Card accent="orange">
+              <Card accent="orange" className="h-full">
                 <div className="p-4">
                   <SectionLabel>Injuries &amp; Status</SectionLabel>
                   <Injuries
@@ -113,7 +101,7 @@ const ResponsiveLayout = ({
                 </Card>
               }
             >
-              <Card accent="blue">
+              <Card accent="blue" className="h-full">
                 <div className="p-4">
                   <SectionLabel>Team Comparison</SectionLabel>
                   <TeamStats
@@ -123,7 +111,7 @@ const ResponsiveLayout = ({
                 </div>
               </Card>
             </DeferredRender>
-          </div>
+          </aside>
         </div>
       </div>
     </div>

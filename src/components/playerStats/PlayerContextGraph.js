@@ -86,7 +86,7 @@ const PlayerContextGraph = ({ games = [] }) => {
   if (!hasData) return null;
 
   return (
-    <div className="flex flex-col p-4 gap-4 border-t border-white/[0.05]">
+    <div className="flex flex-col gap-4 border-t border-white/[0.07] bg-black/10 p-4 sm:p-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-1 h-4 rounded-sm bg-slate-600" />

@@ -3,8 +3,7 @@ import getInjuries from "@/lib/getInjuries";
 import getProps from "@/lib/getProps";
 import getStandings from "@/lib/getStandings";
 import { getAvailablePlayers } from "@/lib/getAvailablePlayers";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/authOptions";
+import { getCurrentSession } from "@/lib/getCurrentSession";
 import PropsTableWrapper from "./PropsTableWrapper";
 
 const STATS = new Set([
@@ -102,7 +101,7 @@ const STAT_MATCHUP_RANK = (stat, matchup) => {
 
 export default async function PropsPage({ searchParams }) {
   const resolvedSearchParams = await searchParams;
-  const session = await getServerSession(authOptions);
+  const session = await getCurrentSession();
   const plan = session?.user?.plan ?? "free";
   const allowedPlayerIds = getAvailablePlayers(plan);
   const selectedStatParam = getSingleParam(resolvedSearchParams?.stat);

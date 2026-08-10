@@ -1,10 +1,9 @@
-import { authOptions } from "@/lib/authOptions";
-import { getServerSession } from "next-auth";
+import { getCurrentSession } from "@/lib/getCurrentSession";
 import Link from "next/link";
 import ProfileMenuClient from "./ProfileMenuClient";
 
 const Navbar = async () => {
-  const session = await getServerSession(authOptions);
+  const session = await getCurrentSession();
   const isFreePlan = !session?.user?.plan || session?.user?.plan === "free";
 
   return (

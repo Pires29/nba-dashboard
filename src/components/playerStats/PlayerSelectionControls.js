@@ -1,16 +1,13 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Card from "@/components/ui/playerStats/Card";
 import GameSelector from "./selectors/GameSelector";
+import PlayerDropdown from "./selectors/PlayerDropdown";
+import dynamic from "next/dynamic";
 
 const TeamRoster = dynamic(() => import("./TeamRoster"), {
-  ssr: false,
-});
-
-const UpgradeOverlay = dynamic(() => import("../UpgradeOverlay"), {
   ssr: false,
 });
 
@@ -77,9 +74,12 @@ const PlayerSelectionControls = ({
     <>
       <Card
         accent="orange"
-        className="hidden lg:flex lg:min-h-0 lg:w-[300px] lg:flex-shrink-0 lg:flex-col"
+        className="hidden lg:flex lg:h-full lg:min-h-0 lg:flex-col"
       >
-        <div className="flex-shrink-0 px-4 pt-4">
+        <div className="p-4 pb-3">
+          <p className="mb-2 text-[10px] font-mono font-bold uppercase tracking-[0.16em] text-slate-400">
+            Game
+          </p>
           <GameSelector
             plan={plan}
             team1Id={currentGame?.home_team_id}
@@ -90,58 +90,38 @@ const PlayerSelectionControls = ({
         </div>
 
         {safeHomeRoster.length > 0 && safeAwayRoster.length > 0 && (
-          <div className="flex-shrink-0 p-4 pb-3">
-            <div className="flex overflow-hidden rounded-lg border border-white/6 bg-[#0D1828]">
+          <div className="px-4 pb-3">
+            <div className="flex overflow-hidden rounded-lg border border-white/[0.07] bg-[#0D1828] p-1">
               {[
                 team1Formatted?.teamName || "Team 1",
                 team2Formatted?.teamName || "Team 2",
               ].map((name, idx) => (
                 <button
-                  key={idx}
+                  key={name}
                   onClick={() => setActiveTeam(idx)}
-                  className={`flex-1 py-2 text-xs font-bold font-condensed uppercase tracking-wider transition-all duration-200 ${
+                  className={`min-w-0 flex-1 rounded-md px-2 py-2 text-[11px] font-bold uppercase tracking-wider transition-colors ${
                     activeTeam === idx
-                      ? "bg-orange-500 text-white shadow-[0_0_12px_rgba(232,93,4,0.3)]"
-                      : "text-slate-400 hover:text-slate-300"
+                      ? "bg-orange-500 text-white"
+                      : "text-slate-400 hover:bg-white/[0.04] hover:text-slate-200"
                   }`}
                 >
-                  {name.length > 10 ? name.split(" ").pop() : name}
+                  <span className="block truncate">
+                    {name.length > 10 ? name.split(" ").pop() : name}
+                  </span>
                 </button>
               ))}
             </div>
           </div>
         )}
 
-        <div className="min-h-0 flex flex-1 flex-col overflow-y-auto">
-          {safeHomeRoster.length > 0 && safeAwayRoster.length > 0 ? (
-            <>
-              <TeamRoster
-                teamRoster={desktopRoster}
-                setSelectedName={handleSelectPlayer}
-                injuryMap={injuryStatusMap}
-                selectedName={selectedName}
-              />
-
-              {plan === "free" && (
-                <div className="relative min-h-44 flex-1">
-                  <UpgradeOverlay message="Upgrade to Pro to see more players." />
-                </div>
-              )}
-            </>
-          ) : plan === "pro" ? (
-            <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
-              <p className="text-[12px] font-mono text-slate-400">
-                No players available
-              </p>
-              <p className="text-[10px] font-mono text-slate-400">
-                Data could not be loaded
-              </p>
-            </div>
-          ) : (
-            <UpgradeOverlay />
-          )}
+        <div className="flex-1 border-t border-white/[0.05]">
+          <TeamRoster
+            teamRoster={desktopRoster}
+            setSelectedName={handleSelectPlayer}
+            injuryMap={injuryStatusMap}
+            selectedName={selectedName}
+          />
         </div>
-
       </Card>
 
       <button

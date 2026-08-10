@@ -7,8 +7,7 @@ import getTeamStats from "@/lib/getTeamStats";
 import getPlayerLogs from "@/lib/getPlayerLogs";
 import getPrevPlayerLogs from "@/lib/getPrevPlayerLogs";
 import { getAvailablePlayers } from "@/lib/getAvailablePlayers";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/authOptions";
+import { getCurrentSession } from "@/lib/getCurrentSession";
 
 export default async function Page({ searchParams }) {
   const resolvedSearchParams = await searchParams;
@@ -17,7 +16,7 @@ export default async function Page({ searchParams }) {
   const team2Id = Number(resolvedSearchParams.team2Id);
   const requestedPlayerId = Number(resolvedSearchParams.playerId);
   const stat = resolvedSearchParams.stat ?? "points";
-  const session = await getServerSession(authOptions);
+  const session = await getCurrentSession();
   const plan = session?.user?.plan ?? "free";
   const allowedPlayerIds = getAvailablePlayers(plan);
   const playerId = allowedPlayerIds.has(requestedPlayerId)

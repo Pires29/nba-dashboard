@@ -6,6 +6,7 @@ import Card from "@/components/ui/playerStats/Card";
 import DeferredRender from "@/components/ui/DeferredRender";
 import PlayerGraphSkeleton from "@/components/ui/PlayerGraph/PlayerGraphSkeleton";
 import PlayerContextGraphSkeleton from "@/components/ui/PlayerGraph/PlayerContextGraphSkeleton";
+import PlayerInfo from "./PlayerInfo";
 
 const PlayerGraph = dynamic(() => import("./PlayerGraph"), {
   loading: () => <PlayerGraphSkeleton />,
@@ -17,6 +18,8 @@ const PlayerContextGraph = dynamic(() => import("./PlayerContextGraph"), {
 });
 
 const PlayerGraphSection = ({
+  player,
+  injuryStatus,
   playerStats,
   contextGames,
   hasCurrentGames,
@@ -33,10 +36,17 @@ const PlayerGraphSection = ({
 
   return (
     <Card
-      className="flex flex-col lg:h-full lg:min-h-0 lg:min-w-0 lg:flex-1 lg:overflow-x-hidden lg:overflow-y-auto"
+      className="flex min-w-0 flex-col lg:h-full lg:min-h-0 lg:flex-1"
       accent="orange"
     >
-      <div className="min-h-[420px] min-w-0 flex-shrink-0 lg:flex lg:min-h-0 lg:w-full lg:flex-1">
+      <div className="flex-shrink-0 border-b border-white/[0.07] bg-white/[0.015]">
+        <PlayerInfo
+          playerData={player}
+          injuryStatus={injuryStatus}
+        />
+      </div>
+
+      <div className="min-h-[480px] min-w-0 lg:flex lg:min-h-0 lg:w-full lg:flex-1">
         <Suspense fallback={<PlayerGraphSkeleton />}>
           <PlayerGraph
             playerStats={playerStats}
