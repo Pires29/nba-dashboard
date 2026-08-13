@@ -134,7 +134,7 @@ const TeamStats = ({ homeTeamStats, awayTeamStats }) => {
   const homeData = homeTeamStats[homeSide];
   const awayData = awayTeamStats[awaySide];
 
-  // Usa as stats da home como rows base — se os dois lados forem diferentes mostra as stats do home
+  // Use the home stats as the base rows; if the sides differ, show the home stats
   const rows = homeStats;
 
   return (
@@ -215,14 +215,14 @@ const TeamStats = ({ homeTeamStats, awayTeamStats }) => {
       {/* Stat rows */}
       <div className="flex flex-col">
         {rows.map(({ key, label }, i) => {
-          // Away usa as suas próprias stats — se os lados forem diferentes usa o índice para mapear
+          // Away uses its own stats; when the sides differ, use the index to map them
           const awayKey = awayStats[i]?.key ?? key;
           const awayLabel = awayStats[i]?.label ?? label;
 
           const homeStat = homeData?.[key];
           const awayStat = awayData?.[awayKey];
 
-          // Label do centro — se os dois lados forem iguais usa o label normal, se forem diferentes mostra os dois
+          // Center label: use the standard label when both sides match; otherwise show both
           const centerLabel =
             homeSide === awaySide ? label : `${label} / ${awayLabel}`;
 

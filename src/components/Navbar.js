@@ -30,7 +30,7 @@ const Navbar = async () => {
 
         {/* Right side */}
         <div className="flex items-center gap-3">
-          {/* Upgrade button — só no plano free */}
+          {/* Upgrade button — Free plan only */}
           {isFreePlan && (
             <Link
               href="/pricing"

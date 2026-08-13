@@ -31,7 +31,7 @@ const GameDropdown = ({ plan, team1Id, team2Id, games, teams, onSelect }) => {
     ) ?? null;
 
   return (
-    <label className="block">
+    <label className="relative block">
       <span className="sr-only">Select game</span>
       <select
         aria-label="Select game"
@@ -43,7 +43,7 @@ const GameDropdown = ({ plan, team1Id, team2Id, games, teams, onSelect }) => {
           if (!game) return;
           onSelect?.(game);
         }}
-        className="w-full rounded-lg border border-white/[0.08] bg-[#060E1A] px-3 py-3 text-[11px] font-mono font-bold text-slate-300 outline-none transition-colors hover:border-orange-500/30 focus:border-orange-500/40"
+        className="w-full appearance-none rounded-lg border border-white/[0.08] bg-[#060E1A] py-3 pl-3 pr-10 text-[11px] font-mono font-bold text-slate-300 outline-none transition-colors hover:border-orange-500/30 focus:border-orange-500/40"
       >
         <option value="" disabled>
           Select game
@@ -59,6 +59,20 @@ const GameDropdown = ({ plan, team1Id, team2Id, games, teams, onSelect }) => {
           );
         })}
       </select>
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 20 20"
+        fill="none"
+        className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+      >
+        <path
+          d="m6 8 4 4 4-4"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
     </label>
   );
 };

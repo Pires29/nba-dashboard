@@ -2,6 +2,7 @@ import getGamesSchedule from "@/lib/getGamesSchedule";
 import getInjuries from "@/lib/getInjuries";
 import getProps from "@/lib/getProps";
 import getStandings from "@/lib/getStandings";
+import getRosters from "@/lib/getRosters";
 import { getAvailablePlayers } from "@/lib/getAvailablePlayers";
 import { getCurrentSession } from "@/lib/getCurrentSession";
 import PropsTableWrapper from "./PropsTableWrapper";
@@ -129,9 +130,22 @@ export default async function PropsPage({ searchParams }) {
     getInjuries(),
   ]);
 
-  const safeProps = (Array.isArray(rawProps) ? rawProps : []).filter((prop) =>
-    allowedPlayerIds.has(Number(prop.player_id)),
+  const currentRosterByPlayerId = new Map(
+    getRosters().map((player) => [Number(player.PLAYER_ID), player]),
   );
+  const safeProps = (Array.isArray(rawProps) ? rawProps : [])
+    .filter((prop) => allowedPlayerIds.has(Number(prop.player_id)))
+    .map((prop) => {
+      const currentPlayer = currentRosterByPlayerId.get(Number(prop.player_id));
+      if (!currentPlayer) return prop;
+
+      return {
+        ...prop,
+        team: currentPlayer.TEAM_ABBREVIATION,
+        team_id: currentPlayer.TEAM_ID,
+        position: currentPlayer.POSITION || prop.position,
+      };
+    });
   const safeStandings = Array.isArray(standings) ? standings : [];
   const safeSchedule = Array.isArray(schedule) ? schedule : [];
   const safeInjuries = Array.isArray(injuries) ? injuries : [];

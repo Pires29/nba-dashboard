@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { useState, useMemo } from "react";
 
-// ✅ ÚNICO import de recharts — só no ficheiro filho
+// ✅ Only Recharts import — kept in the child file
 const PlayerContextGraphChart = dynamic(
   () => import("./PlayerContextGraphChart"),
   {

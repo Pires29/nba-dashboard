@@ -36,10 +36,10 @@ export default function NotFound() {
         </div>
 
         <h1 className="text-2xl font-black text-white mb-2 tracking-tight">
-          Página não encontrada
+          Page not found
         </h1>
         <p className="text-slate-500 font-mono text-sm mb-8 max-w-xs mx-auto leading-relaxed">
-          A página que procuras não existe ou foi movida.
+          The page you are looking for does not exist or has been moved.
         </p>
 
         <div className="flex items-center justify-center gap-3">
@@ -47,7 +47,7 @@ export default function NotFound() {
             href="/"
             className="px-6 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-400 text-white text-[12px] font-mono font-bold uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(249,115,22,0.3)] hover:shadow-[0_0_30px_rgba(249,115,22,0.5)]"
           >
-            Voltar ao início
+            Back to home
           </Link>
         </div>
       </div>

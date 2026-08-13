@@ -33,7 +33,7 @@ const Injuries = ({ injuriesTeam1, injuriesTeam2 }) => {
     <div className="flex flex-col gap-4">
       {teams.map((team, teamIndex) => (
         <div key={teamIndex}>
-          {/* Divisor com nome da equipa */}
+          {/* Divider with team name */}
           <div className="flex items-center gap-2 mb-2">
             <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-orange-400">
               {team.displayName}
@@ -41,7 +41,7 @@ const Injuries = ({ injuriesTeam1, injuriesTeam2 }) => {
             <div className="flex-1 h-px bg-white/[0.06]" />
           </div>
 
-          {/* Injuries da equipa */}
+          {/* Team injuries */}
           <div className="flex flex-col gap-1">
             {(team.injuries || []).length === 0 ? (
               <p className="text-slate-400 text-xs py-2">No injury reports</p>

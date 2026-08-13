@@ -73,7 +73,7 @@ const ResponsiveLayout = ({
             />
           </div>
 
-          <aside className="grid min-w-0 items-stretch gap-4 lg:grid-cols-2 lg:gap-6">
+          <aside className="grid min-w-0 items-start gap-4 lg:grid-cols-2 lg:gap-6">
             <DeferredRender
               rootMargin="300px 0px"
               fallback={
@@ -101,7 +101,7 @@ const ResponsiveLayout = ({
                 </Card>
               }
             >
-              <Card accent="blue" className="h-full">
+              <Card accent="blue">
                 <div className="p-4">
                   <SectionLabel>Team Comparison</SectionLabel>
                   <TeamStats

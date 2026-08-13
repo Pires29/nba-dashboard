@@ -13,7 +13,7 @@ export async function POST(req) {
 
     if (password.length < 8)
       return NextResponse.json(
-        { error: "Password deve ter pelo menos 8 caracteres" },
+        { error: "Password must be at least 8 characters long" },
         { status: 400 },
       );
 
@@ -27,7 +27,7 @@ export async function POST(req) {
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing)
       return NextResponse.json(
-        { error: "Email já está em uso" },
+        { error: "Email is already in use" },
         { status: 400 },
       );
 
@@ -40,6 +40,6 @@ export async function POST(req) {
     return NextResponse.json({ success: true }, { status: 201 });
   } catch (err) {
     console.error("Signup error:", err);
-    return NextResponse.json({ error: "Erro interno" }, { status: 500 });
+    return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
 }

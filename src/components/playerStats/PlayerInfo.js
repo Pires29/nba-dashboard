@@ -1,4 +1,7 @@
+"use client";
+
 import Image from "next/image";
+import { useState } from "react";
 
 const INJURY_STYLES = {
   Out: "bg-red-500/15 text-red-400 border-red-500/30",
@@ -6,6 +9,47 @@ const INJURY_STYLES = {
   Doubtful: "bg-orange-500/15 text-orange-400 border-orange-500/30",
   Questionable: "bg-yellow-500/15 text-yellow-400 border-yellow-500/30",
   Probable: "bg-blue-500/15 text-blue-400 border-blue-500/30",
+};
+
+const PlayerHeadshot = ({ player }) => {
+  const [loaded, setLoaded] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  return (
+    <div className="relative h-[80px] w-[80px] overflow-hidden rounded-xl border border-white/[0.06] bg-[#0D1828]">
+      <div
+        aria-hidden="true"
+        className={`absolute inset-0 flex items-center justify-center transition-opacity duration-200 ${loaded && !failed ? "opacity-0" : "opacity-100"}`}
+      >
+        <svg
+          viewBox="0 0 80 80"
+          fill="none"
+          className="h-full w-full text-slate-500"
+        >
+          <circle cx="40" cy="21" r="16" fill="currentColor" opacity="0.5" />
+          <path
+            d="M14 80c1-18 10.5-30 26-30s25 12 26 30H14Z"
+            fill="currentColor"
+            opacity="0.5"
+          />
+        </svg>
+      </div>
+
+      {!failed && (
+        <Image
+          src={`https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/${player.PLAYER_ID}.png`}
+          width={80}
+          height={80}
+          alt={player.PLAYER}
+          fetchPriority="high"
+          priority
+          onLoad={() => setLoaded(true)}
+          onError={() => setFailed(true)}
+          className={`relative z-10 h-full w-full object-cover transition-opacity duration-200 ${loaded ? "opacity-100" : "opacity-0"}`}
+        />
+      )}
+    </div>
+  );
 };
 
 const PlayerInfo = ({ playerData, injuryStatus, onAddProp, propSaved }) => {
@@ -30,17 +74,7 @@ const PlayerInfo = ({ playerData, injuryStatus, onAddProp, propSaved }) => {
     <div className="flex items-center gap-5 p-4">
       {/* Headshot */}
       <div className="relative flex-shrink-0">
-        <div className="w-[80px] h-[80px] rounded-xl overflow-hidden bg-[#0D1828] border border-white/6">
-          <Image
-            src={`https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/${playerData.PLAYER_ID}.png`}
-            width={80}
-            height={80}
-            alt={playerData.PLAYER}
-            fetchPriority="high"
-            priority
-            className="object-cover w-full h-full"
-          />
-        </div>
+        <PlayerHeadshot key={playerData.PLAYER_ID} player={playerData} />
       </div>
 
       {/* Name + team */}

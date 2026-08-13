@@ -21,7 +21,7 @@ export async function POST() {
     return Response.json({ error: "No active subscription" }, { status: 400 });
   }
 
-  // Cancela no fim do período atual (não imediatamente)
+  // Cancel at the end of the current period, not immediately
   await stripe.subscriptions.update(user.stripeSubscriptionId, {
     cancel_at_period_end: true,
   });

@@ -4,11 +4,11 @@ import Link from "next/link";
 
 export default function UpgradeOverlay({
   children,
-  message = "Disponível no plano Pro",
+  message = "Available on the Pro plan",
 }) {
   return (
     <div className="relative w-full h-full">
-      {/* Conteúdo desfocado */}
+      {/* Blurred content */}
       <div className="w-full h-full blur-sm pointer-events-none select-none opacity-60">
         {children}
       </div>

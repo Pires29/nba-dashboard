@@ -35,7 +35,7 @@ export default function FavoritesPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col h-full bg-gradient-to-b from-[#0D1B2E] to-[#060E1A] items-center justify-center">
+      <div className="flex min-h-full flex-1 flex-col items-center justify-center bg-gradient-to-b from-[#0D1B2E] to-[#060E1A]">
         <p className="text-[12px] font-mono text-slate-600">Loading...</p>
       </div>
     );
@@ -43,7 +43,7 @@ export default function FavoritesPage() {
 
   return (
     <>
-      <div className="flex flex-col h-full bg-gradient-to-b from-[#0D1B2E] to-[#060E1A] font-sans overflow-hidden">
+      <div className="flex min-h-full flex-1 flex-col bg-gradient-to-b from-[#0D1B2E] to-[#060E1A] font-sans">
         <div
           className="fixed inset-0 pointer-events-none opacity-20"
           style={{
@@ -53,7 +53,7 @@ export default function FavoritesPage() {
           }}
         />
 
-        <div className="relative z-10 flex flex-col h-full max-w-[1400px] mx-auto w-full px-6 py-5 gap-4">
+        <div className="relative z-10 mx-auto flex min-h-full w-full max-w-[1400px] flex-1 flex-col gap-4 px-6 py-5">
         {/* Header */}
         <div className="flex items-center gap-3 flex-shrink-0">
           <div className="w-1 h-5 rounded-sm bg-orange-500" />

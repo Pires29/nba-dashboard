@@ -21,9 +21,9 @@ export function SignupForm() {
     const password = e.target.password.value;
     const confirm = e.target["confirm-password"].value;
 
-    if (password !== confirm) return setError("As passwords não coincidem");
+    if (password !== confirm) return setError("Passwords do not match");
     if (password.length < 8)
-      return setError("Password deve ter pelo menos 8 caracteres");
+      return setError("Password must be at least 8 characters long");
 
     const emailRegex = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(email))
@@ -42,12 +42,12 @@ export function SignupForm() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Erro ao criar conta");
+        setError(data.error || "Failed to create account");
         setLoading(false);
         return;
       }
 
-      // Conta criada — faz login automático
+      // Account created — sign in automatically
       const result = await signIn("credentials", {
         redirect: false,
         email,
@@ -55,13 +55,13 @@ export function SignupForm() {
       });
 
       if (result?.error) {
-        setError("Conta criada mas erro ao fazer login");
+        setError("Account created, but sign-in failed");
         setLoading(false);
       } else {
         window.location.href = "/";
       }
     } catch (err) {
-      setError("Erro de ligação");
+      setError("Connection error");
       setLoading(false);
     }
   };

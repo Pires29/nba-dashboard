@@ -184,10 +184,9 @@ export async function buildPlayerStatsPageData({
   const playoffPlayerLogs = Array.isArray(playerLogsPlayoffs)
     ? playerLogsPlayoffs
     : [];
-  // Os endpoints devolvem regular season e playoffs separadamente. Para a
-  // experiência do gráfico, ambos fazem parte da época atual: assim L5/L10 e
-  // restantes contextos usam sempre os jogos mais recentes, seja qual for a
-  // fase da competição.
+  // The endpoints return the regular season and playoffs separately. For the
+  // chart experience, both belong to the current season, so L5/L10 and other
+  // contexts always use the latest games regardless of the competition phase.
   const currentSeasonPlayerLogs = [...currentPlayerLogs, ...playoffPlayerLogs]
     .map((game, index) => ({ game, index }))
     .sort((a, b) => {

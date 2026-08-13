@@ -36,11 +36,12 @@ const PlayerRow = ({
       <span
         className={`
         font-mono text-[10px] w-6 h-6 flex items-center justify-center
-        rounded border text-center leading-none border-white/10 text-slate-400 group-hover:text-slate-300
+        rounded border text-center leading-none group-hover:text-slate-300
+        ${player.NUM ? "border-white/10 text-slate-400" : "border-white/[0.06] text-slate-500"}
         
       `}
       >
-        {player.NUM}
+        {player.NUM || "—"}
       </span>
       <div>
         <p

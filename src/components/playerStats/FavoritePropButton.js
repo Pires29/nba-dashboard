@@ -4,9 +4,7 @@ import AppToaster from "@/components/AppToaster";
 import { useFavorites } from "@/hooks/useFavorites";
 
 const FavoritePropButton = ({ playerStats, selectedStat, betLine, gameInfo }) => {
-  const { hasLoaded, isFavorite, toggleFavorite } = useFavorites({
-    enabled: false,
-  });
+  const { hasLoaded, isFavorite, toggleFavorite } = useFavorites();
 
   const playerObj = playerStats
     ? {

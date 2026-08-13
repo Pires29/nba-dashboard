@@ -4,7 +4,7 @@ import prisma from "../../../../../prisma/prismaClient";
 import getProps from "@/lib/getProps";
 
 export async function DELETE(req) {
-  // Verifica secret para não ser chamada por qualquer pessoa
+  // Verify the secret so this cannot be called by anyone
   const authHeader = req.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CLEANUP_SECRET}`) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });

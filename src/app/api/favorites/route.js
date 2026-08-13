@@ -15,8 +15,6 @@ export async function GET() {
     orderBy: { createdAt: "desc" },
   });
 
-  console.log("FAVORITES:", favorites.slice(0, 5));
-
   return Response.json(favorites);
 }
 

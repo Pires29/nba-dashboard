@@ -73,7 +73,7 @@ const GameSelector = ({ plan, team1Id, team2Id, games, teams }) => {
     ) ?? null;
 
   return (
-    <label className="block">
+    <label className="relative block">
       <span className="sr-only">Select game</span>
       <select
         aria-label="Select game"
@@ -87,7 +87,7 @@ const GameSelector = ({ plan, team1Id, team2Id, games, teams }) => {
             `/playersStats?team1Id=${game.home_team_id}&team2Id=${game.visitor_team_id}`,
           );
         }}
-        className="w-full rounded-lg border border-white/[0.06] bg-[#0D1828] px-3 py-3 text-[11px] font-mono font-bold text-slate-300 outline-none transition-colors hover:border-orange-500/30 focus:border-orange-500/40"
+        className="w-full appearance-none rounded-lg border border-white/[0.06] bg-[#0D1828] py-3 pl-3 pr-10 text-[11px] font-mono font-bold text-slate-300 outline-none transition-colors hover:border-orange-500/30 focus:border-orange-500/40"
       >
         <option value="" disabled>
           Select game
@@ -103,6 +103,20 @@ const GameSelector = ({ plan, team1Id, team2Id, games, teams }) => {
           );
         })}
       </select>
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 20 20"
+        fill="none"
+        className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+      >
+        <path
+          d="m6 8 4 4 4-4"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
     </label>
   );
 };

@@ -1,7 +1,7 @@
 // lib/getAvailablePlayers.js
-import rostersData from "@/app/data/nba_rosters.json";
-import propsData from "@/app/data/nba_props.json";
+import getProps from "./getProps";
 import getInjuries from "./getInjuries";
+import getRosters from "./getRosters";
 import { hasProAccess } from "./permissions";
 
 function seededShuffle(array, seed) {
@@ -34,13 +34,15 @@ const MIN_HIT_RATE_L10 = 60;
 const CANDIDATE_POOL = 60;
 
 export function getAvailablePlayers(plan) {
-  if (!rostersData?.length) return new Set(); // sem dados = ninguém
+  const rostersData = getRosters();
+  const propsData = getProps();
+  if (!rostersData?.length) return new Set(); // no data means no players
 
   if (hasProAccess(plan)) {
     return new Set(rostersData.map((p) => p.PLAYER_ID));
   }
 
-  // Jogadores lesionados — excluir do free
+  // Injured players — exclude from the Free plan
   const injuries = getInjuries();
   const injuredNames = new Set(
     injuries.flatMap(
@@ -48,7 +50,7 @@ export function getAvailablePlayers(plan) {
     ),
   );
 
-  // Filtra props por critérios de qualidade e ordena pelos melhores
+  // Filter props by quality criteria and sort by the best results
   const qualityProps = propsData
     .filter((p) => {
       const avg = p.props?.points?.avg ?? 0;
@@ -56,24 +58,24 @@ export function getAvailablePlayers(plan) {
       return avg >= MIN_POINTS_AVG && l10 >= MIN_HIT_RATE_L10;
     })
     .sort((a, b) => {
-      // Ordena por L10 hit rate desc, desempate por média de pontos
+      // Sort by descending L10 hit rate, breaking ties by average points
       const aL10 = a.props?.points?.L10?.hit_rate ?? 0;
       const bL10 = b.props?.points?.L10?.hit_rate ?? 0;
       if (bL10 !== aL10) return bL10 - aL10;
       return (b.props?.points?.avg ?? 0) - (a.props?.points?.avg ?? 0);
     });
 
-  // IDs dos top CANDIDATE_POOL jogadores com qualidade
+  // IDs of the top CANDIDATE_POOL qualifying players
   const topIds = new Set(
     qualityProps.slice(0, CANDIDATE_POOL).map((p) => p.player_id),
   );
 
-  // Cruza com o roster e exclui lesionados
+  // Cross-reference the roster and exclude injured players
   const eligible = rostersData.filter(
     (p) => topIds.has(p.PLAYER_ID) && !injuredNames.has(p.PLAYER),
   );
 
-  // Shuffle diário e devolve 15
+  // Shuffle daily and return 15
   const seed = new Date().toISOString().split("T")[0];
   const shuffled = seededShuffle(eligible, seed);
 

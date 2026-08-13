@@ -63,8 +63,8 @@ function buildChartYAxisTicks(points, stat) {
 
 function buildChartPayload(points, stat, betLine) {
   return {
-    // Os logs chegam do mais recente para o mais antigo; o gráfico deve ler
-    // naturalmente da esquerda (mais antigo) para a direita (mais recente).
+    // Logs arrive newest first; the chart should read naturally from left
+    // (oldest) to right (newest).
     points: [...points].reverse(),
     yTicks: buildChartYAxisTicks(points, stat),
     betLine,

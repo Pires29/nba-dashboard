@@ -10,7 +10,7 @@ export async function DELETE(req) {
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.email) {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
     await prisma.user.delete({
@@ -21,7 +21,7 @@ export async function DELETE(req) {
   } catch (err) {
     console.error("Delete account error:", err);
     return NextResponse.json(
-      { error: "Erro ao apagar conta" },
+      { error: "Failed to delete account" },
       { status: 500 },
     );
   }

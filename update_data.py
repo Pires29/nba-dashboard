@@ -1,7 +1,7 @@
 """
 pipeline.py
 ===========
-Pipeline unificado para gerar todos os JSONs otimizados para a NBA app.
+Unified pipeline for generating all JSON files optimized for the NBA app.
 Corre 1x por dia via GitHub Actions.
 
 OUTPUT (minified JSON):
@@ -16,7 +16,7 @@ OUTPUT (minified JSON):
   game_logs_prev.json       → { [playerId]: [{ gid, date, opp, pts, reb, ast, stl, blk, tov, min }] }
   game_logs_playoffs.json   → { [playerId]: [{ gid, date, opp, pts, reb, ast, stl, blk, tov, min }] }
 
-Dependências:
+Dependencies:
   pip install nba_api requests pandas
 """
 
@@ -42,8 +42,31 @@ from nba_api.stats.endpoints import (
 # CONFIG
 # ============================================================
 
-SEASON = "2025-26"
-PREV_SEASON = "2024-25"
+def season_label(start_year):
+    """Return an NBA season label such as 2026-27."""
+    return f"{start_year}-{str(start_year + 1)[-2:]}"
+
+
+today = datetime.now()
+
+# NBA statistics roll over when the regular season begins in October. During
+# the summer, keep using the season that has just ended.
+stats_season_start = today.year if today.month >= 10 else today.year - 1
+
+# Rosters roll over in July so offseason trades and free agency are assigned
+# to the upcoming season before games and statistics exist for that season.
+roster_season_start = today.year if today.month >= 7 else today.year - 1
+
+# Environment overrides remain available for backfills or API edge cases.
+SEASON = os.getenv("NBA_STATS_SEASON", season_label(stats_season_start))
+PREV_SEASON = os.getenv(
+    "NBA_PREV_SEASON",
+    season_label(stats_season_start - 1),
+)
+ROSTER_SEASON = os.getenv(
+    "NBA_ROSTER_SEASON",
+    season_label(roster_season_start),
+)
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "src", "app", "data")
 
 SCHEDULE_DAYS_AHEAD = 2
@@ -217,20 +240,14 @@ def fetch_raw_game_logs(season, season_type="Regular Season"):
 
 def fetch_raw_rosters():
     print("\n👥 Fetching rosters (one request per team)...")
-    df_teams = leaguestandings.LeagueStandings(
-        league_id="00", season=SEASON,
-        headers=NBA_HEADERS, timeout=REQUEST_TIMEOUT,
-    ).get_data_frames()[0][["TeamID", "TeamName"]]
-
     # raw_rosters: { teamId(int): [row_dict, ...] }
     raw_rosters = {}
-    total = len(df_teams)
-    for i, (_, row) in enumerate(df_teams.iterrows()):
-        team_id = int(row["TeamID"])
-        team_name = row["TeamName"]
+    team_entries = list(TEAM_ABBREV_MAP.items())
+    total = len(team_entries)
+    for i, (team_id, team_abbr) in enumerate(team_entries):
         try:
             roster_df = commonteamroster.CommonTeamRoster(
-                team_id=team_id, season=SEASON,
+                team_id=team_id, season=ROSTER_SEASON,
                 headers=NBA_HEADERS, timeout=REQUEST_TIMEOUT,
             ).get_data_frames()[0]
 
@@ -238,13 +255,25 @@ def fetch_raw_rosters():
                 "PLAYER_ID", "PLAYER", "NUM", "POSITION", "HEIGHT", "WEIGHT", "BIRTH_DATE"
             ]].to_dict(orient="records")
 
-            print(f"  [{i+1}/{total}] {team_name}: {len(roster_df)} players")
+            print(f"  [{i+1}/{total}] {team_abbr}: {len(roster_df)} players")
         except Exception as e:
-            print(f"  ⚠️ Error for {team_name}: {e}")
+            print(f"  ⚠️ Error for {team_abbr}: {e}")
             raw_rosters[team_id] = []
         random_sleep()
 
     return raw_rosters
+
+
+def update_roster_files():
+    """Refresh only offseason roster-related files."""
+    print(f"🚀 Updating rosters for {ROSTER_SEASON}")
+    raw_rosters = fetch_raw_rosters()
+    if not any(raw_rosters.values()):
+        raise RuntimeError("Roster update returned no players; existing files were preserved")
+
+    save_json(fix_nan(build_players(raw_rosters)), "players.json")
+    save_json(build_teams(), "teams.json")
+    save_json(fix_nan(build_rosters(raw_rosters)), "rosters.json")
 
 def fetch_raw_schedule():
     print(f"\n📅 Fetching schedule (next {SCHEDULE_DAYS_AHEAD} days)...")
@@ -278,6 +307,14 @@ def fetch_raw_schedule():
             seen.add(key)
             unique.append(g)
     return unique
+
+
+def fetch_raw_standings():
+    print(f"\n🏆 Fetching standings for {SEASON}...")
+    return leaguestandings.LeagueStandings(
+        league_id="00", season=SEASON,
+        headers=NBA_HEADERS, timeout=REQUEST_TIMEOUT,
+    ).get_data_frames()[0]
 
 def fetch_raw_injuries():
     print("\n🏥 Fetching injuries (ESPN)...")
@@ -535,6 +572,7 @@ def build_injuries(raw_espn):
 
             injuries[tid_str].append({
                 "pid":        pid,
+                "name":       athlete.get("displayName") or None,
                 "status":     injury.get("status"),
                 "type":       details.get("type") or None,
                 "detail":     details.get("detail") or None,
@@ -542,6 +580,30 @@ def build_injuries(raw_espn):
             })
 
     return injuries
+
+
+def build_standings(df_standings):
+    """Keep the standings fields consumed by the app."""
+    fields = [
+        "LeagueID", "SeasonID", "TeamID", "TeamName", "Conference",
+        "ConferenceRecord", "PlayoffRank", "WINS", "LOSSES", "WinPCT",
+        "LeagueRank", "Record", "HOME", "ROAD", "L10",
+        "Last10Home", "Last10Road",
+    ]
+    return [
+        {field: py(row[field]) for field in fields if field in row.index}
+        for _, row in df_standings.iterrows()
+    ]
+
+
+def update_live_files():
+    """Refresh lightweight schedule, injury and standings datasets."""
+    schedule = fetch_raw_schedule()
+    injuries = build_injuries(fetch_raw_injuries())
+    standings = build_standings(fetch_raw_standings())
+    save_json(fix_nan(schedule), "schedule.json")
+    save_json(fix_nan(injuries), "injuries.json")
+    save_json(fix_nan(standings), "standings.json")
 
 
 def build_props(schedule, raw_rosters, df_player_stats, df_current_logs):
@@ -708,6 +770,7 @@ def run():
     df_off, df_def        = fetch_raw_team_stats();       random_sleep()
     raw_rosters           = fetch_raw_rosters()           # has its own sleep
     schedule              = fetch_raw_schedule()          # has its own sleep
+    df_standings          = fetch_raw_standings();        random_sleep()
     raw_injuries          = fetch_raw_injuries();         random_sleep()
     df_logs_current       = fetch_raw_game_logs(SEASON);  random_sleep()
     df_logs_prev          = fetch_raw_game_logs(PREV_SEASON); random_sleep()
@@ -739,6 +802,10 @@ def run():
     # injuries.json
     injuries = build_injuries(raw_injuries)
     save_json(injuries, "injuries.json")
+
+    # schedule.json / standings.json
+    save_json(fix_nan(schedule), "schedule.json")
+    save_json(fix_nan(build_standings(df_standings)), "standings.json")
 
     # game_logs_current.json
     logs_current = build_game_logs(df_logs_current)

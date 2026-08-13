@@ -1,3 +1,5 @@
+# NBA Dashboard
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
@@ -14,254 +16,147 @@ pnpm dev
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser to see the result.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+You can start editing the page by modifying `app/page.js`. The page automatically updates as you edit the file.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a font family created for Vercel.
 
 ## Learn More
 
-To learn more about Next.js, take a look at the following resources:
+To learn more about Next.js, see these resources:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- [Next.js Documentation](https://nextjs.org/docs) — learn about Next.js features and its API.
+- [Learn Next.js](https://nextjs.org/learn) — an interactive Next.js tutorial.
+- [Next.js GitHub repository](https://github.com/vercel/next.js) — feedback and contributions are welcome.
 
 ## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The easiest way to deploy the app is through the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme), from the creators of Next.js.
+
+See the [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Core Requirements
+
+- Player and game listings backed by a public API or a local dataset.
+- Basic statistics: name, team, position, goals, assists, and age.
+- Filters for position, team, age, and active status.
+- Individual player or game pages with detailed statistics and simple charts.
+- Favorites that users can add, filter, and persist in local storage or the backend.
+- A summary dashboard with aggregate statistics and bar, line, or radar charts.
+- Pagination or infinite scrolling for large player and game lists.
+- Email/password or NextAuth.js authentication, protected routes, and app-wide user state.
+- Loading and error states for data-fetching components.
+
+## Advanced Requirements
+
+### 1. Structure and Navigation
+
+- Create a main layout with a navbar for Home, Stats, Standings, and Rosters.
+- Make the navbar responsive on mobile and desktop.
+- Give each page its own Next.js App Router route.
+
+### 2. Roster Page — Players by Team
+
+- Automatically group players by team.
+- Make each team collapsible, showing or hiding its player list.
+- Give each player a card containing their name, position, number, basic statistics (PTS, REB, AST, and so on), and a photo when one is available in the JSON.
+
+### 3. Interactivity
+
+- Filter by player name across all teams.
+- Filter by position: PG, SG, SF, PF, or C.
+- Sort dynamically by name or statistics such as points and assists.
+- Combine name, position, and statistic filters.
+
+### 4. Advanced UI/UX
+
+- Use Tailwind for a clean, modern layout with cards, shadows, and team colors.
+- Use pagination or lazy loading for very large lists.
+- Show detailed statistics in a tooltip or modal when a player is selected.
+- Support mobile, tablet, and desktop layouts.
+- Visually highlight star players, such as those averaging more than 20 PTS.
+
+### 5. Visual Statistics
+
+- Add team charts with Recharts or Chart.js.
+- Show average points per player, assists, and rebounds.
+- Update charts dynamically when the selected statistic changes.
+
+### 6. React and Next.js Best Practices
+
+- Create reusable team accordion, player card, and search/filter components.
+- Avoid code duplication.
+- Manage global state with React Context or Zustand when needed.
+- Manage pagination or lazy loading with local state.
+
+### 7. Optional Challenge
+
+- Integrate a real NBA statistics API.
+- Use Next.js SSR or SSG to load data.
+- Save user preferences, such as filters or favorite teams, in local storage.
+
+## Next Steps
+
+- Dynamic data
+  - Use Python scripts to generate JSON and overwrite data files.
+  - Configure a cron job, GitHub Actions, or another scheduler.
+  - Ensure Next.js reads the generated files.
+- Upcoming games
+  - Add team photos.
+  - Add standings.
+- Chart page
+  - Allow users to choose the game from the page. ✅
+  - Show game information. ✅
+  - Rename tabs after the teams. ✅
+  - Show injuries. ✅
+  - Add team statistics, including defensive rankings, pace, and points allowed by position.
+  - Consider disabling charts for players injured for the selected game.
+  - Show hit-rate percentages for every statistic, including outliers.
+- Add filters to player statistics, including position.
+- Authentication stack
+  - Next.js provides the frontend and backend, pages, APIs, Server Actions, and redirects.
+  - NextAuth/Auth.js provides Google sign-in and secure sessions, avoids direct password management, and creates users automatically.
+  - Supabase provides a persistent PostgreSQL database for users, favorites, and application data, plus a convenient dashboard.
+  - Prisma connects the code to the database, avoids direct SQL, generates types, and reduces bugs.
+- Favorites.
+- Reconsider whether a dedicated player page is needed.
+- News.
+- Review PWA options.
+
+## To Do
+
+- Improve the design, including referrals, Stripe Checkout, and overall sizing.
+- Test performance.
+- Fix misaligned injury columns on desktop.
+- Add a support email address.
+- Replace Stripe webhooks after deploying to production.
+- Add privacy terms and policies to Stripe Checkout.
+- Investigate intermittent authentication errors.
+- Show points allowed by position, such as PF.
+- Investigate why some players have no logs.
+- Consider advertising later.
+- Add betting lines to `PlayerGraph`.
+- Replace URL parameters with dynamic routes if worthwhile.
+- Make the page statically generated.
+- Add loading indicators when navigating to a player.
+- Add breadcrumbs to the player statistics page.
+- Review the schedule and only show it in `GameSelector`, grouped by day.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Error Handling
 
-Listagem de jogadores / partidas
+The main risk is that local JSON files are imported directly. A malformed or empty file can crash a component without warning. The project still needs:
 
-Dados de API pública ou dataset local
+- Error boundaries that catch React errors and show a message instead of crashing the entire page. Next.js supports this natively with an `error.tsx` file in each route folder.
+- Data validation to confirm that JSON has the expected structure before it is used.
+- Clear empty states when a player has no logs instead of empty output or silent errors.
 
-Estatísticas básicas: nome, time, posição, gols, assistências, idade
+## Payment and User Security
 
-Filtros: posição, time, idade, status ativo
+Security depends heavily on how payments are managed and how the user's plan is stored. A simple database field may be manipulated, so plan status should be verified against the payment provider, such as Stripe or LemonSqueezy.
 
-Detalhes individuais
+## Scalability
 
-Página de jogador ou partida
+The main issue is that JSON files are loaded into memory on every server request. This is manageable with a small user base, but at scale it can cause high memory usage, slow response times, and expensive Next.js cold starts.
 
-Estatísticas detalhadas e gráficos simples
-
-Favoritos / seleção
-
-Usuário pode marcar favoritos
-
-Filtrar apenas favoritos
-
-Persistência (localStorage ou backend)
-
-Dashboard resumido
-
-Estatísticas agregadas (média de gols, partidas jogadas)
-
-Visualizações básicas (bar chart, line chart, radar chart)
-
-Paginação / Infinite Scroll
-
-Para listas grandes de jogadores ou partidas
-
-Autenticação
-
-Login com email/senha ou NextAuth.js
-
-Rotas protegidas (dashboard, favoritos)
-
-Estado do usuário acessível em toda a app
-
-Loading e error states
-
-Componentes mostrando carregamento ou erro de fetch
-
----
-
-Projeto: NBA Rosters Dashboard – Lista de Requisitos Avançados
-1️⃣ Estrutura e Navegação
-
-Criar um layout principal com Navbar (Home, Stats, Standings, Rosters)
-
-Navbar responsiva, que funciona em mobile e desktop
-
-Cada página deve ter rota própria (App Router do Next.js)
-
-2️⃣ Roster Page – Jogadores por Equipa
-
-Agrupar automaticamente jogadores por equipa (como já fizeste)
-
-Cada equipa deve ser colapsável (accordion), mostrando/escondendo a lista de jogadores
-
-Cada jogador deve ter um cartão com:
-
-Nome
-
-Posição
-
-Número
-
-Estatísticas básicas (PTS, REB, AST, etc)
-
-Adicionar foto do jogador se tiver disponível no JSON
-
-3️⃣ Interatividade
-
-Filtro por nome: input para procurar jogador em qualquer equipa
-
-Filtro por posição: PG, SG, SF, PF, C
-
-Ordenação dinâmica:
-
-Por nome
-
-Por estatísticas (pontos, assistências, etc)
-
-Busca e filtros combinados: nome + posição + estatística
-
-4️⃣ UI/UX Avançado
-
-Use Tailwind para layout limpo e moderno (cards, sombras, cores por equipa)
-
-Paginação ou lazy-loading se a lista for muito grande
-
-Tooltip ou modal ao clicar no jogador mostrando estatísticas detalhadas
-
-Responsividade total (mobile, tablet, desktop)
-
-Destaque visual para jogadores “estrelas” (PTS > 20, por exemplo)
-
-5️⃣ Estatísticas Visuais
-
-Gráficos por equipa (recharts ou chart.js):
-
-Pontos médios por jogador
-
-Assistências, rebotes
-
-Filtro por estatística → gráfico atualizado dinamicamente
-
-6️⃣ Boas práticas de React/Next.js
-
-Criar componentes reutilizáveis:
-
-Accordion por equipa
-
-Card de jogador
-
-Filtro/Busca
-
-Evitar duplicação de código
-
-Gerir estado global se necessário (ex: React Context ou Zustand)
-
-Paginação ou lazy-loading com estado local
-
-7️⃣ Extra – desafio total
-
-Integração com API real de stats da NBA (opcional)
-
-Implementar SSR/SSG no Next.js para carregar dados
-
-Salvar preferências do usuário (ex: filtros ou equipes favoritas) no localStorage
-
-NEXT STEPS:
-
-- Dados Dinâmicos
-  - Scripts Python a gerar json e sobreescrever ficheiros
-    - configurar cron job no servidor, github actions ou outro
-    - garantir que o Next.js le esses arquivos
-- Jogos que vao acontecer
-  - Meter Fotos das Equipas
-  - Classificao
-- Página de grafico
-  - Colocar option de escolher o jogo mesmo dentro desta página ✅
-  - Colocar info do jogo na página ✅
-  - Mudar o nome das tabs para o nome das equipas ✅
-  - Colocar Injuries ✅
-  - Colocar estatísticas de equipas (Ranking de estatisticas defensivas, pace, points allowed to centers, etc)
-  - Desativar graficos de players que estão lesionados para aquele jogo em especifico (ideia)
-  - Percentagens de hit rate em cada stat (ex: outlier)
-
-- Filtros nos stats dos jogadores (Por posição e assim)
-- Autenticação
-  Next.js
-
-→ Frontend e backend no mesmo projeto
-→ Páginas, API, Server Actions, redirects
-→ É a base da app
-
-NextAuth (Auth.js)
-
-→ Login (Google, etc.)
-→ Sessões seguras
-→ Não geres passwords
-→ Cria utilizadores automaticamente
-
-Supabase
-
-→ Base de dados (PostgreSQL)
-→ Guarda utilizadores, favoritos, dados
-→ Persistente (“para sempre”)
-→ Dashboard fácil
-
-Prisma
-
-→ Liga o código à base de dados
-→ Evita SQL direto
-→ Tipos automáticos
-→ Menos bugs
-
-- Favoritos
-- Página Jogador (Repensar a necessidade desta página)
-- Noticias (?)
-- PWA ( ver opções )
-
-TODO:
-
-- Melhorar design
-  Referrals
-- Testar Performance
-
-  Colunas desfasadas injury em desktop
-  Melhorar design do Stripe payment checkout
-  Aumentar o tamanho do design em si
-
-- Adiconar email de suporte
-- Trocar web hooks depois de por em producao no stripe se nao nao funciona
-- Colocar termos de privacidade e politicas no stripe no pagamento
-
-- Há gato na autenticação nao sei o que, mas aquilo de vez em quando da erro
-- Por tipo pontos concedidos a PF (por posicao, etc)
-- Alguns jogadores nao tem logs, perceber porque
-
-- Performance
-- Publicidade (Mais para a frente)
-- Acrescentar BetLines no PlayerGraph
-- Trocar url params por url dinamico ( nao faz grande diferenca )
-- Tornar a página Static page generated
-- Loading states — quando navegas para um jogador não há nenhum indicador de carregamento
-- Breadcrumbs na página de playersStats para saber onde estás
-- Rever isto do schedule, mostrar so no gameSelector identificado por dias
-
-Tratamento de erros
-O teu risco principal é que os dados vêm de JSONs locais importados diretamente — se um JSON estiver mal formado ou vazio, o componente vai crashar sem aviso. O que falta:
-
-Error Boundaries — um componente React que captura erros e mostra uma mensagem em vez de crashar a página toda. O Next.js tem suporte nativo com error.tsx em cada pasta de rota.
-Validação dos dados — verificar se o JSON tem a estrutura esperada antes de o usar, em vez de assumir que está sempre correto.
-Estados vazios — quando um jogador não tem logs, mostrar uma mensagem clara em vez de render vazio ou erro silencioso.
-
-Segurança de pagamentos e utilizadores
-Aqui a pergunta é: como estás a gerir pagamentos atualmente? Stripe, LemonSqueezy, outro? Porque a segurança depende muito de como o plan é guardado no utilizador — se é um campo simples na base de dados que alguém pode manipular, ou se é verificado contra o provider de pagamentos.
-
-Escalabilidade
-O problema principal é que os JSONs são carregados em memória em cada request do servidor. Com poucos utilizadores não é problema, mas com muitos podes ter:
-
-Memória elevada
-Tempos de resposta lentos
-O Next.js a fazer cold starts pesados
-
-A solução a longo prazo seria mover os dados para uma base de dados, mas isso é um refactor grande.
+The long-term solution is to move the data into a database, although that requires a substantial refactor.

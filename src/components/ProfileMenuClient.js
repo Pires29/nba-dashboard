@@ -57,14 +57,14 @@ const ProfileMenuClient = ({ session }) => {
           )}
         </div>
 
-        {/* Nome — escondido em mobile */}
+        {/* Name — hidden on mobile */}
         {session?.user?.name && (
           <span className="hidden sm:block text-[11px] font-mono text-slate-400 group-hover:text-slate-300 transition-colors max-w-[100px] truncate">
             {session.user.name.split(" ")[0]}
           </span>
         )}
 
-        {/* Chevron — escondido em mobile */}
+        {/* Chevron — hidden on mobile */}
         <svg
           className={`hidden sm:block w-3 h-3 text-slate-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
           fill="none"
@@ -124,7 +124,7 @@ const ProfileMenuClient = ({ session }) => {
 
           {/* Menu items */}
           <div className="py-1">
-            {/* Manage Plan — novo */}
+            {/* Manage Plan — new */}
             <Link
               href="/pricing"
               onClick={() => setOpen(false)}
@@ -157,7 +157,7 @@ const ProfileMenuClient = ({ session }) => {
               </div>
             </Link>
 
-            {/* Settings — igual ao que já tens */}
+            {/* Settings */}
             <Link
               href="/settings"
               onClick={() => setOpen(false)}

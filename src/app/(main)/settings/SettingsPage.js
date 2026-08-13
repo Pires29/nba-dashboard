@@ -135,6 +135,7 @@ export default function SettingsPage({ session }) {
   const isGoogle = !!(user?.image && user.image.includes("google"));
   const plan = user?.plan ?? "free";
   const isPro = plan === "pro";
+  const isSeasonPlan = isPro && user?.planInterval === "season";
 
   const renewsAt = user?.planRenewsAt
     ? new Date(user.planRenewsAt).toLocaleDateString("en-GB", {
@@ -265,12 +266,17 @@ export default function SettingsPage({ session }) {
                     </span>
                   )}
                 </div>
-                {isPro && renewsAt && !cancelled && (
+                {isSeasonPlan && renewsAt && (
+                  <p className="text-[12px] font-mono text-slate-500">
+                    Pro access until <span className="text-slate-300">{renewsAt}</span>
+                  </p>
+                )}
+                {isPro && !isSeasonPlan && renewsAt && !cancelled && (
                   <p className="text-[12px] font-mono text-slate-500">
                     Renews on <span className="text-slate-300">{renewsAt}</span>
                   </p>
                 )}
-                {isPro && renewsAt && cancelled && (
+                {isPro && !isSeasonPlan && renewsAt && cancelled && (
                   <p className="text-[12px] font-mono text-slate-500">
                     Pro access until{" "}
                     <span className="text-slate-300">{renewsAt}</span>
@@ -284,7 +290,7 @@ export default function SettingsPage({ session }) {
               </div>
             </div>
 
-            {isPro && !cancelled ? (
+            {isPro && !isSeasonPlan && !cancelled ? (
               <div className="flex flex-col gap-3">
                 <p className="text-[11px] font-mono text-slate-600 leading-relaxed">
                   By cancelling, you&apos;ll keep Pro access until{" "}

@@ -1,5 +1,21 @@
-import data from "@/app/data/nba_injuries.json";
+import data from "@/app/data/injuries.json";
+import teams from "@/app/data/teams.json";
 
 export default function getInjuries() {
-  return data?.injuries ?? [];
+  return Object.entries(data ?? {}).map(([teamId, injuries]) => ({
+    displayName: teams?.[teamId]?.name ?? "",
+    injuries: (injuries ?? []).map((injury) => ({
+      TeamID: Number(teamId),
+      athlete: {
+        id: injury.pid,
+        displayName: injury.name ?? "Unknown player",
+      },
+      status: injury.status,
+      details: {
+        type: injury.type,
+        detail: injury.detail,
+        returnDate: injury.returnDate,
+      },
+    })),
+  }));
 }

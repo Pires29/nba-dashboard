@@ -53,14 +53,14 @@ const BILLING_OPTIONS = [
     description: "Billed monthly, cancel anytime",
   },
   {
-    id: "yearly",
-    label: "Yearly",
-    price: 3.19,
-    period: "mo",
-    badge: "Save 20%",
+    id: "season",
+    label: "NBA Season",
+    price: 29.99,
+    period: "season",
+    badge: "One-time",
     badgeColor: "green",
-    description: "€38.28 billed once a year",
-    savings: "Save €9.60 vs monthly",
+    description: "One payment · Access until June 30",
+    savings: "No automatic renewal",
   },
 ];
 
@@ -201,9 +201,10 @@ function TrialBanner({ userPlan }) {
 function ProBanner({ userPlan, onManage }) {
   const renewDate = formatRenewDate(userPlan?.planRenewsAt);
   const daysLeft = getDaysUntil(userPlan?.planRenewsAt);
+  const isSeasonPlan = userPlan?.planInterval === "season";
 
   function getPlanLabel(interval) {
-    if (interval === "year") return "Yearly";
+    if (interval === "season") return "NBA Season";
     if (interval === "month") return "Monthly";
     return "";
   }
@@ -219,7 +220,7 @@ function ProBanner({ userPlan, onManage }) {
             <div className="flex items-center gap-2.5 mb-1">
               <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
               <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-green-400">
-                Active subscription
+                {isSeasonPlan ? "Active season pass" : "Active subscription"}
               </span>
             </div>
             <h2 className="text-2xl font-black text-white">
@@ -254,7 +255,7 @@ function ProBanner({ userPlan, onManage }) {
             className={`p-4 rounded-xl border bg-white/[0.02] border-white/6`}
           >
             <p className="text-[10px] font-mono uppercase tracking-widest text-slate-600 mb-1">
-              Renews on
+              {isSeasonPlan ? "Access until" : "Renews on"}
             </p>
             <p className={`text-sm font-mono font-bold text-white`}>
               {renewDate ?? "—"}
@@ -288,17 +289,21 @@ function ProBanner({ userPlan, onManage }) {
           </ul>
         </div>
 
-        <div className="flex items-center gap-3 pt-5 border-t border-white/[0.05]">
-          <button
-            onClick={onManage}
-            className="px-6 py-2.5 rounded-xl text-[11px] font-mono font-bold uppercase tracking-widest border border-white/10 hover:border-white/20 text-slate-400 hover:text-white transition-all"
-          >
-            Manage subscription
-          </button>
-        </div>
-        <p className="text-[9px] font-mono text-slate-700 mt-3">
-          You can cancel, change plan or update your payment method at any time.
-        </p>
+        {!isSeasonPlan && (
+          <>
+            <div className="flex items-center gap-3 pt-5 border-t border-white/[0.05]">
+              <button
+                onClick={onManage}
+                className="px-6 py-2.5 rounded-xl text-[11px] font-mono font-bold uppercase tracking-widest border border-white/10 hover:border-white/20 text-slate-400 hover:text-white transition-all"
+              >
+                Manage subscription
+              </button>
+            </div>
+            <p className="text-[9px] font-mono text-slate-700 mt-3">
+              You can cancel, change plan or update your payment method at any time.
+            </p>
+          </>
+        )}
       </div>
     </div>
   );
@@ -341,7 +346,7 @@ function DiscountBadge({ code, discountPct }) {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function PricingPage({ userPlan }) {
-  const [selectedBilling, setSelectedBilling] = useState("yearly");
+  const [selectedBilling, setSelectedBilling] = useState("season");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -367,12 +372,7 @@ export default function PricingPage({ userPlan }) {
       : activePlan.price
     : 0;
 
-  // Discounted yearly total for description
-  const yearlyTotal =
-    selectedBilling === "yearly"
-      ? (3.19 * 12 * (discountActive ? 1 - REFERRAL_DISCOUNT : 1)).toFixed(2)
-      : null;
-
+  // Discounted NBA season total for description
   const validateReferral = async () => {
     if (!referralCode) return;
     setReferralStatus("loading");
@@ -403,11 +403,13 @@ export default function PricingPage({ userPlan }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ billing, referralCodeId }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (data.url) {
         window.location.href = data.url;
       } else if (res.status === 401) {
         router.push("/login?callbackUrl=/pricing");
+      } else {
+        throw new Error(data.error || "Unable to start checkout");
       }
     } catch (err) {
       console.error("Checkout error:", err);
@@ -421,7 +423,7 @@ export default function PricingPage({ userPlan }) {
   };
 
   const handleUpgrade = () => handleCheckout(selectedBilling);
-  const handleRenew = () => handleCheckout("yearly");
+  const handleRenew = () => handleCheckout("season");
 
   const ctaLabel = selectedBilling === "trial" ? "Start Free Trial" : "Get Pro";
 
@@ -517,10 +519,10 @@ export default function PricingPage({ userPlan }) {
                       Pro Plan
                     </p>
                     <p className="text-[13px] text-slate-500 font-mono mb-8">
-                      Desbloqueia o que o Free não te dá
+                      Unlock what the Free plan does not include
                     </p>
 
-                    {/* Vantagem 1 */}
+                    {/* Benefit 1 */}
                     <div className="relative rounded-2xl border border-orange-500/20 bg-gradient-to-br from-orange-500/10 to-transparent p-6 mb-4 overflow-hidden">
                       <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-orange-500/60 to-transparent" />
                       <div className="flex items-start gap-4">
@@ -561,17 +563,17 @@ export default function PricingPage({ userPlan }) {
                         </div>
                         <div>
                           <p className="text-white font-black text-[15px] mb-1">
-                            Todos os jogos agendados
+                            All scheduled games
                           </p>
                           <p className="text-slate-500 font-mono text-[11px] leading-relaxed">
-                            No Free só vês os jogos de hoje. Com Pro tens acesso
-                            a todos os jogos da época — passados e futuros.
+                            The Free plan only shows today&apos;s games. Pro gives
+                            you access to every game in the season — past and future.
                           </p>
                         </div>
                       </div>
                     </div>
 
-                    {/* Vantagem 2 */}
+                    {/* Benefit 2 */}
                     <div className="relative rounded-2xl border border-amber-500/20 bg-gradient-to-br from-orange-500/10 to-transparent p-6 overflow-hidden">
                       <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-orange-500/60 to-transparent" />
                       <div className="flex items-start gap-4">
@@ -606,12 +608,12 @@ export default function PricingPage({ userPlan }) {
                         </div>
                         <div>
                           <p className="text-white font-black text-[15px] mb-1">
-                            Roster completo das equipas
+                            Full team rosters
                           </p>
                           <p className="text-slate-500 font-mono text-[11px] leading-relaxed">
-                            No Free tens acesso a apenas 15 jogadores no total,
-                            atualizados diariamente. Com Pro vês o roster
-                            completo, sem limites.
+                            The Free plan gives you access to only 15 players,
+                            refreshed daily. Pro unlocks every roster with no
+                            limits.
                           </p>
                         </div>
                       </div>
@@ -621,11 +623,11 @@ export default function PricingPage({ userPlan }) {
                   {/* Free note */}
                   <div className="mt-8 pt-6 border-t border-white/[0.05]">
                     <p className="text-[10px] font-mono text-slate-600 uppercase tracking-widest mb-2">
-                      Tudo o resto está disponível no Free
+                      Everything else is available on the Free plan
                     </p>
                     <p className="text-[11px] font-mono text-slate-700 leading-relaxed">
-                      Stats, histórico, lesões, comparações, filtros avançados e
-                      hit rate tracking — incluídos em ambos os planos.
+                      Stats, history, injuries, comparisons, advanced filters,
+                      and hit-rate tracking — included in both plans.
                     </p>
                   </div>
                 </div>
@@ -718,9 +720,9 @@ export default function PricingPage({ userPlan }) {
                                   : "text-slate-700"
                               }`}
                             >
-                              {/* Update yearly description when discount is active */}
-                              {optionDiscountActive && option.id === "yearly"
-                                ? `€${(3.19 * 12 * (1 - REFERRAL_DISCOUNT)).toFixed(2)} billed once a year`
+                              {/* Update NBA season description when discount is active */}
+                              {optionDiscountActive && option.id === "season"
+                                ? "One payment · Access until June 30"
                                 : optionDiscountActive &&
                                     option.id === "monthly"
                                   ? "Billed monthly, cancel anytime"
@@ -783,8 +785,8 @@ export default function PricingPage({ userPlan }) {
                     )}
 
                     <p className="text-[10px] font-mono text-slate-600 mb-5">
-                      {discountActive && selectedBilling === "yearly"
-                        ? `€${yearlyTotal} billed once a year`
+                      {discountActive && selectedBilling === "season"
+                        ? "One payment · Access until June 30"
                         : activePlan.description}
                     </p>
 

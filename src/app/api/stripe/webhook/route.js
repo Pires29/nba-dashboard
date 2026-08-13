@@ -5,6 +5,12 @@ import prisma from "../../../../../prisma/prismaClient";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
+function getSeasonAccessEnd(purchasedAt = new Date()) {
+  const year = purchasedAt.getUTCFullYear();
+  const endYear = purchasedAt.getUTCMonth() >= 6 ? year + 1 : year;
+  return new Date(Date.UTC(endYear, 5, 30, 23, 59, 59, 999));
+}
+
 export async function POST(req) {
   const body = await req.text();
   const sig = req.headers.get("stripe-signature");
@@ -28,6 +34,7 @@ export async function POST(req) {
       const session = event.data.object;
       const userId = session.metadata?.userId;
       const referralCodeId = session.metadata?.referralCodeId;
+      const billing = session.metadata?.billing;
       if (!userId) break;
 
       if (referralCodeId) {
@@ -42,9 +49,22 @@ export async function POST(req) {
         });
       }
 
-      const subscription = await stripe.subscriptions.retrieve(
-        session.subscription,
-      );
+      if (billing === "season" && session.mode === "payment") {
+        if (session.payment_status !== "paid") break;
+
+        await prisma.user.update({
+          where: { id: userId },
+          data: {
+            plan: "pro",
+            stripeSubscriptionId: null,
+            planRenewsAt: getSeasonAccessEnd(),
+            planInterval: "season",
+          },
+        });
+        break;
+      }
+
+      const subscription = await stripe.subscriptions.retrieve(session.subscription);
 
       const renewsAt = new Date(
         subscription.items.data[0].current_period_end * 1000,
@@ -77,7 +97,7 @@ export async function POST(req) {
       break;
     }
     case "customer.subscription.updated": {
-      // Quando o trial termina, o Stripe muda o status para "active"
+      // When the trial ends, Stripe changes the status to "active"
       const subscription = event.data.object;
       const customer = await stripe.customers.retrieve(subscription.customer);
       const userId = customer.metadata?.userId;

@@ -30,7 +30,7 @@ const sections = [
     title: "5. Pro plan and billing",
     content: null,
     list: [
-      "The Pro plan is a paid subscription billed monthly or yearly, as chosen at checkout.",
+      "The Pro plan is a paid subscription billed monthly or once per NBA season, as chosen at checkout.",
       "A 7-day free trial is available. No credit card is required to start the trial.",
       "After the trial period, you will be charged automatically unless you cancel before the trial ends.",
       "We will send a reminder email 3 days before your trial expires.",

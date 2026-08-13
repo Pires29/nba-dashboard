@@ -6,7 +6,7 @@ export async function POST(req) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return Response.json(
-      { valid: false, error: "Não autenticado" },
+      { valid: false, error: "Not authenticated" },
       { status: 401 },
     );
   }
@@ -19,7 +19,7 @@ export async function POST(req) {
 
   if (!referral) {
     return Response.json(
-      { valid: false, error: "Código inválido" },
+      { valid: false, error: "Invalid code" },
       { status: 400 },
     );
   }
@@ -30,7 +30,7 @@ export async function POST(req) {
 
   if (alreadyUsed) {
     return Response.json(
-      { valid: false, error: "Já usaste um código" },
+      { valid: false, error: "You have already used a code" },
       { status: 400 },
     );
   }

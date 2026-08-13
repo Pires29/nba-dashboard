@@ -8,30 +8,6 @@ export function useFavorites({ enabled = true } = {}) {
   const [loading, setLoading] = useState(enabled);
   const [hasLoaded, setHasLoaded] = useState(false);
 
-  const cleanupExpiredFavorites = useCallback(async (favoritesToCheck) => {
-    const now = new Date();
-
-    const expired = favoritesToCheck.filter((fav) => {
-      if (!fav.gameDate) return false;
-      const gameDay = new Date(fav.gameDate);
-      // Considera expirado se o dia do jogo já passou (comparação por dia, não hora)
-      gameDay.setHours(23, 59, 59, 999);
-      return now > gameDay;
-    });
-
-    if (!expired.length) return;
-
-    await Promise.all(
-      expired.map((fav) =>
-        fetch(`/api/favorites/${fav.id}`, { method: "DELETE" }),
-      ),
-    );
-
-    setFavorites((prev) =>
-      prev.filter((f) => !expired.some((e) => e.id === f.id)),
-    );
-  }, []);
-
   const fetchFavorites = useCallback(async () => {
     setLoading(true);
 
@@ -39,15 +15,7 @@ export function useFavorites({ enabled = true } = {}) {
       const res = await fetch("/api/favorites");
       if (res.ok) {
         const data = await res.json();
-        await cleanupExpiredFavorites(data); // <-- cleanup antes de setar
-        setFavorites(
-          data.filter((fav) => {
-            if (!fav.gameDate) return true;
-            const gameDay = new Date(fav.gameDate);
-            gameDay.setHours(23, 59, 59, 999);
-            return new Date() <= gameDay;
-          }),
-        );
+        setFavorites(Array.isArray(data) ? data : []);
       }
     } catch (error) {
       console.error("Failed to fetch favorites", error);
@@ -55,7 +23,7 @@ export function useFavorites({ enabled = true } = {}) {
       setLoading(false);
       setHasLoaded(true);
     }
-  }, [cleanupExpiredFavorites]);
+  }, []);
 
   useEffect(() => {
     if (!enabled || hasLoaded) return;
@@ -86,11 +54,11 @@ export function useFavorites({ enabled = true } = {}) {
       if (res.ok) {
         const newFav = await res.json();
         setFavorites((prev) => [newFav, ...prev]);
-        toast.success(`${playerName} adicionado aos favoritos`, {
+        toast.success(`${playerName} added to favorites`, {
           description: `${stat.toUpperCase()} · ${avg?.toFixed(1) ?? "—"}`,
         });
       } else {
-        toast.error("Erro ao adicionar favorito");
+        toast.error("Failed to add favorite");
       }
     },
     [],
@@ -110,11 +78,11 @@ export function useFavorites({ enabled = true } = {}) {
         setFavorites((prev) =>
           prev.filter((f) => !(f.playerId === playerId && f.stat === stat)),
         );
-        toast(`${fav.playerName} removido dos favoritos`, {
+        toast(`${fav.playerName} removed from favorites`, {
           description: `${stat.toUpperCase()}`,
         });
       } else {
-        toast.error("Erro ao remover favorito");
+        toast.error("Failed to remove favorite");
       }
     },
     [favorites],
@@ -157,11 +125,11 @@ export function useFavorites({ enabled = true } = {}) {
         );
         toast(
           ids
-            ? `${ids.length} favorito(s) removido(s)`
-            : "Todos os favoritos removidos",
+            ? `${ids.length} favorite(s) removed`
+            : "All favorites removed",
         );
       } else {
-        toast.error("Erro ao remover favoritos");
+        toast.error("Failed to remove favorites");
       }
     },
     [favorites],

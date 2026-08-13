@@ -12,7 +12,7 @@ export async function DELETE(req, { params }) {
 
   const { id } = await params;
 
-  // Verifica que o favorito pertence ao utilizador
+  // Verify that the favorite belongs to the user
   const favorite = await prisma.favorite.findUnique({ where: { id } });
   if (!favorite || favorite.userId !== session.user.id) {
     return Response.json({ error: "Not found" }, { status: 404 });

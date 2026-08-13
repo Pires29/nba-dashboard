@@ -64,10 +64,25 @@ export const authOptions = {
       });
 
       if (dbUser) {
+        const planExpired =
+          dbUser.plan === "pro" &&
+          dbUser.planInterval === "season" &&
+          dbUser.planRenewsAt &&
+          dbUser.planRenewsAt <= new Date();
+
+        if (planExpired) {
+          await prisma.user.update({
+            where: { id: dbUser.id },
+            data: { plan: "free", planRenewsAt: null, planInterval: null },
+          });
+        }
+
         session.user.id = dbUser.id;
-        session.user.plan = dbUser.plan ?? "free";
-        session.user.planRenewsAt = dbUser.planRenewsAt ?? null;
-        session.user.planInterval = dbUser.planInterval;
+        session.user.plan = planExpired ? "free" : (dbUser.plan ?? "free");
+        session.user.planRenewsAt = planExpired
+          ? null
+          : (dbUser.planRenewsAt ?? null);
+        session.user.planInterval = planExpired ? null : dbUser.planInterval;
       }
 
       return session;

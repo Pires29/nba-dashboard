@@ -22,7 +22,7 @@ async function main() {
   });
 
   if (!user) {
-    console.error(`❌ Utilizador com email ${partnerEmail} não encontrado`);
+    console.error(`❌ User with email ${partnerEmail} not found`);
     process.exit(1);
   }
 
@@ -34,7 +34,7 @@ async function main() {
   });
 
   console.log(
-    `✅ Código criado: ${referral.code} para ${user.name ?? user.email}`,
+    `✅ Code created: ${referral.code} for ${user.name ?? user.email}`,
   );
 }
 

@@ -19,31 +19,47 @@ export default async function Page({ searchParams }) {
   const session = await getCurrentSession();
   const plan = session?.user?.plan ?? "free";
   const allowedPlayerIds = getAvailablePlayers(plan);
-  const playerId = allowedPlayerIds.has(requestedPlayerId)
-    ? requestedPlayerId
-    : 0;
+
+  const rawRosterData = getRosters();
+
+  // Apply the entitlement before resolving the selected player, so restricted
+  // identities and their historical logs never reach a Free user's browser.
+  const allowedRosterData = rawRosterData.filter((player) =>
+    allowedPlayerIds.has(Number(player.PLAYER_ID)),
+  );
+  const matchupRoster = allowedRosterData.filter((player) => {
+    const teamId = Number(player.TEAM_ID);
+    return teamId === team1Id || teamId === team2Id;
+  });
+  const requestedPlayer = matchupRoster.find(
+    (player) => Number(player.PLAYER_ID) === requestedPlayerId,
+  );
+  const homeRoster = matchupRoster.filter(
+    (player) => Number(player.TEAM_ID) === team1Id,
+  );
+  const awayRoster = matchupRoster.filter(
+    (player) => Number(player.TEAM_ID) === team2Id,
+  );
+  const fallbackRoster = homeRoster.length ? homeRoster : awayRoster;
+  const fallbackPlayer =
+    fallbackRoster.find((player) => player.NUM) ?? fallbackRoster[0] ?? null;
+  const playerId = Number(
+    requestedPlayer?.PLAYER_ID ?? fallbackPlayer?.PLAYER_ID ?? 0,
+  );
 
   const [
-    rawRosterData,
     rawGamesSchedule,
     rawInjuries,
     rawTeamStats,
     { logs, logsPlayoffs },
     logsPrev,
   ] = await Promise.all([
-    getRosters(),
     getGamesSchedule(),
     getInjuries(),
     getTeamStats(),
     playerId ? getPlayerLogs(playerId) : Promise.resolve({ logs: [] }),
     playerId ? getPrevPlayerLogs(playerId) : Promise.resolve([]),
   ]);
-
-  // Apply the entitlement before page data is built, so restricted player
-  // identities and their historical logs never reach a Free user's browser.
-  const allowedRosterData = rawRosterData.filter((player) =>
-    allowedPlayerIds.has(player.PLAYER_ID),
-  );
 
   const data = await buildPlayerStatsPageData({
     playerId,
