@@ -43,9 +43,10 @@ const PlayerDropdown = ({
             {players.map((player) => {
               const injury = formatInjuryLabel(injuryMap?.[player.PLAYER]);
               const number = player.NUM ? `#${player.NUM}` : "";
+              const access = player._isLocked ? "🔒 Pro" : "";
               return (
                 <option key={player.PLAYER_ID} value={player.PLAYER_ID}>
-                  {[number, player.PLAYER, injury].filter(Boolean).join(" · ")}
+                  {[number, player.PLAYER, injury, access].filter(Boolean).join(" · ")}
                 </option>
               );
             })}

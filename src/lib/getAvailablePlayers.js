@@ -2,82 +2,26 @@
 import getProps from "./getProps";
 import getInjuries from "./getInjuries";
 import getRosters from "./getRosters";
-import { hasProAccess } from "./permissions";
-
-function seededShuffle(array, seed) {
-  let hash = 0;
-  for (let i = 0; i < seed.length; i++) {
-    hash = (hash << 5) - hash + seed.charCodeAt(i);
-    hash |= 0;
-  }
-
-  let s = Math.abs(hash);
-  const rand = () => {
-    s += 0x6d2b79f5;
-    let t = s;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-
-  const result = [...array];
-  for (let i = result.length - 1; i > 0; i--) {
-    const j = Math.floor(rand() * (i + 1));
-    [result[i], result[j]] = [result[j], result[i]];
-  }
-  return result;
-}
-
-const FREE_PLAN_LIMIT = 15;
-const MIN_POINTS_AVG = 10;
-const MIN_HIT_RATE_L10 = 60;
-const CANDIDATE_POOL = 60;
+import {
+  hasFullPlayerAccess,
+  selectFreePlayerIds,
+} from "./playerEntitlements";
 
 export function getAvailablePlayers(plan) {
   const rostersData = getRosters();
   const propsData = getProps();
   if (!rostersData?.length) return new Set(); // no data means no players
 
-  if (hasProAccess(plan)) {
-    return new Set(rostersData.map((p) => p.PLAYER_ID));
+  if (hasFullPlayerAccess(plan)) {
+    return new Set(rostersData.map((player) => Number(player.PLAYER_ID)));
   }
 
-  // Injured players — exclude from the Free plan
   const injuries = getInjuries();
-  const injuredNames = new Set(
-    injuries.flatMap(
-      (team) => team?.injuries?.map((i) => i.athlete.displayName) ?? [],
-    ),
-  );
-
-  // Filter props by quality criteria and sort by the best results
-  const qualityProps = propsData
-    .filter((p) => {
-      const avg = p.props?.points?.avg ?? 0;
-      const l10 = p.props?.points?.L10?.hit_rate ?? 0;
-      return avg >= MIN_POINTS_AVG && l10 >= MIN_HIT_RATE_L10;
-    })
-    .sort((a, b) => {
-      // Sort by descending L10 hit rate, breaking ties by average points
-      const aL10 = a.props?.points?.L10?.hit_rate ?? 0;
-      const bL10 = b.props?.points?.L10?.hit_rate ?? 0;
-      if (bL10 !== aL10) return bL10 - aL10;
-      return (b.props?.points?.avg ?? 0) - (a.props?.points?.avg ?? 0);
-    });
-
-  // IDs of the top CANDIDATE_POOL qualifying players
-  const topIds = new Set(
-    qualityProps.slice(0, CANDIDATE_POOL).map((p) => p.player_id),
-  );
-
-  // Cross-reference the roster and exclude injured players
-  const eligible = rostersData.filter(
-    (p) => topIds.has(p.PLAYER_ID) && !injuredNames.has(p.PLAYER),
-  );
-
-  // Shuffle daily and return 15
   const seed = new Date().toISOString().split("T")[0];
-  const shuffled = seededShuffle(eligible, seed);
-
-  return new Set(shuffled.slice(0, FREE_PLAN_LIMIT).map((p) => p.PLAYER_ID));
+  return selectFreePlayerIds({
+    rosters: rostersData,
+    props: propsData,
+    injuries,
+    seed,
+  });
 }

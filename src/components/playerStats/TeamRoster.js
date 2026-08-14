@@ -17,10 +17,12 @@ const PlayerRow = ({
   clickable = true,
   injuryStatus,
 }) => (
-  <div
+  <button
+    type="button"
     onClick={onClick}
+    aria-label={player._isLocked ? `${player.PLAYER}, locked on Free` : `Open ${player.PLAYER}`}
     className={`
-      group flex items-center justify-between px-4 py-2.5
+      group flex w-full items-center justify-between px-4 py-2.5 text-left
       border-b border-white/[0.04] transition-all duration-150
       ${clickable ? "cursor-pointer" : ""}
       ${
@@ -62,9 +64,14 @@ const PlayerRow = ({
           {injuryStatus === "Day-To-Day" ? "DTD" : injuryStatus}
         </span>
       )}
+      {player._isLocked && (
+        <span className="rounded border border-orange-500/30 bg-orange-500/10 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-widest text-orange-400">
+          Pro
+        </span>
+      )}
       {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-slate-400" />}
     </div>
-  </div>
+  </button>
 );
 
 const TeamRoster = ({
@@ -84,9 +91,9 @@ const TeamRoster = ({
 
   return (
     <div className="mt-1 overflow-y-auto scrollbar-thin">
-      {sortedRoster.map((player, index) => (
+      {sortedRoster.map((player) => (
         <PlayerRow
-          key={index}
+          key={player.PLAYER_ID}
           player={player}
           isSelected={player.PLAYER === selectedName}
           onClick={() => setSelectedName(player)}

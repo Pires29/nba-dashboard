@@ -65,21 +65,19 @@ const BILLING_OPTIONS = [
 ];
 
 const FREE_FEATURES = [
-  "Today's games only",
-  "5 players per team",
-  "Last 5 games history",
-  "Basic player stats",
+  "15 featured players, refreshed daily",
+  "Complete history and advanced stats",
+  "Home/away, H2H and playoff filters",
+  "Injuries and team comparison",
 ];
 
 const PRO_FEATURES = [
-  "All scheduled games",
-  "Full team rosters",
-  "Full game history (season)",
-  "Advanced player stats",
-  "Injury reports & status",
-  "Team comparison",
-  "Advanced filters (home/away, win/loss)",
-  "Hit rate tracking",
+  "Every NBA player",
+  "No daily player limit",
+  "Complete history and advanced stats",
+  "Home/away, H2H and playoff filters",
+  "Injuries and team comparison",
+  "Hit-rate tracking",
   "Early access to new features",
 ];
 
@@ -560,11 +558,11 @@ export default function PricingPage({ userPlan }) {
                         </div>
                         <div>
                           <p className="text-white font-black text-[15px] mb-1">
-                            All scheduled games
+                            Every game, same complete analysis
                           </p>
                           <p className="text-slate-500 font-mono text-[11px] leading-relaxed">
-                            The Free plan only shows today&apos;s games. Pro gives
-                            you access to every game in the season — past and future.
+                            Games and analysis tools are available on both plans.
+                            Pro removes the daily player restriction.
                           </p>
                         </div>
                       </div>
@@ -605,7 +603,7 @@ export default function PricingPage({ userPlan }) {
                         </div>
                         <div>
                           <p className="text-white font-black text-[15px] mb-1">
-                            Full team rosters
+                            Every NBA player
                           </p>
                           <p className="text-slate-500 font-mono text-[11px] leading-relaxed">
                             The Free plan gives you access to only 15 players,

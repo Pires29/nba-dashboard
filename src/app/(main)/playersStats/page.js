@@ -8,6 +8,7 @@ import getPlayerLogs from "@/lib/getPlayerLogs";
 import getPrevPlayerLogs from "@/lib/getPrevPlayerLogs";
 import { getAvailablePlayers } from "@/lib/getAvailablePlayers";
 import { getCurrentSession } from "@/lib/getCurrentSession";
+import LockedPlayerState from "@/components/playerStats/LockedPlayerState";
 
 export default async function Page({ searchParams }) {
   const resolvedSearchParams = await searchParams;
@@ -21,23 +22,29 @@ export default async function Page({ searchParams }) {
   const allowedPlayerIds = getAvailablePlayers(plan);
 
   const rawRosterData = getRosters();
-
-  // Apply the entitlement before resolving the selected player, so restricted
-  // identities and their historical logs never reach a Free user's browser.
-  const allowedRosterData = rawRosterData.filter((player) =>
-    allowedPlayerIds.has(Number(player.PLAYER_ID)),
-  );
-  const matchupRoster = allowedRosterData.filter((player) => {
+  const matchupRoster = rawRosterData.filter((player) => {
     const teamId = Number(player.TEAM_ID);
     return teamId === team1Id || teamId === team2Id;
-  });
-  const requestedPlayer = matchupRoster.find(
+  }).map((player) => ({
+    ...player,
+    _isLocked: !allowedPlayerIds.has(Number(player.PLAYER_ID)),
+  }));
+  const requestedRosterPlayer = matchupRoster.find(
     (player) => Number(player.PLAYER_ID) === requestedPlayerId,
   );
-  const homeRoster = matchupRoster.filter(
+  const requestedPlayer = requestedRosterPlayer?._isLocked
+    ? null
+    : requestedRosterPlayer;
+
+  if (requestedRosterPlayer?._isLocked) {
+    return <LockedPlayerState playerName={requestedRosterPlayer.PLAYER} />;
+  }
+
+  const accessibleRoster = matchupRoster.filter((player) => !player._isLocked);
+  const homeRoster = accessibleRoster.filter(
     (player) => Number(player.TEAM_ID) === team1Id,
   );
-  const awayRoster = matchupRoster.filter(
+  const awayRoster = accessibleRoster.filter(
     (player) => Number(player.TEAM_ID) === team2Id,
   );
   const fallbackRoster = homeRoster.length ? homeRoster : awayRoster;
@@ -46,6 +53,10 @@ export default async function Page({ searchParams }) {
   const playerId = Number(
     requestedPlayer?.PLAYER_ID ?? fallbackPlayer?.PLAYER_ID ?? 0,
   );
+
+  if (!playerId) {
+    return <LockedPlayerState />;
+  }
 
   const [
     rawGamesSchedule,
@@ -66,7 +77,7 @@ export default async function Page({ searchParams }) {
     team1Id,
     team2Id,
     stat,
-    rawRosterData: allowedRosterData,
+    rawRosterData: matchupRoster,
     rawGamesSchedule,
     rawInjuries,
     rawTeamStats,

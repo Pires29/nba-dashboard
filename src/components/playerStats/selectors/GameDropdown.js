@@ -1,23 +1,16 @@
-import { hasProAccess } from "@/lib/permissions";
 
 const buildGameValue = (game) =>
   `${game.date}-${game.home_team_id}-${game.visitor_team_id}`;
 
-const GameDropdown = ({ plan, team1Id, team2Id, games, teams, onSelect }) => {
-  const isPro = hasProAccess(plan);
+const GameDropdown = ({ team1Id, team2Id, games, teams, onSelect }) => {
   const hasGames = games?.length > 0;
 
-  if (!isPro || !hasGames) {
+  if (!hasGames) {
     return (
       <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg border border-white/[0.06] bg-[#060E1A] opacity-60">
         <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest flex-1">
-          {!isPro ? "Upgrade to Pro" : "No games today"}
+          No games today
         </span>
-        {!isPro && (
-          <span className="px-1.5 py-0.5 rounded border border-orange-500/30 bg-orange-500/10 text-orange-400 text-[9px] font-mono font-bold uppercase">
-            Pro
-          </span>
-        )}
       </div>
     );
   }

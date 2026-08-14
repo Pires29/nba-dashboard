@@ -13,8 +13,11 @@ export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const playerId = Number(searchParams.get("playerId"));
 
-  if (!Number.isSafeInteger(playerId) || playerId <= 0 || !allowedPlayerIds.has(playerId)) {
-    return NextResponse.json({ logs: [], logsPlayoffs: [], logsPrev: [] });
+  if (!Number.isSafeInteger(playerId) || playerId <= 0) {
+    return NextResponse.json({ error: "INVALID_PLAYER_ID" }, { status: 400 });
+  }
+  if (!allowedPlayerIds.has(playerId)) {
+    return NextResponse.json({ error: "PLAYER_LOCKED" }, { status: 403 });
   }
 
   const { logs, logsPlayoffs } = getPlayerLogs(playerId);
