@@ -1,8 +1,8 @@
 import Link from "next/link";
 
-const LockedPlayerState = ({ playerName }) => (
-  <main className="flex min-h-full items-center justify-center bg-gradient-to-b from-[#0D1B2E] to-[#060E1A] px-5 py-16">
-    <section className="w-full max-w-xl rounded-2xl border border-orange-500/20 bg-[#0D1828] p-8 text-center shadow-2xl">
+const LockedPlayerState = ({ playerName, embedded = false }) => (
+  <main className={embedded ? "flex min-h-[520px] items-center justify-center" : "flex min-h-full items-center justify-center bg-gradient-to-b from-[#0D1B2E] to-[#060E1A] px-5 py-16"}>
+    <section className={`w-full rounded-2xl border border-orange-500/20 bg-[#0D1828] p-8 text-center shadow-2xl ${embedded ? "h-full" : "max-w-xl"}`}>
       <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full border border-orange-500/30 bg-orange-500/10 text-orange-400">
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="h-6 w-6">
           <rect x="4" y="10" width="16" height="11" rx="2" stroke="currentColor" strokeWidth="1.8" />

@@ -35,10 +35,7 @@ export default async function Page({ searchParams }) {
   const requestedPlayer = requestedRosterPlayer?._isLocked
     ? null
     : requestedRosterPlayer;
-
-  if (requestedRosterPlayer?._isLocked) {
-    return <LockedPlayerState playerName={requestedRosterPlayer.PLAYER} />;
-  }
+  const isPlayerLocked = Boolean(requestedRosterPlayer?._isLocked);
 
   const accessibleRoster = matchupRoster.filter((player) => !player._isLocked);
   const homeRoster = accessibleRoster.filter(
@@ -51,7 +48,10 @@ export default async function Page({ searchParams }) {
   const fallbackPlayer =
     fallbackRoster.find((player) => player.NUM) ?? fallbackRoster[0] ?? null;
   const playerId = Number(
-    requestedPlayer?.PLAYER_ID ?? fallbackPlayer?.PLAYER_ID ?? 0,
+    requestedRosterPlayer?.PLAYER_ID ??
+      requestedPlayer?.PLAYER_ID ??
+      fallbackPlayer?.PLAYER_ID ??
+      0,
   );
 
   if (!playerId) {
@@ -66,10 +66,12 @@ export default async function Page({ searchParams }) {
     logsPrev,
   ] = await Promise.all([
     getGamesSchedule(),
-    getInjuries(),
-    getTeamStats(),
-    playerId ? getPlayerLogs(playerId) : Promise.resolve({ logs: [] }),
-    playerId ? getPrevPlayerLogs(playerId) : Promise.resolve([]),
+    isPlayerLocked ? Promise.resolve([]) : getInjuries(),
+    isPlayerLocked ? Promise.resolve([]) : getTeamStats(),
+    isPlayerLocked
+      ? Promise.resolve({ logs: [], logsPlayoffs: [] })
+      : getPlayerLogs(playerId),
+    isPlayerLocked ? Promise.resolve([]) : getPrevPlayerLogs(playerId),
   ]);
 
   const data = await buildPlayerStatsPageData({
@@ -93,6 +95,8 @@ export default async function Page({ searchParams }) {
       playerId={playerId}
       stat={stat}
       data={data}
+      isPlayerLocked={isPlayerLocked}
+      lockedPlayerName={requestedRosterPlayer?.PLAYER}
     />
   );
 }

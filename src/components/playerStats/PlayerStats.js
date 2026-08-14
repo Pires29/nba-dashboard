@@ -1,6 +1,12 @@
 import ResponsiveLayout from "./layout/ResponsiveLayout";
 
-const PlayerStats = ({ data, plan, stat }) => {
+const PlayerStats = ({
+  data,
+  plan,
+  stat,
+  isPlayerLocked = false,
+  lockedPlayerName,
+}) => {
   return (
     <div className="flex min-h-full flex-col bg-gradient-to-b from-[#0D1B2E] to-[#060E1A] font-sans">
       <div
@@ -35,6 +41,8 @@ const PlayerStats = ({ data, plan, stat }) => {
         opponentAbbr={data.opponentAbbr}
         statGraphData={data.statGraphData}
         initialStat={stat}
+        isPlayerLocked={isPlayerLocked}
+        lockedPlayerName={lockedPlayerName}
       />
     </div>
   );

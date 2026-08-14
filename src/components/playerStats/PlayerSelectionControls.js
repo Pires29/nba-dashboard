@@ -93,8 +93,12 @@ const PlayerSelectionControls = ({
           <div className="px-4 pb-3">
             <div className="flex overflow-hidden rounded-lg border border-white/[0.07] bg-[#0D1828] p-1">
               {[
-                team1Formatted?.teamName || "Team 1",
-                team2Formatted?.teamName || "Team 2",
+                team1Formatted?.teamName ||
+                  teamNameMap?.[currentGame?.home_team_id] ||
+                  "Team 1",
+                team2Formatted?.teamName ||
+                  teamNameMap?.[currentGame?.visitor_team_id] ||
+                  "Team 2",
               ].map((name, idx) => (
                 <button
                   key={name}

@@ -7,6 +7,26 @@ import Injuries from "../Injuries";
 import PlayerGraphSection from "../PlayerGraphSection";
 import PlayerSelectionControls from "../PlayerSelectionControls";
 import SectionLabel from "@/components/ui/playerStats/SectionLabel";
+import LockedPlayerState from "../LockedPlayerState";
+
+const LockedSection = ({ title }) => (
+  <Card accent="orange" className="h-full">
+    <div className="p-4">
+      <SectionLabel>{title}</SectionLabel>
+      <div className="flex min-h-[180px] items-center justify-center rounded-xl border border-white/[0.06] bg-[#060E1A]/60">
+        <div className="text-center text-orange-400">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="mx-auto h-6 w-6">
+            <rect x="4" y="10" width="16" height="11" rx="2" stroke="currentColor" strokeWidth="1.8" />
+            <path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          </svg>
+          <p className="mt-2 font-mono text-[10px] font-bold uppercase tracking-widest">
+            Player data locked
+          </p>
+        </div>
+      </div>
+    </div>
+  </Card>
+);
 
 const TeamStats = dynamic(() => import("../TeamStats"), {
   ssr: false,
@@ -38,6 +58,8 @@ const ResponsiveLayout = ({
   opponentAbbr,
   statGraphData,
   initialStat,
+  isPlayerLocked,
+  lockedPlayerName,
 }) => {
   return (
     <div className="relative z-10 mx-auto flex w-full max-w-[1440px] flex-1 flex-col px-4 sm:px-5 lg:px-6">
@@ -58,23 +80,33 @@ const ResponsiveLayout = ({
               initialActiveTeam={initialActiveTeam}
             />
 
-            <PlayerGraphSection
-              player={player}
-              injuryStatus={injuryMap?.[player?.PLAYER]}
-              playerStats={playerStats}
-              contextGames={contextGames}
-              hasCurrentGames={hasCurrentGames}
-              hasPreviousGames={hasPreviousGames}
-              hasPlayoffGames={hasPlayoffGames}
-              currentGame={currentGame}
-              opponentAbbr={opponentAbbr}
-              statGraphData={statGraphData}
-              initialStat={initialStat}
-            />
+            {isPlayerLocked ? (
+              <LockedPlayerState playerName={lockedPlayerName} embedded />
+            ) : (
+              <PlayerGraphSection
+                player={player}
+                injuryStatus={injuryMap?.[player?.PLAYER]}
+                playerStats={playerStats}
+                contextGames={contextGames}
+                hasCurrentGames={hasCurrentGames}
+                hasPreviousGames={hasPreviousGames}
+                hasPlayoffGames={hasPlayoffGames}
+                currentGame={currentGame}
+                opponentAbbr={opponentAbbr}
+                statGraphData={statGraphData}
+                initialStat={initialStat}
+              />
+            )}
           </div>
 
           <aside className="grid min-w-0 items-start gap-4 lg:grid-cols-2 lg:gap-6">
-            <DeferredRender
+            {isPlayerLocked ? (
+              <>
+                <LockedSection title="Injuries & Status" />
+                <LockedSection title="Team Comparison" />
+              </>
+            ) : (
+              <><DeferredRender
               rootMargin="300px 0px"
               fallback={
                 <Card accent="orange">
@@ -110,7 +142,8 @@ const ResponsiveLayout = ({
                   />
                 </div>
               </Card>
-            </DeferredRender>
+            </DeferredRender></>
+            )}
           </aside>
         </div>
       </div>
