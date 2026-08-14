@@ -361,7 +361,6 @@ export default function PricingPage({ userPlan }) {
 
   const [referralCode, setReferralCode] = useState("");
   const [referralStatus, setReferralStatus] = useState(null);
-  const [referralCodeId, setReferralCodeId] = useState(null);
   const [appliedCode, setAppliedCode] = useState(null); // tracks the validated code string
 
   const discountActive = referralStatus === "valid" && activePlan?.price > 0;
@@ -386,11 +385,9 @@ export default function PricingPage({ userPlan }) {
 
     if (data.valid) {
       setReferralStatus("valid");
-      setReferralCodeId(data.referralCodeId);
-      setAppliedCode(referralCode);
+      setAppliedCode(referralCode.trim().toUpperCase());
     } else {
       setReferralStatus("invalid");
-      setReferralCodeId(null);
       setAppliedCode(null);
     }
   };
@@ -401,7 +398,7 @@ export default function PricingPage({ userPlan }) {
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ billing, referralCodeId }),
+        body: JSON.stringify({ billing, referralCode: appliedCode }),
       });
       const data = await res.json().catch(() => ({}));
       if (data.url) {

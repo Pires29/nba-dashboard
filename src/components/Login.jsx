@@ -10,13 +10,14 @@ import {
   GoogleIcon,
 } from "@/components/AuthLayout";
 import { useSearchParams } from "next/navigation";
+import { safeInternalPath } from "@/lib/security";
 
 export function LoginForm() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/";
+  const callbackUrl = safeInternalPath(searchParams.get("callbackUrl"), "/");
 
   const handleLogin = async (e) => {
     e.preventDefault();

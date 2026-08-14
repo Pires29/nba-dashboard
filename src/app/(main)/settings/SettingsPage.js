@@ -25,7 +25,7 @@ const InfoRow = ({ label, value }) => (
   </div>
 );
 
-const DeleteModal = ({ onConfirm, onCancel }) => (
+const DeleteModal = ({ onConfirm, onCancel, loading }) => (
   <div className="fixed inset-0 z-50 flex items-center justify-center">
     <div
       className="absolute inset-0 bg-black/60 backdrop-blur-sm"
@@ -78,9 +78,10 @@ const DeleteModal = ({ onConfirm, onCancel }) => (
           </button>
           <button
             onClick={onConfirm}
+            disabled={loading}
             className="flex-1 py-2.5 rounded-xl bg-red-500 hover:bg-red-400 text-white text-[11px] font-mono font-bold uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(239,68,68,0.3)]"
           >
-            Delete
+            {loading ? "Deleting..." : "Delete"}
           </button>
         </div>
       </div>
@@ -129,6 +130,8 @@ export default function SettingsPage({ session }) {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
   const [cancelled, setCancelled] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [actionError, setActionError] = useState("");
   const router = useRouter();
 
   const user = session?.user;
@@ -146,31 +149,39 @@ export default function SettingsPage({ session }) {
     : null;
 
   const handleDeleteAccount = async () => {
+    setDeleteLoading(true);
+    setActionError("");
     try {
       const res = await fetch("/api/user/delete", { method: "DELETE" });
       const data = await res.json();
       if (!res.ok) {
-        console.error("Error deleting account:", data.error);
+        setActionError(data.error || "Unable to delete the account");
         return;
       }
       setShowDeleteModal(false);
       await signOut({ callbackUrl: "/" });
     } catch (err) {
-      console.error("Error:", err);
+      setActionError("Unable to connect. Please try again.");
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
   const handleCancelSubscription = async () => {
     setCancelLoading(true);
+    setActionError("");
     try {
       const res = await fetch("/api/stripe/cancel", { method: "POST" });
       if (res.ok) {
         setCancelled(true);
         setShowCancelModal(false);
         router.refresh();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setActionError(data.error || "Unable to cancel the subscription");
       }
     } catch (err) {
-      console.error("Error cancelling:", err);
+      setActionError("Unable to connect. Please try again.");
     } finally {
       setCancelLoading(false);
     }
@@ -337,6 +348,11 @@ export default function SettingsPage({ session }) {
               </button>
             </div>
           </div>
+          {actionError && (
+            <p role="alert" className="text-center text-[11px] font-mono text-red-400">
+              {actionError}
+            </p>
+          )}
         </div>
       </div>
 
@@ -344,6 +360,7 @@ export default function SettingsPage({ session }) {
         <DeleteModal
           onConfirm={handleDeleteAccount}
           onCancel={() => setShowDeleteModal(false)}
+          loading={deleteLoading}
         />
       )}
       {showCancelModal && (

@@ -1,13 +1,15 @@
 import { getToken } from "next-auth/jwt";
 import { NextResponse } from "next/server";
 
-export async function middleware(req) {
+export async function proxy(req) {
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-  const { pathname } = req.nextUrl;
 
-  if (pathname.startsWith("/playersStats") && !token) {
+  if (!token) {
     const loginUrl = new URL("/login", req.url);
-    loginUrl.searchParams.set("callbackUrl", req.nextUrl.href);
+    loginUrl.searchParams.set(
+      "callbackUrl",
+      `${req.nextUrl.pathname}${req.nextUrl.search}`,
+    );
     return NextResponse.redirect(loginUrl);
   }
 
@@ -16,11 +18,10 @@ export async function middleware(req) {
 
 export const config = {
   matcher: [
-    "/playersStats",
     "/playersStats/:path*",
-    "/props",
     "/props/:path*",
-    "/favorites",
     "/favorites/:path*",
+    "/settings/:path*",
   ],
 };
+

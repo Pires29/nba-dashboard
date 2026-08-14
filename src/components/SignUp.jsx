@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import {
   AuthLayout,
   AuthInput,
@@ -13,6 +14,7 @@ import {
 export function SignupForm() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const handleSignup = async (e) => {
     e.preventDefault();
@@ -58,7 +60,8 @@ export function SignupForm() {
         setError("Account created, but sign-in failed");
         setLoading(false);
       } else {
-        window.location.href = "/";
+        router.push("/");
+        router.refresh();
       }
     } catch (err) {
       setError("Connection error");

@@ -12,7 +12,15 @@ function getSeasonAccessEnd(purchasedAt = new Date()) {
 }
 
 export async function POST(req) {
+  const contentLength = Number(req.headers.get("content-length"));
+  if (Number.isFinite(contentLength) && contentLength > 1_048_576) {
+    return Response.json({ error: "Webhook payload too large" }, { status: 413 });
+  }
+
   const body = await req.text();
+  if (new TextEncoder().encode(body).length > 1_048_576) {
+    return Response.json({ error: "Webhook payload too large" }, { status: 413 });
+  }
   const sig = req.headers.get("stripe-signature");
 
   let event;
@@ -22,15 +30,21 @@ export async function POST(req) {
       sig,
       process.env.STRIPE_WEBHOOK_SECRET,
     );
-  } catch (err) {
-    return Response.json(
-      { error: `Webhook error: ${err.message}` },
-      { status: 400 },
-    );
+  } catch {
+    return Response.json({ error: "Invalid webhook signature" }, { status: 400 });
   }
 
-  switch (event.type) {
-    case "checkout.session.completed": {
+  const alreadyProcessed = await prisma.stripeWebhookEvent.findUnique({
+    where: { id: event.id },
+    select: { id: true },
+  });
+  if (alreadyProcessed) {
+    return Response.json({ received: true, duplicate: true });
+  }
+
+  try {
+    switch (event.type) {
+      case "checkout.session.completed": {
       const session = event.data.object;
       const userId = session.metadata?.userId;
       const referralCodeId = session.metadata?.referralCodeId;
@@ -38,8 +52,14 @@ export async function POST(req) {
       if (!userId) break;
 
       if (referralCodeId) {
-        await prisma.referralUse.create({
-          data: {
+        await prisma.referralUse.upsert({
+          where: { referredUserId: userId },
+          update: {
+            discountApplied: true,
+            amountPaid: session.amount_total,
+            stripeSessionId: session.id,
+          },
+          create: {
             referralCodeId,
             referredUserId: userId,
             discountApplied: true,
@@ -72,16 +92,9 @@ export async function POST(req) {
 
       const interval = subscription.items.data[0].price.recurring.interval;
 
-      console.log("subscription", subscription);
-      console.log(
-        "subscription",
-        subscription.items.data[0].price.recurring.interval,
-      );
-      console.log("subscription", subscription.items.data);
-
       const plan = subscription.status === "trialing" ? "trial" : "pro";
 
-      await prisma.user.update({
+      await prisma.user.updateMany({
         where: { id: userId },
         data: {
           plan,
@@ -96,27 +109,31 @@ export async function POST(req) {
       });
       break;
     }
-    case "customer.subscription.updated": {
-      // When the trial ends, Stripe changes the status to "active"
-      const subscription = event.data.object;
-      const customer = await stripe.customers.retrieve(subscription.customer);
-      const userId = customer.metadata?.userId;
-      if (!userId) break;
+      case "customer.subscription.updated": {
+        const subscription = event.data.object;
+        const customer = await stripe.customers.retrieve(subscription.customer);
+        const userId = subscription.metadata?.userId || customer.metadata?.userId;
+        if (!userId) break;
 
-      if (
-        subscription.status === "active" &&
-        subscription.trial_end &&
-        Date.now() / 1000 > subscription.trial_end
-      ) {
-        await prisma.user.update({
+        const item = subscription.items.data[0];
+        const hasAccess = ["active", "trialing"].includes(subscription.status);
+        await prisma.user.updateMany({
           where: { id: userId },
-          data: { plan: "pro" },
+          data: {
+            plan: hasAccess
+              ? subscription.status === "trialing" ? "trial" : "pro"
+              : "free",
+            stripeSubscriptionId: subscription.id,
+            planRenewsAt: item?.current_period_end
+              ? new Date(item.current_period_end * 1000)
+              : null,
+            planInterval: item?.price?.recurring?.interval ?? null,
+          },
         });
+        break;
       }
-      break;
-    }
 
-    case "invoice.payment_succeeded": {
+      case "invoice.payment_succeeded": {
       const invoice = event.data.object;
       if (!invoice.subscription) break;
       const customer = await stripe.customers.retrieve(invoice.customer);
@@ -125,20 +142,20 @@ export async function POST(req) {
       const renewsAt = invoice.period_end
         ? new Date(invoice.period_end * 1000)
         : null;
-      await prisma.user.update({
+      await prisma.user.updateMany({
         where: { id: userId },
         data: { planRenewsAt: renewsAt },
       });
       break;
     }
 
-    case "customer.subscription.deleted": {
+      case "customer.subscription.deleted": {
       const subscription = event.data.object;
       const customer = await stripe.customers.retrieve(subscription.customer);
       const userId = customer.metadata?.userId;
       if (!userId) break;
 
-      await prisma.user.update({
+      await prisma.user.updateMany({
         where: { id: userId },
         data: {
           plan: "free",
@@ -149,10 +166,37 @@ export async function POST(req) {
       break;
     }
 
-    case "invoice.payment_failed": {
-      console.warn("Payment failed for:", event.data.object.customer);
+      case "invoice.payment_failed": {
+      const invoice = event.data.object;
+      const customer = await stripe.customers.retrieve(invoice.customer);
+      const userId = customer.metadata?.userId;
+      if (userId) {
+        await prisma.user.updateMany({
+          where: { id: userId },
+          data: { plan: "free" },
+        });
+      }
+      console.warn("Stripe invoice payment failed", {
+        customerId: invoice.customer,
+        invoiceId: invoice.id,
+      });
       break;
     }
+    }
+
+    await prisma.stripeWebhookEvent.create({
+      data: { id: event.id, type: event.type },
+    });
+  } catch (error) {
+    if (error?.code === "P2002") {
+      return Response.json({ received: true, duplicate: true });
+    }
+    console.error("Stripe webhook processing failed", {
+      eventId: event.id,
+      eventType: event.type,
+      code: error?.code,
+    });
+    return Response.json({ error: "Webhook processing failed" }, { status: 500 });
   }
 
   return Response.json({ received: true });

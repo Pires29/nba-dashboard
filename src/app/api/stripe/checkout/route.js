@@ -4,6 +4,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import Stripe from "stripe";
 import prisma from "../../../../../prisma/prismaClient";
+import { validateReferralForUser } from "@/lib/referrals";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
+import { readJson, RequestError } from "@/lib/security";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -12,16 +15,25 @@ const PRICE_MAP = {
   season: process.env.STRIPE_PRICE_SEASON,
   trial: process.env.STRIPE_PRICE_MONTHLY,
 };
+const REFERRAL_COUPON_ID = process.env.STRIPE_REFERRAL_COUPON_ID;
 
 export async function POST(req) {
+  let referralReservedForUserId = null;
+  let checkoutSessionCreated = false;
+
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Also receives the referralCodeId.
-    const { billing, referralCodeId } = await req.json();
+    const rateLimit = checkRateLimit(`checkout:${session.user.id}`, {
+      limit: 5,
+      windowMs: 15 * 60 * 1000,
+    });
+    if (!rateLimit.allowed) return rateLimitResponse(rateLimit);
+
+    const { billing, referralCode } = await readJson(req, { maxBytes: 2_048 });
     const priceId = PRICE_MAP[billing];
 
     if (!priceId) {
@@ -34,6 +46,41 @@ export async function POST(req) {
 
     if (!user) {
       return Response.json({ error: "User not found" }, { status: 404 });
+    }
+
+    if (user.plan === "pro" && user.planInterval !== "season") {
+      return Response.json({ error: "An active subscription already exists" }, { status: 409 });
+    }
+
+    if (billing === "trial" && user.hasUsedTrial) {
+      return Response.json({ error: "Trial already used" }, { status: 409 });
+    }
+
+    let referralCodeId = null;
+    if (referralCode) {
+      if (!REFERRAL_COUPON_ID) {
+        console.error("Stripe referral coupon is not configured");
+        return Response.json({ error: "Referral discounts are unavailable" }, { status: 503 });
+      }
+      const referralResult = await validateReferralForUser({
+        code: referralCode,
+        userId: user.id,
+      });
+      if (!referralResult.valid) {
+        return Response.json({ error: "Invalid or unavailable referral code" }, { status: 400 });
+      }
+      referralCodeId = referralResult.referral.id;
+
+      // Reserve the one-time referral before contacting Stripe. The unique
+      // referredUserId constraint prevents concurrent discounted checkouts.
+      await prisma.referralUse.create({
+        data: {
+          referralCodeId,
+          referredUserId: user.id,
+          discountApplied: false,
+        },
+      });
+      referralReservedForUserId = user.id;
     }
 
     let customerId = user.stripeCustomerId;
@@ -73,7 +120,7 @@ export async function POST(req) {
       payment_method_types: ["card"],
       line_items: [{ price: priceId, quantity: 1 }],
       mode: isSeasonPayment ? "payment" : "subscription",
-      discounts: referralCodeId ? [{ coupon: "REFERRAL20" }] : [],
+      discounts: referralCodeId ? [{ coupon: REFERRAL_COUPON_ID }] : [],
       ...(!isSeasonPayment && {
         subscription_data: applyTrial
           ? {
@@ -90,12 +137,34 @@ export async function POST(req) {
         referralCodeId: referralCodeId ?? "",
       },
     });
+    checkoutSessionCreated = true;
+
+    if (referralReservedForUserId) {
+      await prisma.referralUse.update({
+        where: { referredUserId: referralReservedForUserId },
+        data: { stripeSessionId: checkoutSession.id },
+      });
+    }
 
     return Response.json({ url: checkoutSession.url });
   } catch (error) {
-    console.error("Stripe checkout error:", error);
+    if (referralReservedForUserId && !checkoutSessionCreated) {
+      await prisma.referralUse.deleteMany({
+        where: {
+          referredUserId: referralReservedForUserId,
+          discountApplied: false,
+        },
+      }).catch(() => undefined);
+    }
+    if (error instanceof RequestError) {
+      return Response.json({ error: error.message }, { status: error.status });
+    }
+    if (error?.code === "P2002") {
+      return Response.json({ error: "Referral code is already in use" }, { status: 409 });
+    }
+    console.error("Stripe checkout failed", { type: error?.type, code: error?.code });
     return Response.json(
-      { error: error?.message ?? "Unable to create checkout session" },
+      { error: "Unable to create checkout session" },
       { status: 500 },
     );
   }

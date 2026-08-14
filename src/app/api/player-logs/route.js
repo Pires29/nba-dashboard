@@ -13,7 +13,7 @@ export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const playerId = Number(searchParams.get("playerId"));
 
-  if (!playerId || !allowedPlayerIds.has(playerId)) {
+  if (!Number.isSafeInteger(playerId) || playerId <= 0 || !allowedPlayerIds.has(playerId)) {
     return NextResponse.json({ logs: [], logsPlayoffs: [], logsPrev: [] });
   }
 
