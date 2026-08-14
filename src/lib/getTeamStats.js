@@ -1,14 +1,16 @@
 import teamStats from "@/app/data/team_stats.json";
 import teams from "@/app/data/teams.json";
 
-export default function getTeamStats() {
-  return Object.entries(teamStats ?? {}).map(([teamId, stats]) => {
+export default function getTeamStats(source = {}) {
+  const statsSource = source.teamStatsById ?? teamStats;
+  const teamSource = source.teamsById ?? teams;
+  return Object.entries(statsSource ?? {}).map(([teamId, stats]) => {
     const offense = stats?.offense ?? {};
     const defense = stats?.defense ?? {};
 
     return {
       TEAM_ID: Number(teamId),
-      TEAM_NAME: teams?.[teamId]?.name ?? "",
+      TEAM_NAME: teamSource?.[teamId]?.name ?? "",
       offense: {
         PTS: offense.pts, PTS_RANK: offense.pts_rank,
         AST: offense.ast, AST_RANK: offense.ast_rank,

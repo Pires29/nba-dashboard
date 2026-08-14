@@ -1,9 +1,9 @@
 import "server-only";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
-import { getQaFixtures, QA_PERSONAS, QA_SCENARIOS } from "./fixtures";
-
 export const QA_COOKIE = "nba_qa_scenario";
+export const QA_SCENARIOS = ["regular", "no-games", "partial-data"];
+export const QA_PERSONAS = ["free", "trial", "pro"];
 
 export function isQaEnabled() {
   return process.env.NODE_ENV !== "production" && process.env.QA_MODE === "true";
@@ -40,5 +40,6 @@ export async function getQaContext() {
   const store = await cookies();
   const state = parseQaToken(store.get(QA_COOKIE)?.value);
   if (!state) return null;
+  const { getQaFixtures } = await import("./fixtures");
   return { ...state, data: getQaFixtures(state.scenario) };
 }

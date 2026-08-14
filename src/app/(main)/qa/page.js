@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getQaContext, isQaEnabled } from "@/lib/qa/context";
-import { QA_PERSONAS, QA_SCENARIOS } from "@/lib/qa/fixtures";
+import {
+  getQaContext,
+  isQaEnabled,
+  QA_PERSONAS,
+  QA_SCENARIOS,
+} from "@/lib/qa/context";
 import { activateQaScenario, clearQaScenario } from "./actions";
 import { getAvailablePlayers } from "@/lib/getAvailablePlayers";
 

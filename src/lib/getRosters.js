@@ -2,12 +2,15 @@ import rostersByTeam from "@/app/data/rosters.json";
 import playersById from "@/app/data/players.json";
 import teamsById from "@/app/data/teams.json";
 
-export default function getRosters() {
-  return Object.entries(rostersByTeam ?? {}).flatMap(([teamId, roster]) => {
-    const team = teamsById?.[teamId] ?? {};
+export default function getRosters(source = {}) {
+  const rosterSource = source.rostersByTeam ?? rostersByTeam;
+  const playerSource = source.playersById ?? playersById;
+  const teamSource = source.teamsById ?? teamsById;
+  return Object.entries(rosterSource ?? {}).flatMap(([teamId, roster]) => {
+    const team = teamSource?.[teamId] ?? {};
 
     return (roster ?? []).map((rosterPlayer) => {
-      const player = playersById?.[String(rosterPlayer.id)] ?? {};
+      const player = playerSource?.[String(rosterPlayer.id)] ?? {};
 
       return {
         PLAYER_ID: Number(rosterPlayer.id),

@@ -1,9 +1,11 @@
 import data from "@/app/data/injuries.json";
 import teams from "@/app/data/teams.json";
 
-export default function getInjuries() {
-  return Object.entries(data ?? {}).map(([teamId, injuries]) => ({
-    displayName: teams?.[teamId]?.name ?? "",
+export default function getInjuries(source = {}) {
+  const injurySource = source.injuriesByTeam ?? data;
+  const teamSource = source.teamsById ?? teams;
+  return Object.entries(injurySource ?? {}).map(([teamId, injuries]) => ({
+    displayName: teamSource?.[teamId]?.name ?? "",
     injuries: (injuries ?? []).map((injury) => ({
       TeamID: Number(teamId),
       athlete: {

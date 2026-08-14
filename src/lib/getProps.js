@@ -2,7 +2,6 @@ import propsByPlayer from "@/app/data/props.json";
 import schedule from "@/app/data/schedule.json";
 import teamStats from "@/app/data/team_stats.json";
 import seasonStats from "@/app/data/season_stats.json";
-import gameLogs from "@/app/data/game_logs_current.json";
 import teams from "@/app/data/teams.json";
 import getRosters from "./getRosters";
 
@@ -20,43 +19,48 @@ const STAT_KEYS = {
   ra: "ra",
 };
 
-const toLegacyStat = (stat, logs, opponentAbbr) => ({
+const toLegacyStat = (stat) => ({
   avg: stat.avg,
-  L5: { hit_rate: stat.l5, games: Math.min(logs.length, 5) },
-  L10: { hit_rate: stat.l10, games: Math.min(logs.length, 10) },
-  L20: { hit_rate: stat.l20, games: Math.min(logs.length, 20) },
-  full: { hit_rate: stat.season, games: logs.length },
+  L5: { hit_rate: stat.l5, games: stat.l5Games ?? (stat.l5 == null ? 0 : 5) },
+  L10: { hit_rate: stat.l10, games: stat.l10Games ?? (stat.l10 == null ? 0 : 10) },
+  L20: { hit_rate: stat.l20, games: stat.l20Games ?? (stat.l20 == null ? 0 : 20) },
+  full: { hit_rate: stat.season, games: stat.seasonGames ?? 0 },
   h2h: {
     hit_rate: stat.h2h,
-    games: logs.filter((game) => game.opp === opponentAbbr).length,
+    games: stat.h2hGames ?? 0,
   },
 });
 
-export default function getProps() {
+export default function getProps(source = {}) {
+  const compactProps = source.propsByPlayer ?? propsByPlayer;
+  const scheduleData = source.schedule ?? schedule;
+  const teamStatsData = source.teamStats ?? teamStats;
+  const seasonStatsData = source.seasonStats ?? seasonStats;
+  const teamsData = source.teams ?? teams;
+  const rostersData = source.rostersData ?? getRosters(source);
   const rosterByPlayerId = new Map(
-    getRosters().map((player) => [Number(player.PLAYER_ID), player]),
+    rostersData.map((player) => [Number(player.PLAYER_ID), player]),
   );
 
-  return Object.entries(propsByPlayer ?? {}).flatMap(([playerId, entry]) => {
+  return Object.entries(compactProps ?? {}).flatMap(([playerId, entry]) => {
     const id = Number(playerId);
     const player = rosterByPlayerId.get(id);
     if (!player) return [];
 
     const teamId = Number(player.TEAM_ID);
     const opponentId = Number(entry.oppId);
-    const opponentAbbr = teams?.[String(opponentId)]?.abbr ?? "";
-    const logs = gameLogs?.[playerId] ?? [];
-    const currentGame = (schedule ?? []).find(
+    const opponentAbbr = teamsData?.[String(opponentId)]?.abbr ?? "";
+    const currentGame = (scheduleData ?? []).find(
       (game) =>
         Number(game.home_team_id) === teamId ||
         Number(game.visitor_team_id) === teamId,
     );
-    const defense = teamStats?.[String(opponentId)]?.defense ?? {};
+    const defense = teamStatsData?.[String(opponentId)]?.defense ?? {};
     const props = Object.fromEntries(
       Object.entries(STAT_KEYS).flatMap(([legacyKey, compactKey]) => {
         const stat = entry.props?.[compactKey];
         return stat
-          ? [[legacyKey, toLegacyStat(stat, logs, opponentAbbr)]]
+          ? [[legacyKey, toLegacyStat(stat)]]
           : [];
       }),
     );
@@ -70,7 +74,7 @@ export default function getProps() {
       opponent: opponentAbbr,
       opponent_id: opponentId,
       game_date: currentGame?.date ?? null,
-      avg_minutes: seasonStats?.[playerId]?.min ?? 0,
+      avg_minutes: seasonStatsData?.[playerId]?.min ?? 0,
       props,
       matchup: {
         opp_pts_allowed_rank: defense.pts_rank,

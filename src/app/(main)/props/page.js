@@ -1,12 +1,8 @@
-import getGamesSchedule from "@/lib/getGamesSchedule";
-import getInjuries from "@/lib/getInjuries";
-import getProps from "@/lib/getProps";
-import getStandings from "@/lib/getStandings";
-import getRosters from "@/lib/getRosters";
 import { getAvailablePlayers } from "@/lib/getAvailablePlayers";
 import { getCurrentSession } from "@/lib/getCurrentSession";
 import PropsTableWrapper from "./PropsTableWrapper";
 import { getQaContext } from "@/lib/qa/context";
+import { getNbaData } from "@/lib/nbaDataSource";
 
 const STATS = new Set([
   "points",
@@ -105,8 +101,9 @@ export default async function PropsPage({ searchParams }) {
   const resolvedSearchParams = await searchParams;
   const session = await getCurrentSession();
   const qa = await getQaContext();
+  const nbaData = qa?.data ?? (await getNbaData());
   const plan = qa?.persona ?? session?.user?.plan ?? "free";
-  const allowedPlayerIds = getAvailablePlayers(plan, qa?.data);
+  const allowedPlayerIds = getAvailablePlayers(plan, nbaData);
   const selectedStatParam = getSingleParam(resolvedSearchParams?.stat);
   const sortPeriodParam = getSingleParam(resolvedSearchParams?.sortPeriod);
   const filterTeam = getSingleParam(resolvedSearchParams?.team) ?? "";
@@ -126,14 +123,14 @@ export default async function PropsPage({ searchParams }) {
   const sortPeriod = PERIODS.has(sortPeriodParam) ? sortPeriodParam : "L5";
 
   const [rawProps, standings, schedule, injuries] = await Promise.all([
-    qa?.data.props ?? getProps(),
-    qa?.data.standings ?? getStandings(),
-    qa?.data.games ?? getGamesSchedule(),
-    qa?.data.injuries ?? getInjuries(),
+    nbaData.props,
+    nbaData.standings,
+    nbaData.games,
+    nbaData.injuries,
   ]);
 
   const currentRosterByPlayerId = new Map(
-    (qa?.data.rosters ?? getRosters()).map((player) => [Number(player.PLAYER_ID), player]),
+    nbaData.rosters.map((player) => [Number(player.PLAYER_ID), player]),
   );
   const safeProps = (Array.isArray(rawProps) ? rawProps : [])
     .filter((prop) => allowedPlayerIds.has(Number(prop.player_id)))

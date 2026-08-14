@@ -6,8 +6,9 @@ import {
   createQaToken,
   isQaEnabled,
   QA_COOKIE,
+  QA_PERSONAS,
+  QA_SCENARIOS,
 } from "@/lib/qa/context";
-import { QA_PERSONAS, QA_SCENARIOS } from "@/lib/qa/fixtures";
 
 export async function activateQaScenario(formData) {
   if (!isQaEnabled()) redirect("/");

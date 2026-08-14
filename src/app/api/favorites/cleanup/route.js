@@ -1,7 +1,6 @@
 export const runtime = "nodejs";
 
 import prisma from "../../../../../prisma/prismaClient";
-import getProps from "@/lib/getProps";
 
 export async function DELETE(req) {
   // Verify the secret so this cannot be called by anyone

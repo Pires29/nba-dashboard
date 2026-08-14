@@ -157,6 +157,8 @@ Security depends heavily on how payments are managed and how the user's plan is 
 
 ## Scalability
 
-The main issue is that JSON files are loaded into memory on every server request. This is manageable with a small user base, but at scale it can cause high memory usage, slow response times, and expensive Next.js cold starts.
-
-The long-term solution is to move the data into a database, although that requires a substantial refactor.
+NBA snapshots and per-player histories are published by `update_data.py` to the
+private `nba-data` Supabase Storage bucket. The server resolves the active
+version through `current.json`, checks player entitlements before reading a
+history object, and keeps the small local JSON files only as a temporary
+fallback. Large game-log JSON files must not be committed to the repository.

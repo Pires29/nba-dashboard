@@ -1,15 +1,10 @@
 import PlayerStats from "@/components/playerStats/PlayerStats";
 import { buildPlayerStatsPageData } from "@/lib/buildPlayerStatsPageData";
-import getGamesSchedule from "@/lib/getGamesSchedule";
-import getInjuries from "@/lib/getInjuries";
-import getRosters from "@/lib/getRosters";
-import getTeamStats from "@/lib/getTeamStats";
-import getPlayerLogs from "@/lib/getPlayerLogs";
-import getPrevPlayerLogs from "@/lib/getPrevPlayerLogs";
 import { getAvailablePlayers } from "@/lib/getAvailablePlayers";
 import { getCurrentSession } from "@/lib/getCurrentSession";
 import LockedPlayerState from "@/components/playerStats/LockedPlayerState";
 import { getQaContext } from "@/lib/qa/context";
+import { getNbaData, getNbaPlayerLogs } from "@/lib/nbaDataSource";
 
 export default async function Page({ searchParams }) {
   const resolvedSearchParams = await searchParams;
@@ -20,10 +15,11 @@ export default async function Page({ searchParams }) {
   const stat = resolvedSearchParams.stat ?? "points";
   const session = await getCurrentSession();
   const qa = await getQaContext();
+  const nbaData = qa?.data ?? (await getNbaData());
   const plan = qa?.persona ?? session?.user?.plan ?? "free";
-  const allowedPlayerIds = getAvailablePlayers(plan, qa?.data);
+  const allowedPlayerIds = getAvailablePlayers(plan, nbaData);
 
-  const rawRosterData = qa?.data.rosters ?? getRosters();
+  const rawRosterData = nbaData.rosters;
   const matchupRoster = rawRosterData.filter((player) => {
     const teamId = Number(player.TEAM_ID);
     return teamId === team1Id || teamId === team2Id;
@@ -60,21 +56,19 @@ export default async function Page({ searchParams }) {
     return <LockedPlayerState />;
   }
 
-  const [
-    rawGamesSchedule,
-    rawInjuries,
-    rawTeamStats,
-    { logs, logsPlayoffs },
-    logsPrev,
-  ] = await Promise.all([
-    qa?.data.games ?? getGamesSchedule(),
-    isPlayerLocked ? Promise.resolve([]) : Promise.resolve(qa?.data.injuries ?? getInjuries()),
-    isPlayerLocked ? Promise.resolve([]) : Promise.resolve(qa?.data.teamStats ?? getTeamStats()),
-    isPlayerLocked
-      ? Promise.resolve({ logs: [], logsPlayoffs: [] })
-      : Promise.resolve(qa ? { logs: qa.data.logsByPlayer[String(playerId)] ?? [], logsPlayoffs: [] } : getPlayerLogs(playerId)),
-    isPlayerLocked ? Promise.resolve([]) : Promise.resolve(qa ? qa.data.previousLogsByPlayer[String(playerId)] ?? [] : getPrevPlayerLogs(playerId)),
-  ]);
+  const playerLogBundle = isPlayerLocked
+    ? { logs: [], logsPrev: [], logsPlayoffs: [] }
+    : qa
+      ? {
+          logs: qa.data.logsByPlayer[String(playerId)] ?? [],
+          logsPrev: qa.data.previousLogsByPlayer[String(playerId)] ?? [],
+          logsPlayoffs: [],
+        }
+      : await getNbaPlayerLogs(playerId);
+  const rawGamesSchedule = nbaData.games;
+  const rawInjuries = isPlayerLocked ? [] : nbaData.injuries;
+  const rawTeamStats = isPlayerLocked ? [] : nbaData.teamStats;
+  const { logs, logsPrev, logsPlayoffs } = playerLogBundle;
 
   const data = await buildPlayerStatsPageData({
     playerId,

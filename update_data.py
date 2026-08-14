@@ -26,7 +26,8 @@ import os
 import time
 import random
 import requests
-from datetime import datetime, timedelta
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import UTC, datetime, timedelta
 from collections import defaultdict
 
 from nba_api.stats.endpoints import (
@@ -68,6 +69,7 @@ ROSTER_SEASON = os.getenv(
     season_label(roster_season_start),
 )
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "src", "app", "data")
+PIPELINE_ENV_FILE = os.path.join(os.path.dirname(__file__), ".env.pipeline")
 
 SCHEDULE_DAYS_AHEAD = 2
 SLEEP_BETWEEN_REQUESTS = (1.0, 2.0)
@@ -135,6 +137,20 @@ def save_json(data, filename):
         json.dump(data, f, separators=(",", ":"), ensure_ascii=False)
     size_kb = os.path.getsize(path) / 1024
     print(f"  ✅ {filename} ({size_kb:.1f} KB)")
+
+def load_pipeline_env():
+    """Load the dedicated, gitignored cron environment without extra packages."""
+    if not os.path.exists(PIPELINE_ENV_FILE):
+        return
+    with open(PIPELINE_ENV_FILE, "r", encoding="utf-8") as env_file:
+        for raw_line in env_file:
+            line = raw_line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            value = value.strip().strip('"').strip("'")
+            if key.strip() and value:
+                os.environ.setdefault(key.strip(), value)
 
 def load_json(filename):
     path = os.path.join(OUTPUT_DIR, filename)
@@ -742,6 +758,11 @@ def build_props(schedule, raw_rosters, df_player_stats, df_current_logs):
                 "l20":    hit_rate(l20,  stat, avg),
                 "season": hit_rate(full, stat, avg),
                 "h2h":    hit_rate(h2h,  stat, avg),
+                "l5Games": len(l5),
+                "l10Games": len(l10),
+                "l20Games": len(l20),
+                "seasonGames": len(full),
+                "h2hGames": len(h2h),
             }
 
         if not props:
@@ -755,15 +776,204 @@ def build_props(schedule, raw_rosters, df_player_stats, df_current_logs):
     return fix_nan(result)
 
 
+def storage_config():
+    load_pipeline_env()
+    url = os.getenv("SUPABASE_URL", "").rstrip("/")
+    secret = os.getenv("SUPABASE_SECRET_KEY", "")
+    bucket = os.getenv("SUPABASE_STORAGE_BUCKET", "")
+    if not url or not secret or not bucket:
+        raise RuntimeError("SUPABASE_URL, SUPABASE_SECRET_KEY and SUPABASE_STORAGE_BUCKET are required")
+    return url, secret, bucket
+
+
+def upload_storage_json(path, data, config):
+    url, secret, bucket = config
+    response = requests.post(
+        f"{url}/storage/v1/object/{bucket}/{path}",
+        headers={
+            "apikey": secret,
+            "Authorization": f"Bearer {secret}",
+            "Content-Type": "application/json",
+            "x-upsert": "true",
+        },
+        data=json.dumps(data, separators=(",", ":"), ensure_ascii=False).encode("utf-8"),
+        timeout=REQUEST_TIMEOUT,
+    )
+    if not response.ok:
+        raise RuntimeError(f"Storage upload failed for {path}: HTTP {response.status_code} {response.text[:200]}")
+
+
+def download_storage_json(path, config):
+    url, secret, bucket = config
+    response = requests.get(
+        f"{url}/storage/v1/object/{bucket}/{path}",
+        headers={"apikey": secret, "Authorization": f"Bearer {secret}"},
+        timeout=30,
+    )
+    if not response.ok:
+        raise RuntimeError(f"Storage validation failed for {path}: HTTP {response.status_code}")
+    return response.json()
+
+
+def list_storage_entries(prefix, config):
+    url, secret, bucket = config
+    entries = []
+    offset = 0
+    while True:
+        response = requests.post(
+            f"{url}/storage/v1/object/list/{bucket}",
+            headers={
+                "apikey": secret,
+                "Authorization": f"Bearer {secret}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "prefix": prefix,
+                "limit": 1000,
+                "offset": offset,
+                "sortBy": {"column": "name", "order": "asc"},
+            },
+            timeout=30,
+        )
+        if not response.ok:
+            raise RuntimeError(f"Storage list failed for {prefix}: HTTP {response.status_code}")
+        page = response.json()
+        entries.extend(page)
+        if len(page) < 1000:
+            return entries
+        offset += len(page)
+
+
+def collect_storage_files(prefix, config):
+    files = []
+    for entry in list_storage_entries(prefix, config):
+        path = f"{prefix}/{entry['name']}"
+        if entry.get("id") is None:
+            files.extend(collect_storage_files(path, config))
+        else:
+            files.append(path)
+    return files
+
+
+def delete_storage_files(paths, config):
+    if not paths:
+        return
+    url, secret, bucket = config
+    for start in range(0, len(paths), 1000):
+        response = requests.delete(
+            f"{url}/storage/v1/object/{bucket}",
+            headers={
+                "apikey": secret,
+                "Authorization": f"Bearer {secret}",
+                "Content-Type": "application/json",
+            },
+            json={"prefixes": paths[start:start + 1000]},
+            timeout=REQUEST_TIMEOUT,
+        )
+        if not response.ok:
+            raise RuntimeError(f"Storage delete failed: HTTP {response.status_code}")
+
+
+def prune_storage_versions(config, keep=3):
+    versions = sorted(
+        (entry["name"] for entry in list_storage_entries("versions", config)),
+        reverse=True,
+    )
+    obsolete = versions[keep:]
+    if not obsolete:
+        print(f"🧹 Storage retention: {len(versions)} version(s), nothing to remove")
+        return
+    for version in obsolete:
+        paths = collect_storage_files(f"versions/{version}", config)
+        delete_storage_files(paths, config)
+        print(f"🧹 Removed old Storage version {version} ({len(paths)} objects)")
+
+
+def publish_storage_version(datasets):
+    config = storage_config()
+    version = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+    prefix = f"versions/{version}"
+    current_logs = datasets["game_logs_current"]
+    previous_logs = datasets["game_logs_prev"]
+    playoff_logs = datasets["game_logs_playoffs"]
+    roster_player_ids = {
+        str(player["id"])
+        for roster in datasets["rosters"].values()
+        for player in roster
+        if player.get("id") is not None
+    }
+    player_ids = sorted(
+        roster_player_ids | set(current_logs) | set(previous_logs) | set(playoff_logs),
+    )
+
+    small_datasets = {
+        "players.json": datasets["players"],
+        "teams.json": datasets["teams"],
+        "rosters.json": datasets["rosters"],
+        "season_stats.json": datasets["season_stats"],
+        "props.json": datasets["props"],
+        "team_stats.json": datasets["team_stats"],
+        "injuries.json": datasets["injuries"],
+        "schedule.json": datasets["schedule"],
+        "standings.json": datasets["standings"],
+    }
+    for filename, data in small_datasets.items():
+        upload_storage_json(f"{prefix}/{filename}", data, config)
+
+    def upload_player(player_id):
+        upload_storage_json(
+            f"{prefix}/players/{player_id}.json",
+            {
+                "current": current_logs.get(player_id, []),
+                "previous": previous_logs.get(player_id, []),
+                "playoffs": playoff_logs.get(player_id, []),
+            },
+            config,
+        )
+        return player_id
+
+    print(f"\n☁️  Uploading {len(player_ids)} player files to Storage...")
+    completed = 0
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        futures = [executor.submit(upload_player, player_id) for player_id in player_ids]
+        for future in as_completed(futures):
+            future.result()
+            completed += 1
+            if completed % 50 == 0 or completed == len(player_ids):
+                print(f"  [{completed}/{len(player_ids)}] players uploaded")
+
+    manifest = {
+        "version": version,
+        "updatedAt": datetime.now(UTC).isoformat(timespec="seconds").replace("+00:00", "Z"),
+        "playerCount": len(player_ids),
+        "files": sorted(small_datasets),
+    }
+    upload_storage_json(f"{prefix}/manifest.json", manifest, config)
+    upload_storage_json("current.json", manifest, config)
+    validated = download_storage_json("current.json", config)
+    if validated.get("version") != version or validated.get("playerCount") != len(player_ids):
+        raise RuntimeError("Published Storage manifest did not pass validation")
+    print(f"✅ Storage version published: {version}")
+    try:
+        prune_storage_versions(config, keep=3)
+    except Exception as error:
+        # Publication is already valid and active. Retention can safely retry on
+        # the next run without making today's fresh data unavailable.
+        print(f"⚠️ Storage retention failed: {error}")
+    return manifest
+
+
 # ============================================================
 # PIPELINE ORCHESTRATOR
 # ============================================================
 
 def run():
+    load_pipeline_env()
     start = datetime.now()
+    write_local_data = os.getenv("NBA_WRITE_LOCAL_DATA", "false").lower() == "true"
     print(f"🚀 NBA data pipeline — {start.strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"   Season: {SEASON} | Prev: {PREV_SEASON}")
-    print(f"   Output: {OUTPUT_DIR}")
+    print(f"   Local JSON fallback updates: {'enabled' if write_local_data else 'disabled'}")
 
     # ── 1. Fetch all raw data ──────────────────────────────────────────────
     df_player_stats       = fetch_raw_player_stats();     random_sleep()
@@ -781,51 +991,64 @@ def run():
 
     # players.json
     players = build_players(raw_rosters)
-    save_json(fix_nan(players), "players.json")
+    if write_local_data: save_json(fix_nan(players), "players.json")
 
     # teams.json
     teams = build_teams()
-    save_json(teams, "teams.json")
+    if write_local_data: save_json(teams, "teams.json")
 
     # rosters.json
     rosters = build_rosters(raw_rosters)
-    save_json(fix_nan(rosters), "rosters.json")
+    if write_local_data: save_json(fix_nan(rosters), "rosters.json")
 
     # season_stats.json
     season_stats = build_season_stats(df_player_stats)
-    save_json(fix_nan(season_stats), "season_stats.json")
+    if write_local_data: save_json(fix_nan(season_stats), "season_stats.json")
 
     # team_defense.json  (now also includes offense for the team stats panel)
     team_stats = build_team_defense(df_off, df_def)
-    save_json(fix_nan(team_stats), "team_stats.json")
+    if write_local_data: save_json(fix_nan(team_stats), "team_stats.json")
 
     # injuries.json
     injuries = build_injuries(raw_injuries)
-    save_json(injuries, "injuries.json")
+    if write_local_data: save_json(injuries, "injuries.json")
 
     # schedule.json / standings.json
-    save_json(fix_nan(schedule), "schedule.json")
-    save_json(fix_nan(build_standings(df_standings)), "standings.json")
+    if write_local_data:
+        save_json(fix_nan(schedule), "schedule.json")
+        save_json(fix_nan(build_standings(df_standings)), "standings.json")
 
-    # game_logs_current.json
+    # Logs are kept in memory only and published per player to private Storage.
+    # Writing them into src/app/data would put ~16 MB back into the Next build.
     logs_current = build_game_logs(df_logs_current)
-    save_json(logs_current, "game_logs_current.json")
-
-    # game_logs_prev.json
     logs_prev = build_game_logs(df_logs_prev)
-    save_json(logs_prev, "game_logs_prev.json")
-
-    # game_logs_playoffs.json
     logs_playoffs = build_game_logs(df_logs_playoffs)
-    save_json(logs_playoffs, "game_logs_playoffs.json")
 
     # props.json  (depends on schedule + rosters + stats + current logs)
     props = build_props(schedule, raw_rosters, df_player_stats, df_logs_current)
-    save_json(props, "props.json")
+    if write_local_data: save_json(props, "props.json")
+
+    # Publish only after every local dataset has been built successfully. The
+    # current.json pointer is updated last by publish_storage_version(), so an
+    # incomplete run can never become the active version.
+    publish_storage_version({
+        "players": fix_nan(players),
+        "teams": teams,
+        "rosters": fix_nan(rosters),
+        "season_stats": fix_nan(season_stats),
+        "props": props,
+        "team_stats": fix_nan(team_stats),
+        "injuries": injuries,
+        "schedule": fix_nan(schedule),
+        "standings": fix_nan(build_standings(df_standings)),
+        "game_logs_current": logs_current,
+        "game_logs_prev": logs_prev,
+        "game_logs_playoffs": logs_playoffs,
+    })
 
     elapsed = (datetime.now() - start).total_seconds()
     print(f"\n✅ Done in {elapsed:.1f}s ({elapsed / 60:.1f} min)")
-    print(f"   Files written to: {OUTPUT_DIR}")
+    print("   Active data source: Supabase Storage")
 
 
 # ============================================================
@@ -833,8 +1056,11 @@ def run():
 # ============================================================
 
 def run_cleanup():
+    cleanup_url = os.getenv("NEXT_PUBLIC_APP_URL", "http://localhost:3000")
+    if cleanup_url.startswith("http://localhost"):
+        print("ℹ️ Favorites cleanup skipped: no deployed app URL configured")
+        return
     try:
-        cleanup_url = os.getenv("NEXT_PUBLIC_APP_URL", "http://localhost:3000")
         cleanup_secret = os.getenv("CLEANUP_SECRET", "")
         r = requests.delete(
             f"{cleanup_url}/api/favorites/cleanup",

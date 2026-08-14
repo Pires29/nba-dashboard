@@ -6,6 +6,7 @@ import { authOptions } from "@/lib/authOptions";
 import prisma from "../../../../prisma/prismaClient";
 import { getAvailablePlayers } from "@/lib/getAvailablePlayers";
 import { readJson, RequestError } from "@/lib/security";
+import { getNbaData } from "@/lib/nbaDataSource";
 
 const FAVORITE_STATS = new Set([
   "points", "assists", "rebounds", "blocks", "steals", "turnovers",
@@ -38,7 +39,10 @@ export async function POST(req) {
     const stat = typeof body.stat === "string" ? body.stat : "";
     const avg = Number(body.avg);
     const gameDate = body.gameDate;
-    const allowedPlayers = getAvailablePlayers(session.user.plan ?? "free");
+    const allowedPlayers = getAvailablePlayers(
+      session.user.plan ?? "free",
+      await getNbaData(),
+    );
 
     if (
       !Number.isSafeInteger(playerId) ||
