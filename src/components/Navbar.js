@@ -1,10 +1,13 @@
 import { getCurrentSession } from "@/lib/getCurrentSession";
 import Link from "next/link";
 import ProfileMenuClient from "./ProfileMenuClient";
+import { getQaContext } from "@/lib/qa/context";
 
 const Navbar = async () => {
   const session = await getCurrentSession();
-  const isFreePlan = !session?.user?.plan || session?.user?.plan === "free";
+  const qa = await getQaContext();
+  const activePlan = qa?.persona ?? session?.user?.plan ?? "free";
+  const isFreePlan = activePlan === "free";
 
   return (
     <nav className="relative sticky top-0 z-50 border-b border-white/6 bg-gradient-to-b from-[#122040] to-[#0D1828]">
@@ -30,6 +33,14 @@ const Navbar = async () => {
 
         {/* Right side */}
         <div className="flex items-center gap-3">
+          {qa && (
+            <Link
+              href="/qa"
+              className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1.5 font-mono text-[9px] font-black uppercase tracking-widest text-emerald-400"
+            >
+              QA · {qa.persona} · {qa.scenario}
+            </Link>
+          )}
           {/* Upgrade button — Free plan only */}
           {isFreePlan && (
             <Link

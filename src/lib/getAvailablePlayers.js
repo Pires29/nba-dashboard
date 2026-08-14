@@ -7,16 +7,16 @@ import {
   selectFreePlayerIds,
 } from "./playerEntitlements";
 
-export function getAvailablePlayers(plan) {
-  const rostersData = getRosters();
-  const propsData = getProps();
+export function getAvailablePlayers(plan, source = {}) {
+  const rostersData = source.rosters ?? getRosters();
+  const propsData = source.props ?? getProps();
   if (!rostersData?.length) return new Set(); // no data means no players
 
   if (hasFullPlayerAccess(plan)) {
     return new Set(rostersData.map((player) => Number(player.PLAYER_ID)));
   }
 
-  const injuries = getInjuries();
+  const injuries = source.injuries ?? getInjuries();
   const seed = new Date().toISOString().split("T")[0];
   return selectFreePlayerIds({
     rosters: rostersData,

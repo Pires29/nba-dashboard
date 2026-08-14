@@ -22,6 +22,6 @@ export const config = {
     "/props/:path*",
     "/favorites/:path*",
     "/settings/:path*",
+    "/qa/:path*",
   ],
 };
-

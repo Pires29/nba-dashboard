@@ -9,6 +9,7 @@ import getPrevPlayerLogs from "@/lib/getPrevPlayerLogs";
 import { getAvailablePlayers } from "@/lib/getAvailablePlayers";
 import { getCurrentSession } from "@/lib/getCurrentSession";
 import LockedPlayerState from "@/components/playerStats/LockedPlayerState";
+import { getQaContext } from "@/lib/qa/context";
 
 export default async function Page({ searchParams }) {
   const resolvedSearchParams = await searchParams;
@@ -18,10 +19,11 @@ export default async function Page({ searchParams }) {
   const requestedPlayerId = Number(resolvedSearchParams.playerId);
   const stat = resolvedSearchParams.stat ?? "points";
   const session = await getCurrentSession();
-  const plan = session?.user?.plan ?? "free";
-  const allowedPlayerIds = getAvailablePlayers(plan);
+  const qa = await getQaContext();
+  const plan = qa?.persona ?? session?.user?.plan ?? "free";
+  const allowedPlayerIds = getAvailablePlayers(plan, qa?.data);
 
-  const rawRosterData = getRosters();
+  const rawRosterData = qa?.data.rosters ?? getRosters();
   const matchupRoster = rawRosterData.filter((player) => {
     const teamId = Number(player.TEAM_ID);
     return teamId === team1Id || teamId === team2Id;
@@ -65,13 +67,13 @@ export default async function Page({ searchParams }) {
     { logs, logsPlayoffs },
     logsPrev,
   ] = await Promise.all([
-    getGamesSchedule(),
-    isPlayerLocked ? Promise.resolve([]) : getInjuries(),
-    isPlayerLocked ? Promise.resolve([]) : getTeamStats(),
+    qa?.data.games ?? getGamesSchedule(),
+    isPlayerLocked ? Promise.resolve([]) : Promise.resolve(qa?.data.injuries ?? getInjuries()),
+    isPlayerLocked ? Promise.resolve([]) : Promise.resolve(qa?.data.teamStats ?? getTeamStats()),
     isPlayerLocked
       ? Promise.resolve({ logs: [], logsPlayoffs: [] })
-      : getPlayerLogs(playerId),
-    isPlayerLocked ? Promise.resolve([]) : getPrevPlayerLogs(playerId),
+      : Promise.resolve(qa ? { logs: qa.data.logsByPlayer[String(playerId)] ?? [], logsPlayoffs: [] } : getPlayerLogs(playerId)),
+    isPlayerLocked ? Promise.resolve([]) : Promise.resolve(qa ? qa.data.previousLogsByPlayer[String(playerId)] ?? [] : getPrevPlayerLogs(playerId)),
   ]);
 
   const data = await buildPlayerStatsPageData({
