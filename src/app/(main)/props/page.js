@@ -58,10 +58,11 @@ const parseHitRateFilters = (value) => {
 };
 
 const MATCHUP_RANK = (rank) => {
-  if (rank == null) return { label: "—" };
-  if (rank >= 20) return { label: "Favorable" };
-  if (rank >= 10) return { label: "Neutral" };
-  return { label: "Unfavorable" };
+  if (rank == null) return { label: "—", color: "text-slate-500" };
+  if (rank >= 20)
+    return { label: "Favorable", color: "text-emerald-400" };
+  if (rank >= 10) return { label: "Neutral", color: "text-yellow-400" };
+  return { label: "Unfavorable", color: "text-red-400" };
 };
 
 const STAT_MATCHUP_RANK = (stat, matchup) => {
@@ -247,14 +248,26 @@ export default async function PropsPage({ searchParams }) {
 
   const enrichedProps = filteredProps.map((p) => {
     const game = scheduleMap.get(`${p.team_id}-${p.opponent_id}`);
-
     const rank = STAT_MATCHUP_RANK(selectedStat, p.matchup);
 
     return {
-      ...p,
-      game,
+      player_id: p.player_id,
+      player_name: p.player_name,
+      team: p.team,
+      team_id: p.team_id,
+      position: p.position,
+      opponent: p.opponent,
+      opponent_id: p.opponent_id,
+      props: { [selectedStat]: p.props?.[selectedStat] },
+      game: game
+        ? {
+            home_team_id: game.home_team_id,
+            visitor_team_id: game.visitor_team_id,
+            date: game.date ?? null,
+          }
+        : null,
       matchupRank: rank,
-      matchupLabel: MATCHUP_RANK(rank).label,
+      matchupLabel: MATCHUP_RANK(rank),
     };
   });
 

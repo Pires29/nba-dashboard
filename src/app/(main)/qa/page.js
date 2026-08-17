@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   getQaContext,
-  isQaEnabled,
+  isQaRequestAllowed,
   QA_PERSONAS,
   QA_SCENARIOS,
 } from "@/lib/qa/context";
@@ -14,7 +14,7 @@ export const metadata = { title: "QA Console", robots: { index: false, follow: f
 const label = (value) => value.replaceAll("-", " ");
 
 export default async function QaPage() {
-  if (!isQaEnabled()) notFound();
+  if (!(await isQaRequestAllowed())) notFound();
   const qa = await getQaContext();
   const firstGame = qa?.data.games[0];
   const availableIds = qa ? getAvailablePlayers(qa.persona, qa.data) : new Set();

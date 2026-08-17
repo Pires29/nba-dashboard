@@ -4,14 +4,15 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import {
   createQaToken,
-  isQaEnabled,
+  isQaRequestAllowed,
   QA_COOKIE,
   QA_PERSONAS,
   QA_SCENARIOS,
 } from "@/lib/qa/context";
+import { QA_FAVORITES_COOKIE } from "@/lib/qa/favorites";
 
 export async function activateQaScenario(formData) {
-  if (!isQaEnabled()) redirect("/");
+  if (!(await isQaRequestAllowed())) redirect("/");
   const persona = String(formData.get("persona") ?? "");
   const scenario = String(formData.get("scenario") ?? "");
   if (!QA_PERSONAS.includes(persona) || !QA_SCENARIOS.includes(scenario)) {
@@ -30,7 +31,9 @@ export async function activateQaScenario(formData) {
 }
 
 export async function clearQaScenario() {
+  if (!(await isQaRequestAllowed())) redirect("/");
   const store = await cookies();
   store.delete(QA_COOKIE);
+  store.delete(QA_FAVORITES_COOKIE);
   redirect("/qa");
 }

@@ -27,6 +27,7 @@ const PERIOD_LABELS = {
   full: "Full",
   h2h: "H2H",
 };
+const INITIAL_VISIBLE_ROWS = 100;
 
 const INJURY_STYLES = {
   Out: "bg-red-500/15 text-red-400 border-red-500/30",
@@ -171,20 +172,12 @@ export default function PropsTable({
   );
   const [filterInjury, setFilterInjury] = useState(initialFilters.filterInjury);
   const [search, setSearch] = useState(initialFilters.search);
+  const [visibleRows, setVisibleRows] = useState(INITIAL_VISIBLE_ROWS);
 
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  useEffect(() => {
-    setSelectedStat(initialFilters.selectedStat);
-    setSortPeriod(initialFilters.sortPeriod);
-    setFilterTeam(initialFilters.filterTeam);
-    setFilterGame(initialFilters.filterGame);
-    setFilterMatchup(initialFilters.filterMatchup);
-    setFilterHitRates(initialFilters.filterHitRates);
-    setFilterInjury(initialFilters.filterInjury);
-    setSearch(initialFilters.search);
-  }, [initialFilters]);
+  const visibleProps = enrichedProps.slice(0, visibleRows);
 
   const updateUrl = useCallback(
     (updates) => {
@@ -759,7 +752,7 @@ export default function PropsTable({
               </tr>
             </thead>
             <tbody>
-              {enrichedProps.map((player, i) => {
+              {visibleProps.map((player, i) => {
                 const prop = player.props?.[selectedStat];
                 const matchupLabel = player.matchupLabel;
                 const rank = player.matchupRank;
@@ -897,6 +890,23 @@ export default function PropsTable({
                         ? "No player props available"
                         : "No props found for the selected filters"}
                     </p>
+                  </td>
+                </tr>
+              )}
+              {visibleRows < enrichedProps.length && (
+                <tr>
+                  <td colSpan={8} className="px-4 py-5 text-center">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setVisibleRows((current) =>
+                          Math.min(current + INITIAL_VISIBLE_ROWS, enrichedProps.length),
+                        )
+                      }
+                      className="rounded-lg border border-white/[0.08] bg-white/[0.03] px-5 py-2.5 text-[11px] font-mono font-bold uppercase tracking-wider text-slate-300 transition-colors hover:border-orange-500/30 hover:text-orange-400"
+                    >
+                      Load more ({enrichedProps.length - visibleRows} remaining)
+                    </button>
                   </td>
                 </tr>
               )}

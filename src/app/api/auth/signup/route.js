@@ -14,7 +14,7 @@ import {
 
 export async function POST(req) {
   try {
-    const rateLimit = checkRateLimit(`signup:${getRequestIp(req)}`, {
+    const rateLimit = await checkRateLimit(`signup:${getRequestIp(req)}`, {
       limit: 5,
       windowMs: 60 * 60 * 1000,
     });

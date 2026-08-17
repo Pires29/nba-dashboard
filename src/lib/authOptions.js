@@ -1,8 +1,7 @@
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
-import bcrypt from "bcryptjs";
 import prisma from "../../prisma/prismaClient";
-import { checkRateLimit } from "@/lib/rateLimit";
+import { authorizeCredentials } from "@/lib/credentialsAuth";
 import { isValidEmail, normalizeEmail } from "@/lib/security";
 
 export const authOptions = {
@@ -18,34 +17,7 @@ export const authOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials, req) {
-        if (!credentials?.email || !credentials?.password) return null;
-
-        const email = normalizeEmail(credentials.email);
-        if (!isValidEmail(email) || credentials.password.length > 128) return null;
-
-        const forwarded = req?.headers?.["x-forwarded-for"];
-        const ip = Array.isArray(forwarded) ? forwarded[0] : forwarded?.split(",")[0];
-        const rateLimit = checkRateLimit(`login:${ip ?? "unknown"}:${email}`, {
-          limit: 10,
-          windowMs: 15 * 60 * 1000,
-        });
-        if (!rateLimit.allowed) return null;
-
-        const user = await prisma.user.findUnique({
-          where: { email },
-        });
-
-        if (!user || !user.password) return null;
-
-        const isValid = await bcrypt.compare(credentials.password, user.password);
-        if (!isValid) return null;
-
-        return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          image: user.image,
-        };
+        return authorizeCredentials(credentials, req);
       },
     }),
   ],

@@ -15,7 +15,7 @@ export async function POST() {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const rateLimit = checkRateLimit(`cancel-subscription:${session.user.id}`, {
+    const rateLimit = await checkRateLimit(`cancel-subscription:${session.user.id}`, {
       limit: 3,
       windowMs: 60 * 60 * 1000,
     });

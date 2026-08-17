@@ -16,6 +16,7 @@ export default function PropsTableWrapper({
   return (
     <>
       <PropsTable
+        key={JSON.stringify(initialFilters)}
         basePath={basePath}
         enrichedProps={enrichedProps}
         allTeams={allTeams}

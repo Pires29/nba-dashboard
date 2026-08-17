@@ -14,7 +14,7 @@ export async function POST(req) {
       );
     }
 
-    const rateLimit = checkRateLimit(`referral:${session.user.id}`, {
+    const rateLimit = await checkRateLimit(`referral:${session.user.id}`, {
       limit: 10,
       windowMs: 15 * 60 * 1000,
     });

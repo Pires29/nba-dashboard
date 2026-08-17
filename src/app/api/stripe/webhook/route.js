@@ -2,14 +2,9 @@ export const runtime = "nodejs";
 
 import Stripe from "stripe";
 import prisma from "../../../../../prisma/prismaClient";
+import { getSeasonAccessEnd } from "@/lib/stripePlans";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
-function getSeasonAccessEnd(purchasedAt = new Date()) {
-  const year = purchasedAt.getUTCFullYear();
-  const endYear = purchasedAt.getUTCMonth() >= 6 ? year + 1 : year;
-  return new Date(Date.UTC(endYear, 5, 30, 23, 59, 59, 999));
-}
 
 export async function POST(req) {
   const contentLength = Number(req.headers.get("content-length"));

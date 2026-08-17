@@ -162,3 +162,29 @@ private `nba-data` Supabase Storage bucket. The server resolves the active
 version through `current.json`, checks player entitlements before reading a
 history object, and keeps the small local JSON files only as a temporary
 fallback. Large game-log JSON files must not be committed to the repository.
+
+
+A estrela nao fica ativa quando eu seleciono o favorito vou para a pagina de favorito e ele esta la e volto para a pagina das props
+Carregar sempre uma pagian quando troco a estatistica
+
+Fase 3 — Base técnica e testes
+Corrigir as migrations Prisma.
+Garantir prisma generate durante o build.
+Criar testes para autenticação, Stripe, referrals e permissões.
+Configurar CI para executar lint, testes, audit e build.
+Investigar por que o build demora ou bloqueia.
+Objetivo: cada alteração futura pode ser publicada com segurança.
+Fase 4 — Performance
+Retirar os JSON de game logs do bundle/build.
+Evitar duplicar os dados dos gráficos.
+Adicionar caching.
+Remover dados, código e dependências antigas.
+Medir payloads, build time e Web Vitals.
+Objetivo: melhorar carregamento, custos e capacidade para muitos utilizadores.
+Fase 5 — UX e produto
+Só depois:
+Melhorar Props e Favorites no mobile.
+Dividir PropsTable e PricingPage.
+Melhorar loading, erros e acessibilidade.
+Implementar analytics.
+Criar offseason mode e alertas de favoritos.

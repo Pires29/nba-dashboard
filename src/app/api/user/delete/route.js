@@ -18,7 +18,7 @@ export async function DELETE(req) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    const rateLimit = checkRateLimit(`delete-account:${session.user.id}`, {
+    const rateLimit = await checkRateLimit(`delete-account:${session.user.id}`, {
       limit: 3,
       windowMs: 60 * 60 * 1000,
     });

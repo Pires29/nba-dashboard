@@ -16,12 +16,11 @@ test("allows internal callback paths and rejects external redirects", () => {
   assert.equal(safeInternalPath("/\\example.com"), "/");
 });
 
-test("rate limiter blocks requests after the configured limit", () => {
+test("rate limiter blocks requests after the configured limit", async () => {
   const key = `test:${crypto.randomUUID()}`;
-  assert.equal(checkRateLimit(key, { limit: 2, windowMs: 60_000 }).allowed, true);
-  assert.equal(checkRateLimit(key, { limit: 2, windowMs: 60_000 }).allowed, true);
-  const blocked = checkRateLimit(key, { limit: 2, windowMs: 60_000 });
+  assert.equal((await checkRateLimit(key, { limit: 2, windowMs: 60_000 })).allowed, true);
+  assert.equal((await checkRateLimit(key, { limit: 2, windowMs: 60_000 })).allowed, true);
+  const blocked = await checkRateLimit(key, { limit: 2, windowMs: 60_000 });
   assert.equal(blocked.allowed, false);
   assert.ok(blocked.retryAfter > 0);
 });
-

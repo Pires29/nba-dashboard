@@ -1,12 +1,31 @@
 import "server-only";
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 export const QA_COOKIE = "nba_qa_scenario";
 export const QA_SCENARIOS = ["regular", "no-games", "partial-data"];
 export const QA_PERSONAS = ["free", "trial", "pro"];
 
 export function isQaEnabled() {
-  return process.env.NODE_ENV !== "production" && process.env.QA_MODE === "true";
+  if (process.env.QA_MODE !== "true") return false;
+  return (
+    process.env.NODE_ENV !== "production" ||
+    process.env.QA_ALLOW_PRODUCTION_LOCAL === "true"
+  );
+}
+
+export async function isQaRequestAllowed() {
+  if (!isQaEnabled()) return false;
+  if (process.env.NODE_ENV !== "production") return true;
+
+  const host = (await headers()).get("host")?.toLowerCase() ?? "";
+  return (
+    host === "localhost" ||
+    host.startsWith("localhost:") ||
+    host === "127.0.0.1" ||
+    host.startsWith("127.0.0.1:") ||
+    host === "[::1]" ||
+    host.startsWith("[::1]:")
+  );
 }
 
 const getSecret = () => process.env.QA_SECRET || process.env.NEXTAUTH_SECRET || "";
@@ -36,7 +55,7 @@ export function parseQaToken(token) {
 }
 
 export async function getQaContext() {
-  if (!isQaEnabled()) return null;
+  if (!(await isQaRequestAllowed())) return null;
   const store = await cookies();
   const state = parseQaToken(store.get(QA_COOKIE)?.value);
   if (!state) return null;

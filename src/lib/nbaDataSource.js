@@ -1,5 +1,6 @@
 import "server-only";
 import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import getGamesSchedule from "./getGamesSchedule";
 import getInjuries from "./getInjuries";
 import getProps from "./getProps";
@@ -28,7 +29,7 @@ async function fetchStorageJson(path, { revalidate = 300, noStore = false } = {}
 }
 
 const getStorageManifest = cache(() =>
-  fetchStorageJson("current.json", { noStore: true }),
+  fetchStorageJson("current.json", { revalidate: 300 }),
 );
 
 async function getStorageSnapshot() {
@@ -57,7 +58,7 @@ function buildLocalData() {
   };
 }
 
-export const getNbaData = cache(async () => {
+const loadNbaData = async () => {
   if (!storageEnabled()) return buildLocalData();
   try {
     const [manifest, raw] = await Promise.all([getStorageManifest(), getStorageSnapshot()]);
@@ -90,7 +91,13 @@ export const getNbaData = cache(async () => {
     console.error("NBA Storage unavailable; using local fallback", { message: error?.message });
     return buildLocalData();
   }
+};
+
+const getCachedNbaData = unstable_cache(loadNbaData, ["nba-data-snapshot"], {
+  revalidate: 300,
 });
+
+export const getNbaData = cache(getCachedNbaData);
 
 export async function getNbaPlayerLogs(playerId) {
   if (storageEnabled()) {

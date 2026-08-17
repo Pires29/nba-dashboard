@@ -7,6 +7,8 @@ import prisma from "../../../../prisma/prismaClient";
 import { getAvailablePlayers } from "@/lib/getAvailablePlayers";
 import { readJson, RequestError } from "@/lib/security";
 import { getNbaData } from "@/lib/nbaDataSource";
+import { getQaContext } from "@/lib/qa/context";
+import { getQaFavorites, setQaFavorites } from "@/lib/qa/favorites";
 
 const FAVORITE_STATS = new Set([
   "points", "assists", "rebounds", "blocks", "steals", "turnovers",
@@ -17,6 +19,9 @@ export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id)
     return Response.json({ error: "Unauthorized" }, { status: 401 });
+
+  const qa = await getQaContext();
+  if (qa) return Response.json(await getQaFavorites());
 
   const favorites = await prisma.favorite.findMany({
     where: { userId: session.user.id },
@@ -32,6 +37,7 @@ export async function POST(req) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
+    const qa = await getQaContext();
     const body = await readJson(req);
     const playerId = Number(body.playerId);
     const playerName = typeof body.playerName === "string" ? body.playerName.trim() : "";
@@ -40,8 +46,8 @@ export async function POST(req) {
     const avg = Number(body.avg);
     const gameDate = body.gameDate;
     const allowedPlayers = getAvailablePlayers(
-      session.user.plan ?? "free",
-      await getNbaData(),
+      qa?.persona ?? session.user.plan ?? "free",
+      qa?.data ?? (await getNbaData()),
     );
 
     if (
@@ -61,6 +67,25 @@ export async function POST(req) {
       if (Number.isNaN(parsedGameDate.getTime())) {
         return Response.json({ error: "Invalid game date" }, { status: 400 });
       }
+    }
+
+    if (qa) {
+      const favorite = {
+        id: `qa:${playerId}:${stat}`,
+        playerId,
+        playerName,
+        team,
+        stat,
+        avg,
+        gameDate: parsedGameDate?.toISOString() ?? null,
+        createdAt: new Date().toISOString(),
+      };
+      const current = await getQaFavorites();
+      await setQaFavorites([
+        favorite,
+        ...current.filter((item) => item.id !== favorite.id),
+      ]);
+      return Response.json(favorite);
     }
 
     const favorite = await prisma.favorite.upsert({
@@ -113,6 +138,13 @@ export async function DELETE(req) {
     ids.some((id) => typeof id !== "string" || id.length > 64)
   ) {
     return Response.json({ error: "Invalid favorite IDs" }, { status: 400 });
+  }
+
+  const qa = await getQaContext();
+  if (qa) {
+    const favorites = await getQaFavorites();
+    await setQaFavorites(favorites.filter((favorite) => !ids.includes(favorite.id)));
+    return Response.json({ ok: true });
   }
 
   await prisma.favorite.deleteMany({

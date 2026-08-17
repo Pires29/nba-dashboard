@@ -119,7 +119,13 @@ export async function buildPlayerStatsPageData({
   };
 
   const rosterData = Array.isArray(rawRosterData) ? rawRosterData : [];
-  const gamesSchedule = Array.isArray(rawGamesSchedule) ? rawGamesSchedule : [];
+  const gamesSchedule = (Array.isArray(rawGamesSchedule) ? rawGamesSchedule : [])
+    .map(({ home_team_id, visitor_team_id, status, date }) => ({
+      home_team_id,
+      visitor_team_id,
+      status,
+      date,
+    }));
   const injuries = Array.isArray(rawInjuries) ? rawInjuries : [];
   const teamStats = Array.isArray(rawTeamStats) ? rawTeamStats : [];
 
@@ -215,6 +221,18 @@ export async function buildPlayerStatsPageData({
     return homeRoster.some((player) => player.PLAYER_ID === playerId) ? 0 : 1;
   })();
 
+  const slimRoster = (roster) =>
+    roster.map(({ PLAYER_ID, PLAYER, NUM, POSITION, TEAM_ID, TEAM_NAME, TEAM_ABBREVIATION, _isLocked }) => ({
+      PLAYER_ID,
+      PLAYER,
+      NUM,
+      POSITION,
+      TEAM_ID,
+      TEAM_NAME,
+      TEAM_ABBREVIATION,
+      _isLocked,
+    }));
+
   const graphData = buildPlayerGraphData({
     currentGames: currentSeasonPlayerLogs,
     previousGames: playerLogsPrev,
@@ -245,8 +263,8 @@ export async function buildPlayerStatsPageData({
     gamesSchedule,
     teamNameMap,
     opponentAbbr,
-    homeRoster,
-    awayRoster,
+    homeRoster: slimRoster(homeRoster),
+    awayRoster: slimRoster(awayRoster),
     injuryStatusMap,
     injuriesTeam1,
     injuriesTeam2,

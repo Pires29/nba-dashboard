@@ -7,6 +7,7 @@ import prisma from "../../../../../prisma/prismaClient";
 import { validateReferralForUser } from "@/lib/referrals";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { readJson, RequestError } from "@/lib/security";
+import { validateCheckoutPlan } from "@/lib/stripePlans";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -27,19 +28,13 @@ export async function POST(req) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const rateLimit = checkRateLimit(`checkout:${session.user.id}`, {
+    const rateLimit = await checkRateLimit(`checkout:${session.user.id}`, {
       limit: 5,
       windowMs: 15 * 60 * 1000,
     });
     if (!rateLimit.allowed) return rateLimitResponse(rateLimit);
 
     const { billing, referralCode } = await readJson(req, { maxBytes: 2_048 });
-    const priceId = PRICE_MAP[billing];
-
-    if (!priceId) {
-      return Response.json({ error: "Invalid billing option" }, { status: 400 });
-    }
-
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
     });
@@ -48,12 +43,9 @@ export async function POST(req) {
       return Response.json({ error: "User not found" }, { status: 404 });
     }
 
-    if (user.plan === "pro" && user.planInterval !== "season") {
-      return Response.json({ error: "An active subscription already exists" }, { status: 409 });
-    }
-
-    if (billing === "trial" && user.hasUsedTrial) {
-      return Response.json({ error: "Trial already used" }, { status: 409 });
+    const plan = validateCheckoutPlan({ billing, user, prices: PRICE_MAP });
+    if (!plan.valid) {
+      return Response.json({ error: plan.error }, { status: plan.status });
     }
 
     let referralCodeId = null;
@@ -111,18 +103,14 @@ export async function POST(req) {
     }
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    const hasUsedTrial = user.hasUsedTrial ?? false;
-    const applyTrial = billing === "trial" && !hasUsedTrial;
-    const isSeasonPayment = billing === "season";
-
     const checkoutSession = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ["card"],
-      line_items: [{ price: priceId, quantity: 1 }],
-      mode: isSeasonPayment ? "payment" : "subscription",
+      line_items: [{ price: plan.priceId, quantity: 1 }],
+      mode: plan.mode,
       discounts: referralCodeId ? [{ coupon: REFERRAL_COUPON_ID }] : [],
-      ...(!isSeasonPayment && {
-        subscription_data: applyTrial
+      ...(plan.mode === "subscription" && {
+        subscription_data: plan.applyTrial
           ? {
               trial_period_days: 7,
               metadata: { userId: user.id },
