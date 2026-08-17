@@ -11,6 +11,7 @@ export default function PropsTableWrapper({
   injuries,
   totalPropsCount,
   isFreePlan,
+  dataStatus,
   initialFilters,
 }) {
   return (
@@ -25,6 +26,7 @@ export default function PropsTableWrapper({
         injuries={injuries}
         totalPropsCount={totalPropsCount}
         isFreePlan={isFreePlan}
+        dataStatus={dataStatus}
         initialFilters={initialFilters}
       />
       <AppToaster />

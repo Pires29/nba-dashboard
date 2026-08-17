@@ -25,12 +25,6 @@ const CheckIcon = () => (
   </svg>
 );
 
-const StarIcon = () => (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="#f97316">
-    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-  </svg>
-);
-
 const REFERRAL_DISCOUNT = 0.2; // 20%
 
 const BILLING_OPTIONS = [
@@ -79,37 +73,6 @@ const PRO_FEATURES = [
   "Injuries and team comparison",
   "Hit-rate tracking",
   "Early access to new features",
-];
-
-const TESTIMONIALS = [
-  {
-    name: "Marco S.",
-    role: "Sports bettor · 2 years",
-    text: "The hit rate tracking alone is worth it. I've tightened my picks significantly since using this.",
-    avatar: "MS",
-    rating: 5,
-  },
-  {
-    name: "Diogo F.",
-    role: "Fantasy basketball · 3 years",
-    text: "Best NBA stats tool I've used. The injury reports and team comparison saved my fantasy season.",
-    avatar: "DF",
-    rating: 5,
-  },
-  {
-    name: "André P.",
-    role: "Casual fan turned bettor",
-    text: "Started on Free, upgraded after one week. The historical data completely changes how you read matchups.",
-    avatar: "AP",
-    rating: 5,
-  },
-];
-
-const TRUST_SIGNALS = [
-  { label: "Active users", value: "2,400+" },
-  { label: "Games tracked", value: "1,230+" },
-  { label: "Player logs", value: "450K+" },
-  { label: "Uptime", value: "99.9%" },
 ];
 
 function formatRenewDate(date) {
@@ -346,6 +309,7 @@ function DiscountBadge({ code, discountPct }) {
 export default function PricingPage({ userPlan }) {
   const [selectedBilling, setSelectedBilling] = useState("season");
   const [loading, setLoading] = useState(false);
+  const [checkoutError, setCheckoutError] = useState(null);
   const router = useRouter();
 
   const isPro = userPlan?.plan === "pro";
@@ -373,25 +337,30 @@ export default function PricingPage({ userPlan }) {
   const validateReferral = async () => {
     if (!referralCode) return;
     setReferralStatus("loading");
+    try {
+      const res = await fetch("/api/referral/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: referralCode }),
+      });
+      const data = await res.json().catch(() => ({}));
 
-    const res = await fetch("/api/referral/validate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code: referralCode }),
-    });
-    const data = await res.json();
-
-    if (data.valid) {
-      setReferralStatus("valid");
-      setAppliedCode(referralCode.trim().toUpperCase());
-    } else {
-      setReferralStatus("invalid");
+      if (res.ok && data.valid) {
+        setReferralStatus("valid");
+        setAppliedCode(referralCode.trim().toUpperCase());
+      } else {
+        setReferralStatus("invalid");
+        setAppliedCode(null);
+      }
+    } catch {
+      setReferralStatus("error");
       setAppliedCode(null);
     }
   };
 
   const handleCheckout = async (billing) => {
     setLoading(true);
+    setCheckoutError(null);
     try {
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
@@ -408,6 +377,11 @@ export default function PricingPage({ userPlan }) {
       }
     } catch (err) {
       console.error("Checkout error:", err);
+      setCheckoutError(
+        err instanceof Error
+          ? err.message
+          : "Unable to start checkout. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -494,7 +468,7 @@ export default function PricingPage({ userPlan }) {
               <p className="text-slate-500 font-mono text-sm max-w-md mx-auto leading-relaxed">
                 {isTrial
                   ? "Choose a plan now to keep access to all Pro features."
-                  : "No tiers, no confusing feature gates. Get everything and win more bets."}
+                  : "Free includes complete analysis for 15 players. Pro removes the daily player limit."}
               </p>
             </div>
 
@@ -505,10 +479,10 @@ export default function PricingPage({ userPlan }) {
               <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-orange-500 via-amber-400 to-transparent" />
               <div className="absolute inset-0 bg-gradient-to-b from-[#1e1506]/60 to-transparent pointer-events-none" />
 
-              <div className="relative grid grid-cols-[1fr_340px]">
+            <div className="relative grid lg:grid-cols-[1fr_340px]">
                 {/* Left — features */}
                 {/* Left — promo */}
-                <div className="p-8 border-r border-white/6 flex flex-col justify-between">
+                <div className="p-6 sm:p-8 border-b border-white/6 lg:border-b-0 lg:border-r flex flex-col justify-between">
                   <div>
                     <p className="font-mono font-black text-[11px] uppercase tracking-[0.2em] text-orange-400 mb-1">
                       Pro Plan
@@ -628,7 +602,7 @@ export default function PricingPage({ userPlan }) {
                 </div>
 
                 {/* Right — billing + CTA */}
-                <div className="p-8 flex flex-col justify-between bg-[#0D1828]/60">
+                <div className="p-6 sm:p-8 flex flex-col justify-between bg-[#0D1828]/60">
                   <div>
                     <p className="text-[10px] font-mono uppercase tracking-widest text-slate-600 mb-3">
                       Choose billing
@@ -792,6 +766,14 @@ export default function PricingPage({ userPlan }) {
                     >
                       {loading ? "Redirecting..." : ctaLabel}
                     </button>
+                    {checkoutError && (
+                      <p
+                        role="alert"
+                        className="mb-3 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-[10px] font-mono text-red-300"
+                      >
+                        {checkoutError}
+                      </p>
+                    )}
                     <Link
                       href="/"
                       className="block w-full py-2.5 rounded-xl text-center text-[11px] font-mono uppercase tracking-widest border border-white/6 hover:border-white/10 text-slate-600 hover:text-slate-400 transition-all"
@@ -805,11 +787,12 @@ export default function PricingPage({ userPlan }) {
 
                   {/* Referral Code */}
                   <div className="mt-4">
-                    <p className="text-[10px] font-mono uppercase tracking-widest text-slate-600 mb-2">
+                    <label htmlFor="referral-code" className="block text-[10px] font-mono uppercase tracking-widest text-slate-500 mb-2">
                       Referral code
-                    </p>
+                    </label>
                     <div className="flex gap-2">
                       <input
+                        id="referral-code"
                         type="text"
                         value={referralCode}
                         onChange={(e) => {
@@ -833,7 +816,7 @@ export default function PricingPage({ userPlan }) {
                     </div>
 
                     {referralStatus === "valid" && (
-                      <div className="mt-2 space-y-1.5">
+                      <div aria-live="polite" className="mt-2 space-y-1.5">
                         {activePlan?.price > 0 && (
                           <p className="text-[10px] font-mono text-slate-500 pl-1">
                             You save{" "}
@@ -850,8 +833,13 @@ export default function PricingPage({ userPlan }) {
                       </div>
                     )}
                     {referralStatus === "invalid" && (
-                      <p className="text-[10px] font-mono text-red-400 mt-1.5 flex items-center gap-1">
+                      <p role="alert" className="text-[10px] font-mono text-red-400 mt-1.5 flex items-center gap-1">
                         <span>✕</span> Invalid code.
+                      </p>
+                    )}
+                    {referralStatus === "error" && (
+                      <p role="alert" className="text-[10px] font-mono text-red-300 mt-1.5">
+                        Could not validate the code. Check your connection and try again.
                       </p>
                     )}
                   </div>
@@ -860,66 +848,6 @@ export default function PricingPage({ userPlan }) {
             </div>
           </>
         )}
-
-        {/* Trust Signals */}
-        <div className="grid grid-cols-4 gap-4 mb-20">
-          {TRUST_SIGNALS.map((signal) => (
-            <div
-              key={signal.label}
-              className="text-center p-4 rounded-xl border border-white/6 bg-white/[0.02]"
-            >
-              <p className="text-2xl font-black text-white font-mono">
-                {signal.value}
-              </p>
-              <p className="text-[10px] font-mono text-slate-600 uppercase tracking-widest mt-1">
-                {signal.label}
-              </p>
-            </div>
-          ))}
-        </div>
-
-        {/* Testimonials */}
-        <div className="mb-20">
-          <div className="text-center mb-8">
-            <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-slate-600 mb-2">
-              Social proof
-            </p>
-            <h2 className="text-2xl font-black text-white">
-              Bettors who upgraded, won
-            </h2>
-          </div>
-          <div className="grid grid-cols-3 gap-5">
-            {TESTIMONIALS.map((t) => (
-              <div
-                key={t.name}
-                className="relative rounded-xl border border-white/6 bg-gradient-to-b from-[#162035] to-[#0F1828] p-5 overflow-hidden"
-              >
-                <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-orange-500/30 to-transparent" />
-                <div className="flex gap-0.5 mb-3">
-                  {Array.from({ length: t.rating }).map((_, i) => (
-                    <StarIcon key={i} />
-                  ))}
-                </div>
-                <p className="text-[13px] text-slate-300 leading-relaxed mb-4 font-mono">
-                  &ldquo;{t.text}&rdquo;
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-orange-500/20 border border-orange-500/30 flex items-center justify-center">
-                    <span className="text-[9px] font-mono font-bold text-orange-400">
-                      {t.avatar}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="text-[12px] font-bold text-white">{t.name}</p>
-                    <p className="text-[10px] font-mono text-slate-600">
-                      {t.role}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
 
         {/* FAQ */}
         <div className="mb-20">

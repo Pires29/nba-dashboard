@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useMemo, useState, useTransition } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Card from "@/components/ui/playerStats/Card";
 import GameSelector from "./selectors/GameSelector";
 import PlayerDropdown from "./selectors/PlayerDropdown";
@@ -29,6 +29,8 @@ const PlayerSelectionControls = ({
   initialActiveTeam,
 }) => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
   const [selectedName, setSelectedName] = useState(initialSelectedName);
   const [activeTeam, setActiveTeam] = useState(initialActiveTeam);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -50,20 +52,21 @@ const PlayerSelectionControls = ({
       if (!selectedPlayer?.PLAYER_ID) return;
       setSelectedName(selectedPlayer.PLAYER);
       setSheetOpen(false);
-      router.push(
-        `/playersStats?team1Id=${currentGame?.home_team_id}&team2Id=${currentGame?.visitor_team_id}&playerId=${selectedPlayer.PLAYER_ID}`,
-      );
+      const stat = searchParams.get("stat") ?? "points";
+      startTransition(() => router.push(
+        `/playersStats?team1Id=${currentGame?.home_team_id}&team2Id=${currentGame?.visitor_team_id}&playerId=${selectedPlayer.PLAYER_ID}&stat=${stat}`,
+      ));
     },
-    [router, currentGame?.home_team_id, currentGame?.visitor_team_id],
+    [router, searchParams, currentGame?.home_team_id, currentGame?.visitor_team_id],
   );
 
   const handleGameSelect = useCallback(
     (game) => {
       if (!game) return;
       setSheetOpen(false);
-      router.push(
+      startTransition(() => router.push(
         `/playersStats?team1Id=${game.home_team_id}&team2Id=${game.visitor_team_id}`,
-      );
+      ));
     },
     [router],
   );
@@ -77,15 +80,18 @@ const PlayerSelectionControls = ({
         className="hidden lg:flex lg:h-full lg:min-h-0 lg:flex-col"
       >
         <div className="p-4 pb-3">
-          <p className="mb-2 text-[10px] font-mono font-bold uppercase tracking-[0.16em] text-slate-400">
-            Game
-          </p>
+          <div className="mb-2 flex items-center justify-between">
+            <p className="text-[10px] font-mono font-bold uppercase tracking-[0.16em] text-slate-400">Game</p>
+            <span aria-live="polite" className={`text-[9px] font-mono text-orange-300 ${isPending ? "opacity-100" : "opacity-0"}`}>Updating…</span>
+          </div>
           <GameSelector
             plan={plan}
             team1Id={currentGame?.home_team_id}
             team2Id={currentGame?.visitor_team_id}
             games={gamesSchedule}
             teams={teamNameMap}
+            onSelect={handleGameSelect}
+            disabled={isPending}
           />
         </div>
 
@@ -118,7 +124,7 @@ const PlayerSelectionControls = ({
           </div>
         )}
 
-        <div className="flex-1 border-t border-white/[0.05]">
+        <div aria-busy={isPending} className={`flex-1 border-t border-white/[0.05] ${isPending ? "pointer-events-none opacity-60" : ""}`}>
           <TeamRoster
             teamRoster={desktopRoster}
             setSelectedName={handleSelectPlayer}
@@ -131,6 +137,7 @@ const PlayerSelectionControls = ({
       <button
         aria-label="Open filters"
         onClick={() => setSheetOpen(true)}
+        disabled={isPending}
         className="fixed bottom-6 right-5 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-orange-500 text-white shadow-[0_4px_24px_rgba(232,93,4,0.45)] transition-transform active:scale-95 lg:hidden"
       >
         <svg

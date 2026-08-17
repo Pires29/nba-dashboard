@@ -6,6 +6,7 @@ const PlayerStats = ({
   stat,
   isPlayerLocked = false,
   lockedPlayerName,
+  dataStatus,
 }) => {
   return (
     <div className="flex min-h-full flex-col bg-gradient-to-b from-[#0D1B2E] to-[#060E1A] font-sans">
@@ -43,6 +44,7 @@ const PlayerStats = ({
         initialStat={stat}
         isPlayerLocked={isPlayerLocked}
         lockedPlayerName={lockedPlayerName}
+        dataStatus={dataStatus}
       />
     </div>
   );

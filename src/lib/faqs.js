@@ -3,13 +3,13 @@ export const ALL_FAQS = [
     id: "trial",
     question: "Can I try PRO for free?",
     answer:
-      "Yes! Start a 14-day free trial with full access to all PRO features. No credit card required.",
+      "Yes. The 7-day trial includes full Pro access. A payment method is required and the monthly plan starts automatically when the trial ends unless you cancel first.",
   },
   {
     id: "trial-end",
     question: "What happens after my trial ends?",
     answer:
-      "After 14 days, you'll be charged for your chosen plan. We'll send you a reminder email 3 days before your trial expires.",
+      "After 7 days, the monthly plan starts automatically unless you cancel before the trial ends. You can review or cancel it from your account settings.",
   },
   {
     id: "cancel",
@@ -27,7 +27,7 @@ export const ALL_FAQS = [
     id: "security",
     question: "Is my data secure?",
     answer:
-      "Yes. All calculations run locally in your browser — your data never leaves your device. Payments are processed securely by Stripe (PCI-DSS Level 1 certified).",
+      "Passwords are stored as secure hashes and payment details are handled by Stripe. HoopiQ stores the account and plan information needed to provide the service.",
   },
 ];
 

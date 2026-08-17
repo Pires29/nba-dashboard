@@ -188,3 +188,5 @@ Dividir PropsTable e PricingPage.
 Melhorar loading, erros e acessibilidade.
 Implementar analytics.
 Criar offseason mode e alertas de favoritos.
+
+Acrescentar secalhar tipo minutos e jogos com e sem um jogador por exemplo

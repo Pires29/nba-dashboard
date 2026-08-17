@@ -1,6 +1,6 @@
 import Footer from "@/components/Footer";
 
-const LAST_UPDATED = "March 2025";
+const LAST_UPDATED = "August 2026";
 
 const sections = [
   {
@@ -31,9 +31,8 @@ const sections = [
     content: null,
     list: [
       "The Pro plan is a paid subscription billed monthly or once per NBA season, as chosen at checkout.",
-      "A 7-day free trial is available. No credit card is required to start the trial.",
+      "A 7-day free trial of the monthly Pro subscription is available to eligible accounts. A payment method is required at checkout.",
       "After the trial period, you will be charged automatically unless you cancel before the trial ends.",
-      "We will send a reminder email 3 days before your trial expires.",
       "All payments are processed securely by Stripe. We do not store your payment details.",
       "Prices are displayed in EUR and are inclusive of any applicable taxes.",
     ],

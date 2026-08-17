@@ -1,12 +1,9 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-
 const buildGameValue = (game) =>
   `${game.date}-${game.home_team_id}-${game.visitor_team_id}`;
 
-const GameSelector = ({ team1Id, team2Id, games, teams }) => {
-  const router = useRouter();
+const GameSelector = ({ team1Id, team2Id, games, teams, onSelect, disabled }) => {
   const hasGamesData = games !== null && games !== undefined;
   const hasTeamsData = teams !== null && teams !== undefined;
   const hasGames = games?.length > 0;
@@ -47,10 +44,9 @@ const GameSelector = ({ team1Id, team2Id, games, teams }) => {
             (item) => buildGameValue(item) === event.target.value,
           );
           if (!game) return;
-          router.push(
-            `/playersStats?team1Id=${game.home_team_id}&team2Id=${game.visitor_team_id}`,
-          );
+          onSelect?.(game);
         }}
+        disabled={disabled}
         className="w-full appearance-none rounded-lg border border-white/[0.06] bg-[#0D1828] py-3 pl-3 pr-10 text-[11px] font-mono font-bold text-slate-300 outline-none transition-colors hover:border-orange-500/30 focus:border-orange-500/40"
       >
         <option value="" disabled>

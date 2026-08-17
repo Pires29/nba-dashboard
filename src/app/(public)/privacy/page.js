@@ -1,6 +1,6 @@
 import Footer from "@/components/Footer";
 
-const LAST_UPDATED = "March 2025";
+const LAST_UPDATED = "August 2026";
 
 const sections = [
   {
@@ -25,7 +25,6 @@ const sections = [
       "To create and manage your account",
       "To authenticate your identity when you log in",
       "To process payments and manage your subscription via Stripe",
-      "To send transactional emails (trial reminders, billing confirmations)",
       "To provide access to features based on your plan",
     ],
   },

@@ -29,6 +29,7 @@ const PlayerGraphSection = ({
   opponentAbbr,
   statGraphData,
   initialStat = "points",
+  logsAvailable = true,
 }) => {
   const [selectedStat, setSelectedStat] = useState(initialStat || "points");
   const [selectedNumber, setSelectedNumber] = useState(5);
@@ -62,6 +63,7 @@ const PlayerGraphSection = ({
             hasPreviousGames={hasPreviousGames}
             hasPlayoffGames={hasPlayoffGames}
             statGraphData={statGraphData}
+            logsAvailable={logsAvailable}
           />
         </Suspense>
       </div>

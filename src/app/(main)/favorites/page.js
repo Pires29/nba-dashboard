@@ -5,6 +5,7 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useState } from "react";
+import FavoritesMobileList from "@/components/favorites/FavoritesMobileList";
 
 const HIT_RATE_COLOR = (rate) => {
   if (rate == null) return "text-slate-600";
@@ -14,11 +15,12 @@ const HIT_RATE_COLOR = (rate) => {
 };
 
 export default function FavoritesPage() {
-  const { favorites, loading, toggleFavorite, clearFavorites } = useFavorites();
+  const { favorites, loading, error, mutating, toggleFavorite, clearFavorites, fetchFavorites } = useFavorites();
   const router = useRouter();
 
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState(new Set());
+  const [confirmClear, setConfirmClear] = useState(false);
 
   const toggleSelect = (id) => {
     setSelected((prev) => {
@@ -33,10 +35,17 @@ export default function FavoritesPage() {
     setSelected(new Set());
   };
 
+  const removeFavorite = (favorite) =>
+    toggleFavorite(
+      { player_id: favorite.playerId, player_name: favorite.playerName, team: favorite.team },
+      favorite.stat,
+      favorite.avg,
+    );
+
   if (loading) {
     return (
       <div className="flex min-h-full flex-1 flex-col items-center justify-center bg-gradient-to-b from-[#0D1B2E] to-[#060E1A]">
-        <p className="text-[12px] font-mono text-slate-600">Loading...</p>
+        <div className="h-28 w-[min(420px,calc(100%-32px))] animate-pulse rounded-xl border border-white/[0.08] bg-white/[0.03]" aria-label="Loading favorites" />
       </div>
     );
   }
@@ -53,9 +62,9 @@ export default function FavoritesPage() {
           }}
         />
 
-        <div className="relative z-10 mx-auto flex min-h-full w-full max-w-[1400px] flex-1 flex-col gap-4 px-6 py-5">
+        <div className="relative z-10 mx-auto flex min-h-full w-full max-w-[1400px] flex-1 flex-col gap-4 px-4 py-5 sm:px-6">
         {/* Header */}
-        <div className="flex items-center gap-3 flex-shrink-0">
+        <div className="flex flex-wrap items-center gap-3 flex-shrink-0">
           <div className="w-1 h-5 rounded-sm bg-orange-500" />
           <h1 className="font-mono font-black text-sm tracking-widest text-white uppercase">
             Favorites
@@ -69,12 +78,14 @@ export default function FavoritesPage() {
               {selectMode ? (
                 <>
                   <button
+                    type="button"
                     onClick={exitSelectMode}
                     className="ml-auto px-3 py-1.5 rounded-lg border border-white/[0.08] text-slate-400 text-[10px] font-mono font-bold uppercase tracking-widest hover:text-slate-200 transition-all"
                   >
                     Cancel
                   </button>
                   <button
+                    type="button"
                     onClick={async () => {
                       const ids = [...selected];
                       if (!ids.length) return;
@@ -90,13 +101,15 @@ export default function FavoritesPage() {
               ) : (
                 <>
                   <button
+                    type="button"
                     onClick={() => setSelectMode(true)}
                     className="ml-auto px-3 py-1.5 rounded-lg border border-white/[0.08] bg-white/[0.03] text-slate-400 text-[10px] font-mono font-bold uppercase tracking-widest hover:text-slate-200 transition-all"
                   >
                     Select
                   </button>
                   <button
-                    onClick={clearFavorites}
+                    type="button"
+                    onClick={() => setConfirmClear(true)}
                     className="px-3 py-1.5 rounded-lg border border-red-500/20 bg-red-500/10 text-red-400 text-[10px] font-mono font-bold uppercase tracking-widest hover:bg-red-500/20 transition-all"
                   >
                     Clear all
@@ -106,6 +119,30 @@ export default function FavoritesPage() {
             </>
           )}
         </div>
+
+        {error && (
+          <div role="alert" className="flex items-center justify-between gap-3 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs text-red-200">
+            <span>{error}</span>
+            <button type="button" onClick={fetchFavorites} className="rounded-lg border border-red-400/30 px-3 py-1.5 font-bold">Retry</button>
+          </div>
+        )}
+
+        {selectMode && favorites.length > 0 && (
+          <button type="button" onClick={() => setSelected(selected.size === favorites.length ? new Set() : new Set(favorites.map((favorite) => favorite.id)))} className="self-start text-xs font-bold text-orange-300">
+            {selected.size === favorites.length ? "Deselect all" : "Select all"}
+          </button>
+        )}
+
+        {confirmClear && (
+          <div role="alertdialog" aria-labelledby="clear-favorites-title" className="rounded-xl border border-red-500/30 bg-[#160d14] p-4">
+            <p id="clear-favorites-title" className="font-bold text-white">Remove all favorites?</p>
+            <p className="mt-1 text-xs text-slate-300">This removes all {favorites.length} saved props.</p>
+            <div className="mt-3 flex gap-2">
+              <button type="button" onClick={() => setConfirmClear(false)} className="rounded-lg border border-white/10 px-4 py-2 text-xs text-slate-200">Cancel</button>
+              <button type="button" disabled={mutating} onClick={async () => { await clearFavorites(); setConfirmClear(false); }} className="rounded-lg bg-red-500 px-4 py-2 text-xs font-bold text-white disabled:opacity-50">Remove all</button>
+            </div>
+          </div>
+        )}
 
         {/* Empty state */}
         {favorites.length === 0 && (
@@ -142,7 +179,9 @@ export default function FavoritesPage() {
 
         {/* Table */}
         {favorites.length > 0 && (
-          <div className="flex-1 min-h-0 overflow-auto rounded-xl border border-white/[0.06]">
+          <>
+          <FavoritesMobileList favorites={favorites} mutating={mutating} onOpen={() => router.push("/props")} onRemove={removeFavorite} onToggleSelect={toggleSelect} selectMode={selectMode} selected={selected} />
+          <div className="hidden flex-1 min-h-0 overflow-auto rounded-xl border border-white/[0.06] md:block">
             <table className="w-full text-left border-collapse">
               <thead className="sticky top-0 z-10 bg-[#0D1828]">
                 <tr className="border-b border-white/[0.06]">
@@ -238,17 +277,12 @@ export default function FavoritesPage() {
                     </td>
                     <td className="px-4 py-3">
                       <button
+                        type="button"
+                        aria-label={`Remove ${fav.playerName} ${fav.stat} from favorites`}
+                        disabled={mutating}
                         onClick={(e) => {
                           e.stopPropagation();
-                          toggleFavorite(
-                            {
-                              player_id: fav.playerId,
-                              player_name: fav.playerName,
-                              team: fav.team,
-                            },
-                            fav.stat,
-                            fav.avg,
-                          );
+                          removeFavorite(fav);
                         }}
                         className="w-6 h-6 flex items-center justify-center text-orange-400 hover:text-red-400 transition-colors"
                       >
@@ -269,6 +303,7 @@ export default function FavoritesPage() {
               </tbody>
             </table>
           </div>
+          </>
         )}
         </div>
       </div>

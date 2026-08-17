@@ -61,6 +61,7 @@ const PlayerGraphChart = ({ points, selectedStat, betLine, yTicks }) => {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart
+        accessibilityLayer
         data={points}
         margin={{ top: 20, right: 4, left: -20, bottom: 0 }}
       >

@@ -4,6 +4,8 @@ import PropsTableWrapper from "./PropsTableWrapper";
 import { getQaContext } from "@/lib/qa/context";
 import { getNbaData } from "@/lib/nbaDataSource";
 
+const SERVER_STARTED_AT = Date.now();
+
 const STATS = new Set([
   "points",
   "assists",
@@ -281,6 +283,13 @@ export default async function PropsPage({ searchParams }) {
       injuries={slimInjuries}
       totalPropsCount={safeProps.length}
       isFreePlan={plan === "free"}
+      dataStatus={{
+        source: qa ? "qa" : nbaData.source,
+        updatedAt: nbaData.updatedAt ?? null,
+        isStale: nbaData.updatedAt
+          ? SERVER_STARTED_AT - new Date(nbaData.updatedAt).getTime() > 24 * 60 * 60 * 1000
+          : false,
+      }}
       initialFilters={{
         selectedStat,
         sortPeriod,

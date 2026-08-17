@@ -30,6 +30,7 @@ const PlayerGraph = ({
   hasPreviousGames,
   hasPlayoffGames: hasPlayoffGamesFlag,
   statGraphData,
+  logsAvailable = true,
 }) => {
   const [shouldRenderChart, setShouldRenderChart] = useState(false);
 
@@ -114,11 +115,11 @@ const PlayerGraph = ({
   const hasPlayoffGames = Boolean(hasPlayoffGamesFlag);
   const prevDataReceived = hasPreviousGames !== undefined;
   const playoffsDataReceived = hasPlayoffGamesFlag !== undefined;
-  const hasValidArray = isPrev
+  const hasValidArray = logsAvailable && (isPrev
     ? prevDataReceived
     : isPlayoffs
       ? playoffsDataReceived
-      : hasCurrentGames !== undefined;
+      : hasCurrentGames !== undefined);
   const shouldShowChart = isPrev
     ? hasPrevGames
     : isPlayoffs
@@ -200,7 +201,7 @@ const PlayerGraph = ({
       </div>
 
       {/* ── Line stats + Add prop ── */}
-      <div className="flex items-center gap-x-5 gap-y-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-3 sm:px-4">
         <div className="flex items-baseline gap-1.5">
           <span className="font-black text-2xl text-white font-mono">
             {betLine?.toFixed(1) ?? "—"}
@@ -230,7 +231,7 @@ const PlayerGraph = ({
           </span>
         </div>
 
-        <div className="ml-auto">
+        <div className="w-full sm:ml-auto sm:w-auto">
           <FavoritePropButton
             playerStats={playerStats}
             selectedStat={selectedStat}

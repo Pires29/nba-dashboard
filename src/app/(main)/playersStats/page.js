@@ -6,6 +6,8 @@ import LockedPlayerState from "@/components/playerStats/LockedPlayerState";
 import { getQaContext } from "@/lib/qa/context";
 import { getNbaData, getNbaPlayerLogs } from "@/lib/nbaDataSource";
 
+const SERVER_STARTED_AT = Date.now();
+
 export default async function Page({ searchParams }) {
   const resolvedSearchParams = await searchParams;
 
@@ -63,6 +65,9 @@ export default async function Page({ searchParams }) {
           logs: qa.data.logsByPlayer[String(playerId)] ?? [],
           logsPrev: qa.data.previousLogsByPlayer[String(playerId)] ?? [],
           logsPlayoffs: [],
+          source: Object.hasOwn(qa.data.logsByPlayer, String(playerId))
+            ? "qa"
+            : "unavailable",
         }
       : await getNbaPlayerLogs(playerId);
   const rawGamesSchedule = nbaData.games;
@@ -91,6 +96,14 @@ export default async function Page({ searchParams }) {
       playerId={playerId}
       stat={stat}
       data={data}
+      dataStatus={{
+        source: qa ? playerLogBundle.source : nbaData.source,
+        updatedAt: nbaData.updatedAt ?? null,
+        isStale: nbaData.updatedAt
+          ? SERVER_STARTED_AT - new Date(nbaData.updatedAt).getTime() > 24 * 60 * 60 * 1000
+          : false,
+        logsAvailable: isPlayerLocked || playerLogBundle.source !== "unavailable",
+      }}
       isPlayerLocked={isPlayerLocked}
       lockedPlayerName={requestedRosterPlayer?.PLAYER}
     />
