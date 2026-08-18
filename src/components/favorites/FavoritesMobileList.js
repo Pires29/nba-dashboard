@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import PlayerHeadshotImage from "@/components/PlayerHeadshotImage";
 
 const formatDate = (value) =>
   new Date(value).toLocaleDateString("pt-PT", { day: "2-digit", month: "short" });
@@ -32,7 +32,7 @@ export default function FavoritesMobileList({
               )}
               <button type="button" onClick={() => selectMode ? onToggleSelect(favorite.id) : onOpen(favorite)} className="flex min-w-0 flex-1 items-center gap-3 rounded text-left focus:outline-none focus:ring-2 focus:ring-orange-500/40">
                 <span className="h-10 w-10 overflow-hidden rounded-lg border border-white/[0.08] bg-[#060E1A]">
-                  <Image src={`https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/${favorite.playerId}.png`} alt="" width={40} height={40} className="h-full w-full object-cover" />
+                  <PlayerHeadshotImage playerId={favorite.playerId} alt="" width={40} height={40} className="h-full w-full object-cover" />
                 </span>
                 <span className="min-w-0">
                   <span className="block truncate text-sm font-semibold text-white">{favorite.playerName}</span>

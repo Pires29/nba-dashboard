@@ -138,6 +138,8 @@ export default function SettingsPage({ session }) {
   const isGoogle = !!(user?.image && user.image.includes("google"));
   const plan = user?.plan ?? "free";
   const isPro = plan === "pro";
+  const isTrial = plan === "trial";
+  const hasSubscription = isPro || isTrial;
   const isSeasonPlan = isPro && user?.planInterval === "season";
 
   const renewsAt = user?.planRenewsAt
@@ -254,7 +256,7 @@ export default function SettingsPage({ session }) {
           {/* Plan */}
           <div className="relative rounded-2xl border border-white/6 bg-gradient-to-b from-[#162035] to-[#0F1828] p-6 overflow-hidden">
             <div
-              className={`absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r ${isPro ? "from-orange-500 via-amber-400" : "from-slate-600 via-slate-500"} to-transparent`}
+              className={`absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r ${hasSubscription ? "from-orange-500 via-amber-400" : "from-slate-600 via-slate-500"} to-transparent`}
             />
             <SectionLabel>Plan</SectionLabel>
 
@@ -262,11 +264,17 @@ export default function SettingsPage({ session }) {
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <span
-                    className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold uppercase tracking-widest ${isPro ? "bg-orange-500/15 text-orange-400 border border-orange-500/20" : "bg-slate-700/50 text-slate-400 border border-white/10"}`}
+                    className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold uppercase tracking-widest ${hasSubscription ? "bg-orange-500/15 text-orange-400 border border-orange-500/20" : "bg-slate-700/50 text-slate-400 border border-white/10"}`}
                   >
-                    {isPro ? "Pro" : "Free"}
+                    {isTrial
+                      ? "Trial"
+                      : isSeasonPlan
+                        ? "Season Pass"
+                        : isPro
+                          ? "Pro"
+                          : "Free"}
                   </span>
-                  {isPro && !cancelled && (
+                  {hasSubscription && !cancelled && (
                     <span className="text-[10px] font-mono text-slate-500">
                       Active plan
                     </span>
@@ -278,22 +286,27 @@ export default function SettingsPage({ session }) {
                   )}
                 </div>
                 {isSeasonPlan && renewsAt && (
+                  <div className="space-y-1">
+                    <p className="text-[12px] font-mono text-slate-500">
+                      Season access until <span className="text-slate-300">{renewsAt}</span>
+                    </p>
+                    <p className="text-[10px] font-mono text-slate-600">
+                      One-time payment · No automatic renewal
+                    </p>
+                  </div>
+                )}
+                {hasSubscription && !isSeasonPlan && renewsAt && !cancelled && (
                   <p className="text-[12px] font-mono text-slate-500">
-                    Pro access until <span className="text-slate-300">{renewsAt}</span>
+                    {isTrial ? "Trial ends" : "Renews"} on <span className="text-slate-300">{renewsAt}</span>
                   </p>
                 )}
-                {isPro && !isSeasonPlan && renewsAt && !cancelled && (
-                  <p className="text-[12px] font-mono text-slate-500">
-                    Renews on <span className="text-slate-300">{renewsAt}</span>
-                  </p>
-                )}
-                {isPro && !isSeasonPlan && renewsAt && cancelled && (
+                {hasSubscription && !isSeasonPlan && renewsAt && cancelled && (
                   <p className="text-[12px] font-mono text-slate-500">
                     Pro access until{" "}
                     <span className="text-slate-300">{renewsAt}</span>
                   </p>
                 )}
-                {!isPro && (
+                {!hasSubscription && (
                   <p className="text-[12px] font-mono text-slate-500">
                     Upgrade to access all features
                   </p>
@@ -301,7 +314,7 @@ export default function SettingsPage({ session }) {
               </div>
             </div>
 
-            {isPro && !isSeasonPlan && !cancelled ? (
+            {hasSubscription && !isSeasonPlan && !cancelled ? (
               <div className="flex flex-col gap-3">
                 <p className="text-[11px] font-mono text-slate-600 leading-relaxed">
                   By cancelling, you&apos;ll keep Pro access until{" "}
@@ -317,7 +330,7 @@ export default function SettingsPage({ session }) {
                   Cancel subscription
                 </button>
               </div>
-            ) : !isPro ? (
+            ) : !hasSubscription ? (
               <a
                 href="/pricing"
                 className="block w-full py-2.5 rounded-xl text-center bg-orange-500 hover:bg-orange-400 text-white text-[11px] font-mono font-bold uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(249,115,22,0.25)] hover:shadow-[0_0_30px_rgba(249,115,22,0.4)]"

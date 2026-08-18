@@ -8,6 +8,11 @@ import { validateReferralForUser } from "@/lib/referrals";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { readJson, RequestError } from "@/lib/security";
 import { validateCheckoutPlan } from "@/lib/stripePlans";
+import {
+  CheckoutInProgressError,
+  releaseCheckoutAttempt,
+  reserveCheckoutAttempt,
+} from "@/lib/stripeBilling";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -20,7 +25,8 @@ const REFERRAL_COUPON_ID = process.env.STRIPE_REFERRAL_COUPON_ID;
 
 export async function POST(req) {
   let referralReservedForUserId = null;
-  let checkoutSessionCreated = false;
+  let checkoutAttempt = null;
+  let checkoutSession = null;
 
   try {
     const session = await getServerSession(authOptions);
@@ -75,6 +81,26 @@ export async function POST(req) {
       referralReservedForUserId = user.id;
     }
 
+    checkoutAttempt = await reserveCheckoutAttempt(prisma, {
+      userId: user.id,
+      billing,
+    });
+
+    if (checkoutAttempt.reused) {
+      const existingSession = await stripe.checkout.sessions.retrieve(
+        checkoutAttempt.stripeSessionId,
+      );
+      if (existingSession.status === "open" && existingSession.url) {
+        return Response.json({ url: existingSession.url, resumed: true });
+      }
+
+      await releaseCheckoutAttempt(prisma, { id: checkoutAttempt.id });
+      checkoutAttempt = await reserveCheckoutAttempt(prisma, {
+        userId: user.id,
+        billing,
+      });
+    }
+
     let customerId = user.stripeCustomerId;
     if (customerId) {
       try {
@@ -103,7 +129,7 @@ export async function POST(req) {
     }
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    const checkoutSession = await stripe.checkout.sessions.create({
+    checkoutSession = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ["card"],
       line_items: [{ price: plan.priceId, quantity: 1 }],
@@ -118,14 +144,24 @@ export async function POST(req) {
           : { metadata: { userId: user.id } },
       }),
       success_url: `${appUrl}/settings?upgraded=true`,
-      cancel_url: `${appUrl}/pricing`,
+      cancel_url: `${appUrl}/#pricing`,
       metadata: {
         userId: user.id,
         billing,
         referralCodeId: referralCodeId ?? "",
+        checkoutAttemptId: checkoutAttempt.id,
+        priorSubscriptionId: plan.priorSubscriptionId ?? "",
       },
+      expires_at: Math.floor(checkoutAttempt.expiresAt.getTime() / 1000),
+    }, {
+      idempotencyKey: `checkout:${checkoutAttempt.id}`,
     });
-    checkoutSessionCreated = true;
+
+    await prisma.$executeRaw`
+      UPDATE "CheckoutAttempt"
+      SET "stripeSessionId" = ${checkoutSession.id}
+      WHERE "id" = ${checkoutAttempt.id}
+    `;
 
     if (referralReservedForUserId) {
       await prisma.referralUse.update({
@@ -136,7 +172,13 @@ export async function POST(req) {
 
     return Response.json({ url: checkoutSession.url });
   } catch (error) {
-    if (referralReservedForUserId && !checkoutSessionCreated) {
+    if (checkoutSession?.id) {
+      await stripe.checkout.sessions.expire(checkoutSession.id).catch(() => undefined);
+    }
+    if (checkoutAttempt) {
+      await releaseCheckoutAttempt(prisma, { id: checkoutAttempt.id }).catch(() => undefined);
+    }
+    if (referralReservedForUserId) {
       await prisma.referralUse.deleteMany({
         where: {
           referredUserId: referralReservedForUserId,
@@ -149,6 +191,9 @@ export async function POST(req) {
     }
     if (error?.code === "P2002") {
       return Response.json({ error: "Referral code is already in use" }, { status: 409 });
+    }
+    if (error instanceof CheckoutInProgressError) {
+      return Response.json({ error: error.message }, { status: 409 });
     }
     console.error("Stripe checkout failed", { type: error?.type, code: error?.code });
     return Response.json(

@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import PlayerHeadshotImage from "@/components/PlayerHeadshotImage";
 import {
   INITIAL_VISIBLE_ROWS,
   INJURY_STYLES,
@@ -118,14 +118,13 @@ export default function PropsResultsTable({
                       aria-label={`Open ${player.player_name} ${selectedStat} details`}
                     >
                       <span className="h-9 w-9 flex-shrink-0 overflow-hidden rounded-lg border border-white/[0.08] bg-[#0D1828]">
-                        <Image
-                          src={`https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/${player.player_id}.png`}
+                        <PlayerHeadshotImage
+                          playerId={player.player_id}
                           width={40}
                           height={30}
                           alt=""
                           priority={index === 0}
                           className="h-full w-full object-cover"
-                          onError={(event) => { event.currentTarget.style.opacity = 0.2; }}
                         />
                       </span>
                       <span className="min-w-0 flex-1">

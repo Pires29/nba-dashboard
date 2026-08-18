@@ -59,11 +59,11 @@ const CustomTooltip = ({ active, payload, selectedStat }) => {
 
 const PlayerGraphChart = ({ points, selectedStat, betLine, yTicks }) => {
   return (
-    <ResponsiveContainer width="100%" height="100%">
+    <ResponsiveContainer width="100%" height="100%" debounce={50}>
       <BarChart
         accessibilityLayer
         data={points}
-        margin={{ top: 20, right: 4, left: -20, bottom: 0 }}
+        margin={{ top: 20, right: 4, left: -20, bottom: 28 }}
       >
         <XAxis
           dataKey="label"
@@ -91,7 +91,12 @@ const PlayerGraphChart = ({ points, selectedStat, betLine, yTicks }) => {
             strokeWidth={1.5}
           />
         )}
-        <Bar dataKey={selectedStat} radius={[3, 3, 0, 0]} maxBarSize={90}>
+        <Bar
+          dataKey={selectedStat}
+          radius={[3, 3, 0, 0]}
+          maxBarSize={90}
+          isAnimationActive={false}
+        >
           {points.map((entry, index) => (
             <Cell
               key={`cell-${index}`}

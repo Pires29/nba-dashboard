@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Card from "@/components/ui/playerStats/Card";
 import GameSelector from "./selectors/GameSelector";
@@ -34,6 +34,30 @@ const PlayerSelectionControls = ({
   const [selectedName, setSelectedName] = useState(initialSelectedName);
   const [activeTeam, setActiveTeam] = useState(initialActiveTeam);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const desktopCardRef = useRef(null);
+  const [desktopCardHeight, setDesktopCardHeight] = useState(null);
+
+  useEffect(() => {
+    let frameId;
+    const updateAvailableHeight = () => {
+      window.cancelAnimationFrame(frameId);
+      frameId = window.requestAnimationFrame(() => {
+        const card = desktopCardRef.current;
+        if (!card || window.innerWidth < 1024) return;
+        const top = Math.max(card.getBoundingClientRect().top, 72);
+        setDesktopCardHeight(Math.max(320, Math.floor(window.innerHeight - top - 16)));
+      });
+    };
+
+    updateAvailableHeight();
+    window.addEventListener("resize", updateAvailableHeight);
+    window.addEventListener("scroll", updateAvailableHeight, { passive: true });
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      window.removeEventListener("resize", updateAvailableHeight);
+      window.removeEventListener("scroll", updateAvailableHeight);
+    };
+  }, []);
 
   const safeHomeRoster = useMemo(() => homeRoster ?? [], [homeRoster]);
   const safeAwayRoster = useMemo(() => awayRoster ?? [], [awayRoster]);
@@ -77,7 +101,9 @@ const PlayerSelectionControls = ({
     <>
       <Card
         accent="orange"
-        className="hidden lg:flex lg:h-full lg:min-h-0 lg:flex-col"
+        className="hidden lg:sticky lg:top-[72px] lg:flex lg:min-h-0 lg:flex-col"
+        elementRef={desktopCardRef}
+        style={desktopCardHeight ? { maxHeight: `${desktopCardHeight}px` } : undefined}
       >
         <div className="p-4 pb-3">
           <div className="mb-2 flex items-center justify-between">
@@ -124,7 +150,7 @@ const PlayerSelectionControls = ({
           </div>
         )}
 
-        <div aria-busy={isPending} className={`flex-1 border-t border-white/[0.05] ${isPending ? "pointer-events-none opacity-60" : ""}`}>
+        <div aria-busy={isPending} className={`min-h-0 flex-1 overflow-y-auto overscroll-contain border-t border-white/[0.05] scrollbar-thin ${isPending ? "pointer-events-none opacity-60" : ""}`}>
           <TeamRoster
             teamRoster={desktopRoster}
             setSelectedName={handleSelectPlayer}

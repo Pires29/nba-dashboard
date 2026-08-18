@@ -38,7 +38,7 @@ const formatDate = (dateStr) => {
 };
 
 const PlayerContextGraph = ({ games = [] }) => {
-  const [selectedStat, setSelectedStat] = useState("fg_pct");
+  const [selectedStat, setSelectedStat] = useState("minutes");
 
   const hasData = games.length > 0;
   const statMeta = STAT_OPTIONS.find((s) => s.key === selectedStat);
@@ -70,6 +70,7 @@ const PlayerContextGraph = ({ games = [] }) => {
     if (!valid.length) return null;
     return valid.reduce((sum, d) => sum + d[selectedStat], 0) / valid.length;
   }, [data, selectedStat]);
+  const hasSelectedData = data.some((game) => game[selectedStat] != null);
 
   const yTicks = useMemo(() => {
     if (!data.length) return [];
@@ -150,12 +151,18 @@ const PlayerContextGraph = ({ games = [] }) => {
       </div>
 
       <div className="w-full h-[160px]">
-        <PlayerContextGraphChart
-          dataFiltered={chartData}
-          selectedStat={selectedStat}
-          statMeta={statMeta}
-          yTicks={yTicks}
-        />
+        {hasSelectedData ? (
+          <PlayerContextGraphChart
+            dataFiltered={chartData}
+            selectedStat={selectedStat}
+            statMeta={statMeta}
+            yTicks={yTicks}
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center rounded-lg border border-white/[0.05] bg-white/[0.01] font-mono text-[10px] uppercase tracking-wider text-slate-500">
+            No data for {statMeta?.label}
+          </div>
+        )}
       </div>
     </div>
   );

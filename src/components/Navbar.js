@@ -44,7 +44,7 @@ const Navbar = async () => {
           {/* Upgrade button — Free plan only */}
           {isFreePlan && (
             <Link
-              href="/pricing"
+              href="/#pricing"
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-500/10 border border-orange-500/30 hover:bg-orange-500/20 hover:border-orange-500/50 transition-all duration-150 group"
             >
               <svg

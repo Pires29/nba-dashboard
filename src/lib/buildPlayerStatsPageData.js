@@ -16,6 +16,7 @@ export async function buildPlayerStatsPageData({
   playerLogs,
   playerLogsPrev,
   playerLogsPlayoffs,
+  teammateLogBundles = [],
 }) {
   const formatTeamStats = (teamStatsEntry) => {
     if (!teamStatsEntry) return null;
@@ -242,6 +243,24 @@ export async function buildPlayerStatsPageData({
   });
   const graphViews = buildPlayerGraphViews(graphData);
   const statGraphData = buildPlayerGraphStatDataMap(graphViews);
+  const gameId = (game) => String(game?.gid ?? game?.GAME_ID ?? "");
+  const average = (games, modernKey, legacyKey) => games.length
+    ? Math.round((games.reduce((sum, game) => sum + Number(game?.[modernKey] ?? game?.[legacyKey] ?? 0), 0) / games.length) * 10) / 10
+    : null;
+  const teammateImpact = teammateLogBundles.map(({ player: teammate, logs = [], logsPrev = [], logsPlayoffs = [] }) => ({
+    playerId: Number(teammate.PLAYER_ID),
+    playerName: teammate.PLAYER,
+    position: teammate.POSITION ?? "—",
+    avgMinutes: average(logs, "min", "MIN"),
+    avgPoints: average(logs, "pts", "PTS"),
+    currentGameIds: [...logs, ...logsPlayoffs].map(gameId).filter(Boolean),
+    previousGameIds: logsPrev.map(gameId).filter(Boolean),
+  }));
+  const availabilityGames = {
+    current: currentPlayerLogs,
+    previous: previousPlayerLogs,
+    playoffs: playoffPlayerLogs,
+  };
   const contextGames = currentSeasonPlayerLogs.slice(0, 10).map((game) => ({
     date: game.date ?? game.GAME_DATE ?? null,
     opponent: game.opp ?? game.opponent ?? "",
@@ -273,5 +292,7 @@ export async function buildPlayerStatsPageData({
     initialSelectedName,
     initialActiveTeam,
     statGraphData,
+    teammateImpact,
+    availabilityGames,
   };
 }

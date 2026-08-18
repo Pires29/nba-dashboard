@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 
 export const metadata = {
   title: {
-    default: "NBA Dashboard",
-    template: "%s | NBA Dashboard",
+    default: "HoopiQ — NBA Props Research",
+    template: "%s | HoopiQ",
   },
   description:
     "NBA dashboard for player stats, props, injuries, favorites, and matchup analysis.",

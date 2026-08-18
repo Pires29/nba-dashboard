@@ -3,6 +3,13 @@ export const runtime = "nodejs";
 import Stripe from "stripe";
 import prisma from "../../../../../prisma/prismaClient";
 import { getSeasonAccessEnd } from "@/lib/stripePlans";
+import {
+  claimWebhookEvent,
+  completeSeasonCheckout,
+  releaseCheckoutAttempt,
+  releaseWebhookClaim,
+  shouldApplySubscriptionUpdate,
+} from "@/lib/stripeBilling";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -29,11 +36,7 @@ export async function POST(req) {
     return Response.json({ error: "Invalid webhook signature" }, { status: 400 });
   }
 
-  const alreadyProcessed = await prisma.stripeWebhookEvent.findUnique({
-    where: { id: event.id },
-    select: { id: true },
-  });
-  if (alreadyProcessed) {
+  if (!(await claimWebhookEvent(prisma, event))) {
     return Response.json({ received: true, duplicate: true });
   }
 
@@ -44,6 +47,7 @@ export async function POST(req) {
       const userId = session.metadata?.userId;
       const referralCodeId = session.metadata?.referralCodeId;
       const billing = session.metadata?.billing;
+      const checkoutAttemptId = session.metadata?.checkoutAttemptId;
       if (!userId) break;
 
       if (referralCodeId) {
@@ -65,16 +69,11 @@ export async function POST(req) {
       }
 
       if (billing === "season" && session.mode === "payment") {
-        if (session.payment_status !== "paid") break;
-
-        await prisma.user.update({
-          where: { id: userId },
-          data: {
-            plan: "pro",
-            stripeSubscriptionId: null,
-            planRenewsAt: getSeasonAccessEnd(),
-            planInterval: "season",
-          },
+        await completeSeasonCheckout({
+          stripe,
+          db: prisma,
+          session,
+          accessEnd: getSeasonAccessEnd(new Date(session.created * 1000)),
         });
         break;
       }
@@ -102,13 +101,39 @@ export async function POST(req) {
           }),
         },
       });
+      await releaseCheckoutAttempt(prisma, checkoutAttemptId
+        ? { id: checkoutAttemptId }
+        : { userId });
       break;
     }
+      case "checkout.session.expired":
+      case "checkout.session.async_payment_failed": {
+        const session = event.data.object;
+        const userId = session.metadata?.userId;
+        const checkoutAttemptId = session.metadata?.checkoutAttemptId;
+        if (checkoutAttemptId || userId) {
+          await releaseCheckoutAttempt(prisma, checkoutAttemptId
+            ? { id: checkoutAttemptId }
+            : { userId });
+        }
+        if (userId) {
+          await prisma.referralUse.deleteMany({
+            where: { referredUserId: userId, discountApplied: false },
+          });
+        }
+        break;
+      }
       case "customer.subscription.updated": {
         const subscription = event.data.object;
         const customer = await stripe.customers.retrieve(subscription.customer);
         const userId = subscription.metadata?.userId || customer.metadata?.userId;
         if (!userId) break;
+
+        const currentUser = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { stripeSubscriptionId: true, planInterval: true },
+        });
+        if (!shouldApplySubscriptionUpdate(currentUser, subscription.id)) break;
 
         const item = subscription.items.data[0];
         const hasAccess = ["active", "trialing"].includes(subscription.status);
@@ -138,7 +163,7 @@ export async function POST(req) {
         ? new Date(invoice.period_end * 1000)
         : null;
       await prisma.user.updateMany({
-        where: { id: userId },
+        where: { id: userId, stripeSubscriptionId: invoice.subscription },
         data: { planRenewsAt: renewsAt },
       });
       break;
@@ -151,7 +176,7 @@ export async function POST(req) {
       if (!userId) break;
 
       await prisma.user.updateMany({
-        where: { id: userId },
+        where: { id: userId, stripeSubscriptionId: subscription.id },
         data: {
           plan: "free",
           stripeSubscriptionId: null,
@@ -167,7 +192,7 @@ export async function POST(req) {
       const userId = customer.metadata?.userId;
       if (userId) {
         await prisma.user.updateMany({
-          where: { id: userId },
+          where: { id: userId, stripeSubscriptionId: invoice.subscription },
           data: { plan: "free" },
         });
       }
@@ -179,13 +204,8 @@ export async function POST(req) {
     }
     }
 
-    await prisma.stripeWebhookEvent.create({
-      data: { id: event.id, type: event.type },
-    });
   } catch (error) {
-    if (error?.code === "P2002") {
-      return Response.json({ received: true, duplicate: true });
-    }
+    await releaseWebhookClaim(prisma, event.id).catch(() => undefined);
     console.error("Stripe webhook processing failed", {
       eventId: event.id,
       eventType: event.type,

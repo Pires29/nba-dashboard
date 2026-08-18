@@ -57,6 +57,8 @@ const ResponsiveLayout = ({
   initialActiveTeam,
   opponentAbbr,
   statGraphData,
+  teammateImpact,
+  availabilityGames,
   initialStat,
   isPlayerLocked,
   lockedPlayerName,
@@ -80,7 +82,7 @@ const ResponsiveLayout = ({
           {dataStatus?.source === "local" && <span className="text-amber-300">Local fallback data</span>}
         </div>
         <div className="flex min-w-0 flex-col gap-4 lg:gap-6">
-          <div className="grid min-w-0 items-stretch gap-4 lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-6">
+          <div className="grid min-w-0 items-start gap-4 lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-6">
             <PlayerSelectionControls
               plan={plan}
               currentGame={currentGame}
@@ -95,6 +97,7 @@ const ResponsiveLayout = ({
               initialActiveTeam={initialActiveTeam}
             />
 
+            <div className="flex min-w-0 flex-col gap-4 lg:gap-6">
             {isPlayerLocked ? (
               <LockedPlayerState playerName={lockedPlayerName} embedded />
             ) : (
@@ -109,13 +112,14 @@ const ResponsiveLayout = ({
                 currentGame={currentGame}
                 opponentAbbr={opponentAbbr}
                 statGraphData={statGraphData}
+                teammateImpact={teammateImpact}
+                availabilityGames={availabilityGames}
                 initialStat={initialStat}
                 logsAvailable={dataStatus?.logsAvailable}
               />
             )}
-          </div>
 
-          <aside className="grid min-w-0 items-start gap-4 lg:grid-cols-2 lg:gap-6">
+          <aside className="grid min-w-0 items-stretch gap-4 lg:grid-cols-2 lg:gap-6">
             {isPlayerLocked ? (
               <>
                 <LockedSection title="Injuries & Status" />
@@ -161,6 +165,8 @@ const ResponsiveLayout = ({
             </DeferredRender></>
             )}
           </aside>
+            </div>
+          </div>
         </div>
       </div>
     </div>

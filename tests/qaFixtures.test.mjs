@@ -10,6 +10,26 @@ test("regular QA fixture provides a realistic large dataset", () => {
   assert.equal(data.games.length, 2);
   assert.equal(Object.keys(data.logsByPlayer).length, 72);
   assert.ok(Object.values(data.logsByPlayer).every((logs) => logs.length === 30));
+  assert.ok(
+    Object.values(data.logsByPlayer).every((logs) =>
+      logs.every(
+        (game) =>
+          typeof game.GAME_ID === "string" &&
+          typeof game.FG_PCT === "number" &&
+          typeof game.MIN === "number",
+      ),
+    ),
+  );
+  const firstTeamPlayers = data.rosters.slice(0, 2);
+  const firstGameIds = new Set(
+    data.logsByPlayer[String(firstTeamPlayers[0].PLAYER_ID)].map(
+      (game) => game.GAME_ID,
+    ),
+  );
+  const sharedGames = data.logsByPlayer[
+    String(firstTeamPlayers[1].PLAYER_ID)
+  ].filter((game) => firstGameIds.has(game.GAME_ID));
+  assert.ok(sharedGames.length > 0 && sharedGames.length < 30);
 });
 
 test("Free QA persona has 15 players and locked alternatives", () => {

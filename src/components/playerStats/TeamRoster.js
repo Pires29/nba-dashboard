@@ -90,7 +90,7 @@ const TeamRoster = ({
   }, [teamRoster]);
 
   return (
-    <div className="mt-1 overflow-y-auto scrollbar-thin">
+    <div>
       {sortedRoster.map((player) => (
         <PlayerRow
           key={player.PLAYER_ID}

@@ -11,7 +11,7 @@ export default function Footer() {
         </p>
         <div className="flex items-center gap-5">
           {[
-            { href: "/faqs", label: "FAQs" },
+            { href: "/#faq", label: "FAQs" },
             { href: "/privacy", label: "Privacy Policy" },
             { href: "/terms", label: "Terms of Service" },
           ].map((link) => (

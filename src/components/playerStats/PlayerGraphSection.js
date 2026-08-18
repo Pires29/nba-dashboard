@@ -17,6 +17,8 @@ const PlayerContextGraph = dynamic(() => import("./PlayerContextGraph"), {
   loading: () => <PlayerContextGraphSkeleton />,
 });
 
+const MAX_TEAMMATES = 3;
+
 const PlayerGraphSection = ({
   player,
   injuryStatus,
@@ -30,14 +32,37 @@ const PlayerGraphSection = ({
   statGraphData,
   initialStat = "points",
   logsAvailable = true,
+  teammateImpact = [],
+  availabilityGames,
 }) => {
   const [selectedStat, setSelectedStat] = useState(initialStat || "points");
   const [selectedNumber, setSelectedNumber] = useState(5);
   const [activeFilter, setActiveFilter] = useState(null);
+  const [selectedTeammateIds, setSelectedTeammateIds] = useState([]);
+  const [teammateFilter, setTeammateFilter] = useState(null);
+  const selectedTeammates = teammateImpact.filter(
+    (entry) => selectedTeammateIds.includes(String(entry.playerId)),
+  );
+
+  const handleTeammateChange = (playerId) => {
+    if (!playerId || selectedTeammateIds.length >= MAX_TEAMMATES) return;
+    setSelectedTeammateIds((ids) =>
+      ids.includes(playerId) ? ids : [...ids, playerId],
+    );
+    setTeammateFilter(null);
+  };
+  const removeTeammate = (playerId) => {
+    setSelectedTeammateIds((ids) => ids.filter((id) => id !== playerId));
+    setTeammateFilter(null);
+  };
+  const clearTeammates = () => {
+    setSelectedTeammateIds([]);
+    setTeammateFilter(null);
+  };
 
   return (
     <Card
-      className="flex min-w-0 flex-col lg:h-full lg:min-h-0 lg:flex-1"
+      className="flex min-w-0 flex-col lg:min-h-0"
       accent="orange"
     >
       <div className="flex-shrink-0 border-b border-white/[0.07] bg-white/[0.015]">
@@ -63,6 +88,15 @@ const PlayerGraphSection = ({
             hasPreviousGames={hasPreviousGames}
             hasPlayoffGames={hasPlayoffGames}
             statGraphData={statGraphData}
+            teammateImpact={teammateImpact}
+            availabilityGames={availabilityGames}
+            selectedTeammates={selectedTeammates}
+            selectedTeammateIds={selectedTeammateIds}
+            onTeammateChange={handleTeammateChange}
+            onRemoveTeammate={removeTeammate}
+            onClearTeammates={clearTeammates}
+            teammateFilter={teammateFilter}
+            onTeammateFilterChange={setTeammateFilter}
             logsAvailable={logsAvailable}
           />
         </Suspense>

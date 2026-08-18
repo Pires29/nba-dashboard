@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import PlayerHeadshotImage from "@/components/PlayerHeadshotImage";
 import { useState } from "react";
 
 const INJURY_STYLES = {
@@ -36,8 +36,8 @@ const PlayerHeadshot = ({ player }) => {
       </div>
 
       {!failed && (
-        <Image
-          src={`https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/${player.PLAYER_ID}.png`}
+        <PlayerHeadshotImage
+          playerId={player.PLAYER_ID}
           width={80}
           height={80}
           alt={player.PLAYER}

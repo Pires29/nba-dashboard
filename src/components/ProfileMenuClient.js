@@ -126,7 +126,7 @@ const ProfileMenuClient = ({ session }) => {
           <div className="py-1">
             {/* Manage Plan — new */}
             <Link
-              href="/pricing"
+              href="/#pricing"
               onClick={() => setOpen(false)}
               className="flex items-center gap-3 px-4 py-2.5 hover:bg-orange-500/10 transition-colors group"
             >

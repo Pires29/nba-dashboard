@@ -6,6 +6,7 @@ const PORT = 3100;
 const BASE_URL = `http://127.0.0.1:${PORT}`;
 let server;
 let serverOutput = "";
+const RUN_ID = `${process.pid}-${Date.now()}`;
 
 async function waitForServer() {
   const deadline = Date.now() + 30_000;
@@ -59,16 +60,20 @@ test("health endpoint verifies the database and NBA data source", async () => {
 test("signup writes to the migrated database and rejects duplicates", async () => {
   const email = `ci-${Date.now()}@example.com`;
   const body = JSON.stringify({ name: "CI User", email, password: "SecurePass123!" });
+  const headers = {
+    "content-type": "application/json",
+    "x-forwarded-for": `integration-signup-${RUN_ID}`,
+  };
   const first = await fetch(`${BASE_URL}/api/auth/signup`, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers,
     body,
   });
   assert.equal(first.status, 201, await first.text());
 
   const duplicate = await fetch(`${BASE_URL}/api/auth/signup`, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers,
     body,
   });
   assert.ok([400, 409].includes(duplicate.status), await duplicate.text());
@@ -77,7 +82,10 @@ test("signup writes to the migrated database and rejects duplicates", async () =
 test("signup rejects oversized request bodies", async () => {
   const response = await fetch(`${BASE_URL}/api/auth/signup`, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: {
+      "content-type": "application/json",
+      "x-forwarded-for": `integration-oversized-${RUN_ID}`,
+    },
     body: JSON.stringify({ name: "x".repeat(20_000), email: "large@example.com", password: "SecurePass123!" }),
   });
   assert.equal(response.status, 413);

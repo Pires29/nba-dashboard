@@ -74,6 +74,31 @@ export default async function Page({ searchParams }) {
   const rawInjuries = isPlayerLocked ? [] : nbaData.injuries;
   const rawTeamStats = isPlayerLocked ? [] : nbaData.teamStats;
   const { logs, logsPrev, logsPlayoffs } = playerLogBundle;
+  const selectedTeamId = Number(
+    requestedRosterPlayer?.TEAM_ID ?? requestedPlayer?.TEAM_ID ?? fallbackPlayer?.TEAM_ID,
+  );
+  const teammates = isPlayerLocked
+    ? []
+    : matchupRoster.filter(
+        (rosterPlayer) =>
+          Number(rosterPlayer.TEAM_ID) === selectedTeamId &&
+          Number(rosterPlayer.PLAYER_ID) !== playerId,
+      );
+  const teammateLogBundles = await Promise.all(
+    teammates.map(async (teammate) => {
+      const bundle = qa
+        ? {
+            logs: qa.data.logsByPlayer[String(teammate.PLAYER_ID)] ?? [],
+            logsPrev: qa.data.previousLogsByPlayer[String(teammate.PLAYER_ID)] ?? [],
+            logsPlayoffs: [],
+            source: Object.hasOwn(qa.data.logsByPlayer, String(teammate.PLAYER_ID))
+              ? "qa"
+              : "unavailable",
+          }
+        : await getNbaPlayerLogs(Number(teammate.PLAYER_ID));
+      return { player: teammate, ...bundle };
+    }),
+  );
 
   const data = await buildPlayerStatsPageData({
     playerId,
@@ -87,6 +112,9 @@ export default async function Page({ searchParams }) {
     playerLogs: logs,
     playerLogsPrev: logsPrev,
     playerLogsPlayoffs: logsPlayoffs,
+    teammateLogBundles: teammateLogBundles.filter(
+      (bundle) => bundle.source !== "unavailable",
+    ),
   });
 
   return (

@@ -116,16 +116,32 @@ export function buildPlayerGraphViews(graphData) {
   };
 }
 
-export function buildPlayerGraphStatData(dataViews, stat) {
+export function buildPlayerGraphStatData(
+  dataViews,
+  stat,
+  { includeDefaultViews = true, betLine: suppliedBetLine } = {},
+) {
   const baseData = dataViews?.FULL ?? [];
   const avg = baseData.length
     ? baseData.reduce((acc, game) => acc + (game[stat] || 0), 0) /
       baseData.length
     : null;
-  const betLine = avg == null ? null : roundToBettingLine(avg);
+  const betLine = suppliedBetLine !== undefined
+    ? suppliedBetLine
+    : avg == null ? null : roundToBettingLine(avg);
+
+  const viewKeys = [
+    ...new Set([
+      ...PERIOD_OPTIONS.map(({ key }) => key),
+      ...CONTEXT_OPTIONS.map(({ key }) => key),
+      ...Object.keys(dataViews ?? {}),
+    ].filter(
+      (key) => includeDefaultViews || Object.hasOwn(dataViews ?? {}, key),
+    )),
+  ];
 
   const rateByViewKey = Object.fromEntries(
-    [...PERIOD_OPTIONS, ...CONTEXT_OPTIONS].map(({ key }) => [
+    viewKeys.map((key) => [
       key,
       betLine == null
         ? { rate: null, hits: 0, misses: 0, avg: null }
@@ -134,14 +150,15 @@ export function buildPlayerGraphStatData(dataViews, stat) {
   );
 
   const chartByViewKey = Object.fromEntries(
-    [...PERIOD_OPTIONS, ...CONTEXT_OPTIONS].map(({ key }) => [
+    viewKeys.map((key) => [
       key,
       buildChartPayload(dataViews?.[key] ?? [], stat, betLine),
     ]),
   );
 
-  const periodOptions =
-    betLine == null
+  const periodOptions = !includeDefaultViews
+    ? []
+    : betLine == null
       ? PERIOD_OPTIONS.map(({ label, number }) => emptyCard(label, { number }))
       : PERIOD_OPTIONS.map(({ key, label, number }) => ({
           label,
@@ -150,8 +167,9 @@ export function buildPlayerGraphStatData(dataViews, stat) {
           ...rateByViewKey[key],
         }));
 
-  const contextOptions =
-    betLine == null
+  const contextOptions = !includeDefaultViews
+    ? []
+    : betLine == null
       ? CONTEXT_OPTIONS.map(({ label, filter, usesPrevBetLine }) =>
           emptyCard(label, { filter, usesPrevBetLine }),
         )
@@ -171,10 +189,123 @@ export function buildPlayerGraphStatData(dataViews, stat) {
   };
 }
 
-export function buildPlayerGraphStatDataMap(dataViews) {
+export function buildPlayerGraphStatDataMap(dataViews, options) {
   return Object.fromEntries(
-    PLAYER_GRAPH_STATS.map((stat) => [stat, buildPlayerGraphStatData(dataViews, stat)]),
+    PLAYER_GRAPH_STATS.map((stat) => [
+      stat,
+      buildPlayerGraphStatData(dataViews, stat, {
+        ...options,
+        betLine: options?.betLineByStat?.[stat],
+      }),
+    ]),
   );
+}
+
+const getGameId = (game) => String(game?.gid ?? game?.GAME_ID ?? "");
+const getMinutes = (game) => Number(game?.min ?? game?.MIN ?? 0);
+
+export function buildFilteredPlayerGraphData({
+  targetGames = [],
+  targetPreviousGames = [],
+  targetPlayoffGames = [],
+  teammateGameIdGroups = [],
+  teammatePreviousGameIdGroups = [],
+  teammateMode = null,
+  teammateModes = [],
+  minMinutes = null,
+  maxMinutes = null,
+  betLineByStat,
+  player,
+  opponentAbbr,
+}) {
+  const currentGameIdSets = teammateGameIdGroups.map((ids) => new Set(ids));
+  const previousGameIdSets = teammatePreviousGameIdGroups.map((ids) => new Set(ids));
+  const inMinuteRange = (game) => {
+    const minutes = getMinutes(game);
+    return (minMinutes == null || minutes >= minMinutes) &&
+      (maxMinutes == null || minutes <= maxMinutes);
+  };
+  const matchesTeammates = (game, sets) => {
+    if ((!teammateMode && !teammateModes.length) || !sets.length) return true;
+    const gameId = getGameId(game);
+    return sets.every((ids, index) => {
+      const mode = teammateModes[index] ?? teammateMode;
+      return mode === "WITH" ? ids.has(gameId) : !ids.has(gameId);
+    });
+  };
+  const filter = (games, sets) =>
+    games.filter((game) => inMinuteRange(game) && matchesTeammates(game, sets));
+  const current = filter(targetGames, currentGameIdSets);
+  const playoffs = filter(targetPlayoffGames, currentGameIdSets);
+  const previous = filter(targetPreviousGames, previousGameIdSets);
+  const graphData = buildPlayerGraphData({
+    currentGames: [...current, ...playoffs],
+    previousGames: previous,
+    playoffGames: playoffs,
+    player,
+    opponentAbbr,
+  });
+
+  return {
+    statGraphData: buildPlayerGraphStatDataMap(buildPlayerGraphViews(graphData), { betLineByStat }),
+    currentGames: current.length + playoffs.length,
+  };
+}
+
+export function buildTeammateImpactData({
+  targetGames = [],
+  targetPreviousGames = [],
+  targetPlayoffGames = [],
+  teammateGameIdGroups = [],
+  teammatePreviousGameIdGroups = [],
+  player,
+  opponentAbbr,
+}) {
+  const currentTargetGames = [...targetGames, ...targetPlayoffGames];
+  const currentGameIdSets = teammateGameIdGroups.map((ids) => new Set(ids));
+  const previousGameIdSets = teammatePreviousGameIdGroups.map((ids) => new Set(ids));
+  const matchesAvailability = (game, gameIdSets, included) => {
+    const gameId = getGameId(game);
+    return included
+      ? gameIdSets.every((ids) => ids.has(gameId))
+      : gameIdSets.every((ids) => !ids.has(gameId));
+  };
+  const withGames = currentTargetGames.filter((game) =>
+    matchesAvailability(game, currentGameIdSets, true),
+  );
+  const withoutGames = currentTargetGames.filter((game) =>
+    matchesAvailability(game, currentGameIdSets, false),
+  );
+  const filterGames = (games, gameIdSets, included) =>
+    games.filter((game) => matchesAvailability(game, gameIdSets, included));
+  const buildImpactViews = (included) =>
+    buildPlayerGraphViews(buildPlayerGraphData({
+      currentGames: included ? withGames : withoutGames,
+      previousGames: filterGames(targetPreviousGames, previousGameIdSets, included),
+      playoffGames: filterGames(targetPlayoffGames, currentGameIdSets, included),
+      player,
+      opponentAbbr,
+    }));
+  const withViews = buildImpactViews(true);
+  const withoutViews = buildImpactViews(false);
+  const views = {
+    FULL: buildPlayerGraphData({ currentGames: currentTargetGames, player }).currentGames,
+    ...Object.fromEntries(Object.entries(withViews).map(([key, games]) => [`WITH_${key}`, games])),
+    ...Object.fromEntries(Object.entries(withoutViews).map(([key, games]) => [`WITHOUT_${key}`, games])),
+  };
+  const averageMinutes = (games) => {
+    if (!games.length) return null;
+    const total = games.reduce((sum, game) => sum + Number(game?.min ?? game?.MIN ?? 0), 0);
+    return Math.round((total / games.length) * 10) / 10;
+  };
+
+  return {
+    statGraphData: buildPlayerGraphStatDataMap(views, { includeDefaultViews: false }),
+    withGames: withGames.length,
+    withoutGames: withoutGames.length,
+    withMinutes: averageMinutes(withGames),
+    withoutMinutes: averageMinutes(withoutGames),
+  };
 }
 
 export function getActiveHitRateOption({

@@ -190,3 +190,14 @@ Implementar analytics.
 Criar offseason mode e alertas de favoritos.
 
 Acrescentar secalhar tipo minutos e jogos com e sem um jogador por exemplo
+Em xs, os filtros de minutos e teammates deviam passar para os filtros gerais que tem no canto inferior da pagina 
+
+Quando faco login ou crio conta vai a aprops page e devia ir para a homepage nao?
+
+Colocar nas settings algo a dizer para atualizar o plano , atualmente nao da
+
+Nas Settings deveria aparecer Season Pass em vez de apenas Pro.
+
+Gerar formas de formar graficos
+
+odds de casas de apostas

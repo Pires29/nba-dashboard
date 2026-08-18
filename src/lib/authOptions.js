@@ -1,8 +1,12 @@
-import GoogleProvider from "next-auth/providers/google";
-import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProviderModule from "next-auth/providers/google";
+import CredentialsProviderModule from "next-auth/providers/credentials";
 import prisma from "../../prisma/prismaClient";
 import { authorizeCredentials } from "@/lib/credentialsAuth";
 import { isValidEmail, normalizeEmail } from "@/lib/security";
+
+const GoogleProvider = GoogleProviderModule.default ?? GoogleProviderModule;
+const CredentialsProvider =
+  CredentialsProviderModule.default ?? CredentialsProviderModule;
 
 export const authOptions = {
   providers: [

@@ -48,8 +48,15 @@ const teamById = new Map(TEAM_DEFINITIONS.map((team) => [team.id, team]));
 const logsByPlayer = Object.fromEntries(
   rosters.map((player, playerIndex) => {
     const opponent = teamById.get(opponentFor(player.TEAM_ID));
-    const logs = Array.from({ length: 30 }, (_, gameIndex) => ({
-      GAME_DATE: new Date(Date.UTC(2026, 9, 19 - gameIndex)).toISOString(),
+    // Each team has a shared 36-game QA calendar. Players participate in
+    // different 30-game windows so teammate-impact views contain both shared
+    // games and realistic absences while every player still has 30 logs.
+    const playerTeamIndex = playerIndex % 18;
+    const logs = Array.from({ length: 30 }, (_, gameIndex) => {
+      const teamGameIndex = (gameIndex + playerTeamIndex) % 36;
+      return {
+      GAME_ID: `QA-${player.TEAM_ID}-${String(teamGameIndex + 1).padStart(3, "0")}`,
+      GAME_DATE: new Date(Date.UTC(2026, 9, 19 - teamGameIndex)).toISOString(),
       MATCHUP: `${player.TEAM_ABBREVIATION} ${gameIndex % 2 ? "@" : "vs."} ${opponent.abbr}`,
       WL: gameIndex % 3 ? "W" : "L",
       MIN: 25 + ((playerIndex + gameIndex) % 14),
@@ -60,8 +67,13 @@ const logsByPlayer = Object.fromEntries(
       BLK: (playerIndex + gameIndex * 2) % 4,
       TOV: 1 + ((playerIndex + gameIndex) % 5),
       FG3M: (playerIndex + gameIndex) % 6,
+      FG_PCT: 0.38 + ((playerIndex + gameIndex) % 18) / 100,
+      FG3_PCT: 0.29 + ((playerIndex * 2 + gameIndex) % 17) / 100,
+      FT_PCT: 0.68 + ((playerIndex + gameIndex * 2) % 25) / 100,
+      PF: 1 + ((playerIndex + gameIndex) % 5),
       opp: opponent.abbr,
-    }));
+      };
+    });
     return [String(player.PLAYER_ID), logs];
   }),
 );
