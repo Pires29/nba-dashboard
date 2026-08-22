@@ -72,6 +72,9 @@ OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "src", "app", "data")
 PIPELINE_ENV_FILE = os.path.join(os.path.dirname(__file__), ".env.pipeline")
 
 SCHEDULE_DAYS_AHEAD = 2
+QA_SNAPSHOT_DATE = os.getenv("NBA_QA_DATE", "").strip()
+STORAGE_MANIFEST_PATH = os.getenv("NBA_STORAGE_MANIFEST", "current.json").strip() or "current.json"
+STORAGE_VERSION_ALIAS = os.getenv("NBA_STORAGE_VERSION", "").strip()
 SLEEP_BETWEEN_REQUESTS = (1.0, 2.0)
 REQUEST_TIMEOUT = 120
 
@@ -151,6 +154,26 @@ def load_pipeline_env():
             value = value.strip().strip('"').strip("'")
             if key.strip() and value:
                 os.environ.setdefault(key.strip(), value)
+
+
+def configure_runtime_from_env():
+    """Refresh runtime options after .env.pipeline has been loaded."""
+    global SEASON, PREV_SEASON, ROSTER_SEASON
+    global QA_SNAPSHOT_DATE, STORAGE_MANIFEST_PATH, STORAGE_VERSION_ALIAS
+
+    SEASON = os.getenv("NBA_STATS_SEASON", season_label(stats_season_start))
+    PREV_SEASON = os.getenv(
+        "NBA_PREV_SEASON",
+        season_label(stats_season_start - 1),
+    )
+    ROSTER_SEASON = os.getenv(
+        "NBA_ROSTER_SEASON",
+        season_label(roster_season_start),
+    )
+    QA_SNAPSHOT_DATE = os.getenv("NBA_QA_DATE", "").strip()
+    STORAGE_MANIFEST_PATH = os.getenv("NBA_STORAGE_MANIFEST", "current.json").strip() or "current.json"
+    STORAGE_VERSION_ALIAS = os.getenv("NBA_STORAGE_VERSION", "").strip()
+
 
 def load_json(filename):
     path = os.path.join(OUTPUT_DIR, filename)
@@ -291,11 +314,27 @@ def update_roster_files():
     save_json(build_teams(), "teams.json")
     save_json(fix_nan(build_rosters(raw_rosters)), "rosters.json")
 
+def parse_qa_date(value):
+    try:
+        return datetime.strptime(value, "%Y-%m-%d")
+    except ValueError as error:
+        raise ValueError("NBA_QA_DATE must use YYYY-MM-DD format") from error
+
+
 def fetch_raw_schedule():
-    print(f"\n📅 Fetching schedule (next {SCHEDULE_DAYS_AHEAD} days)...")
+    if QA_SNAPSHOT_DATE:
+        qa_date = parse_qa_date(QA_SNAPSHOT_DATE)
+        dates = [qa_date.strftime("%m/%d/%Y")]
+        print(f"\n📅 Fetching QA schedule ({QA_SNAPSHOT_DATE})...")
+    else:
+        dates = [
+            (datetime.today() + timedelta(days=i)).strftime("%m/%d/%Y")
+            for i in range(SCHEDULE_DAYS_AHEAD)
+        ]
+        print(f"\n📅 Fetching schedule (next {SCHEDULE_DAYS_AHEAD} days)...")
+
     all_games = []
-    for i in range(SCHEDULE_DAYS_AHEAD):
-        date = (datetime.today() + timedelta(days=i)).strftime("%m/%d/%Y")
+    for date in dates:
         try:
             scoreboard = scoreboardv2.ScoreboardV2(
                 game_date=date, league_id="00", day_offset=0,
@@ -891,7 +930,12 @@ def prune_storage_versions(config, keep=3):
 
 def publish_storage_version(datasets):
     config = storage_config()
-    version = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+    if STORAGE_VERSION_ALIAS:
+        version = STORAGE_VERSION_ALIAS
+    elif QA_SNAPSHOT_DATE:
+        version = f"qa-{QA_SNAPSHOT_DATE}"
+    else:
+        version = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     prefix = f"versions/{version}"
     current_logs = datasets["game_logs_current"]
     previous_logs = datasets["game_logs_prev"]
@@ -947,19 +991,26 @@ def publish_storage_version(datasets):
         "updatedAt": datetime.now(UTC).isoformat(timespec="seconds").replace("+00:00", "Z"),
         "playerCount": len(player_ids),
         "files": sorted(small_datasets),
+        "manifest": STORAGE_MANIFEST_PATH,
     }
+    if QA_SNAPSHOT_DATE:
+        manifest["qaDate"] = QA_SNAPSHOT_DATE
+        manifest["sourceSeason"] = SEASON
     upload_storage_json(f"{prefix}/manifest.json", manifest, config)
-    upload_storage_json("current.json", manifest, config)
-    validated = download_storage_json("current.json", config)
+    upload_storage_json(STORAGE_MANIFEST_PATH, manifest, config)
+    validated = download_storage_json(STORAGE_MANIFEST_PATH, config)
     if validated.get("version") != version or validated.get("playerCount") != len(player_ids):
         raise RuntimeError("Published Storage manifest did not pass validation")
-    print(f"✅ Storage version published: {version}")
-    try:
-        prune_storage_versions(config, keep=3)
-    except Exception as error:
-        # Publication is already valid and active. Retention can safely retry on
-        # the next run without making today's fresh data unavailable.
-        print(f"⚠️ Storage retention failed: {error}")
+    print(f"✅ Storage version published: {version} ({STORAGE_MANIFEST_PATH})")
+    if STORAGE_MANIFEST_PATH == "current.json":
+        try:
+            prune_storage_versions(config, keep=3)
+        except Exception as error:
+            # Publication is already valid and active. Retention can safely retry on
+            # the next run without making today's fresh data unavailable.
+            print(f"⚠️ Storage retention failed: {error}")
+    else:
+        print("ℹ️ Storage retention skipped for non-production manifest")
     return manifest
 
 
@@ -969,10 +1020,14 @@ def publish_storage_version(datasets):
 
 def run():
     load_pipeline_env()
+    configure_runtime_from_env()
     start = datetime.now()
     write_local_data = os.getenv("NBA_WRITE_LOCAL_DATA", "false").lower() == "true"
     print(f"🚀 NBA data pipeline — {start.strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"   Season: {SEASON} | Prev: {PREV_SEASON}")
+    if QA_SNAPSHOT_DATE:
+        print(f"   QA snapshot date: {QA_SNAPSHOT_DATE}")
+    print(f"   Storage manifest: {STORAGE_MANIFEST_PATH}")
     print(f"   Local JSON fallback updates: {'enabled' if write_local_data else 'disabled'}")
 
     # ── 1. Fetch all raw data ──────────────────────────────────────────────

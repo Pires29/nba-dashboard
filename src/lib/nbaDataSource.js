@@ -9,6 +9,7 @@ import getStandings from "./getStandings";
 import getTeamStats from "./getTeamStats";
 
 const storageEnabled = () => process.env.NBA_DATA_SOURCE === "storage";
+const storageManifestPath = () => process.env.NBA_STORAGE_MANIFEST || "current.json";
 
 const storageConfig = () => {
   const url = process.env.SUPABASE_URL?.replace(/\/$/, "");
@@ -29,7 +30,7 @@ async function fetchStorageJson(path, { revalidate = 300, noStore = false } = {}
 }
 
 const getStorageManifest = cache(() =>
-  fetchStorageJson("current.json", { revalidate: 300 }),
+  fetchStorageJson(storageManifestPath(), { revalidate: 300 }),
 );
 
 async function getStorageSnapshot() {

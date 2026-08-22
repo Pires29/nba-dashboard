@@ -163,6 +163,31 @@ version through `current.json`, checks player entitlements before reading a
 history object, and keeps the small local JSON files only as a temporary
 fallback. Large game-log JSON files must not be committed to the repository.
 
+## QA Data Snapshot
+
+For user testing with real but stable data, generate a historical QA snapshot
+from a fixed regular-season date. The first recommended snapshot date is
+`2026-03-11`, using the `2025-26` NBA season.
+
+```bash
+NBA_QA_DATE=2026-03-11 \
+NBA_STATS_SEASON=2025-26 \
+NBA_PREV_SEASON=2024-25 \
+NBA_ROSTER_SEASON=2025-26 \
+NBA_STORAGE_MANIFEST=qa-current.json \
+python3 update_data.py
+```
+
+This publishes the dataset under `versions/qa-2026-03-11/` and updates
+`qa-current.json` instead of production `current.json`.
+
+To point the app at the QA snapshot:
+
+```bash
+NBA_DATA_SOURCE=storage
+NBA_STORAGE_MANIFEST=qa-current.json
+```
+
 
 A estrela nao fica ativa quando eu seleciono o favorito vou para a pagina de favorito e ele esta la e volto para a pagina das props
 Carregar sempre uma pagian quando troco a estatistica
