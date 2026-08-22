@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const getRankColor = (rank, side) => {
   if (!rank) return "text-slate-400";
@@ -127,7 +127,7 @@ const TeamLogo = ({ team }) => {
     return (
       <span
         aria-label={team?.teamName ?? "Team"}
-        className="flex h-7 w-7 min-w-7 flex-shrink-0 items-center justify-center rounded-md border border-white/[0.08] bg-white/[0.04] font-mono text-[8px] font-black uppercase tracking-tight text-slate-300"
+        className="flex h-8 w-8 min-w-8 flex-shrink-0 items-center justify-center rounded-md border border-white/[0.08] bg-white/[0.04] font-mono text-[9px] font-black uppercase tracking-tight text-slate-300 sm:h-9 sm:w-9 sm:min-w-9"
       >
         {abbreviation}
       </span>
@@ -137,20 +137,40 @@ const TeamLogo = ({ team }) => {
   return (
     <Image
       src={`https://cdn.nba.com/logos/nba/${team.teamID}/global/L/logo.svg`}
-      width={20}
-      height={20}
+      width={36}
+      height={36}
       loading="lazy"
       alt={team.teamName}
       unoptimized
       onError={() => setFailed(true)}
-      className="h-5 w-5 min-h-[20px] min-w-[20px] flex-shrink-0 object-contain"
+      className="h-8 w-8 min-h-8 min-w-8 flex-shrink-0 object-contain sm:h-9 sm:w-9 sm:min-h-9 sm:min-w-9"
     />
   );
 };
 
-const TeamStats = ({ homeTeamStats, awayTeamStats }) => {
-  const [homeSide, setHomeSide] = useState("offense");
-  const [awaySide, setAwaySide] = useState("offense");
+const getInitialSides = ({ homeTeamStats, awayTeamStats, selectedPlayerTeamId }) => {
+  const playerTeamId = Number(selectedPlayerTeamId);
+  if (playerTeamId && Number(awayTeamStats?.teamID) === playerTeamId) {
+    return { home: "defense", away: "offense" };
+  }
+  if (playerTeamId && Number(homeTeamStats?.teamID) === playerTeamId) {
+    return { home: "offense", away: "defense" };
+  }
+  return { home: "offense", away: "defense" };
+};
+
+const TeamStats = ({ homeTeamStats, awayTeamStats, selectedPlayerTeamId }) => {
+  const initialSides = useMemo(
+    () => getInitialSides({ homeTeamStats, awayTeamStats, selectedPlayerTeamId }),
+    [awayTeamStats, homeTeamStats, selectedPlayerTeamId],
+  );
+  const [homeSide, setHomeSide] = useState(initialSides.home);
+  const [awaySide, setAwaySide] = useState(initialSides.away);
+
+  useEffect(() => {
+    setHomeSide(initialSides.home);
+    setAwaySide(initialSides.away);
+  }, [initialSides]);
 
   const handleSwap = () => {
     setHomeSide((prev) => (prev === "offense" ? "defense" : "offense"));
@@ -176,9 +196,9 @@ const TeamStats = ({ homeTeamStats, awayTeamStats }) => {
   return (
     <div className="flex flex-col gap-3">
       {/* Toggles + swap */}
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center justify-between gap-3">
         {/* Home logo + toggle */}
-        <div className="flex items-center gap-2 min-w-0 flex-1">
+        <div className="flex items-center gap-2.5 min-w-0 flex-1">
           <TeamLogo team={homeTeamStats} />
           <div className="min-w-0 shrink">
             <SideToggle
@@ -207,7 +227,7 @@ const TeamStats = ({ homeTeamStats, awayTeamStats }) => {
         </button>
 
         {/* Away toggle + logo */}
-        <div className="flex justify-end items-center gap-2 min-w-0 flex-1">
+        <div className="flex justify-end items-center gap-2.5 min-w-0 flex-1">
           <div className="min-w-0 shrink">
             <SideToggle
               side={awaySide}

@@ -368,7 +368,6 @@ export default function PropsTable({
   ]);
   const hasActiveFilters =
     activeFilterChips.length > 0 || search !== "" || sortPeriod !== "L5";
-  const updatedAt = dataStatus?.updatedAt ? new Date(dataStatus.updatedAt) : null;
   const isStale = dataStatus?.isStale ?? false;
 
   return (
@@ -398,15 +397,11 @@ export default function PropsTable({
           >
             Updating…
           </span>
-          <span className={`text-[10px] font-mono ${isStale || dataStatus?.source === "local" ? "text-amber-300" : "text-slate-400"}`}>
-            {dataStatus?.source === "qa"
-              ? "QA data"
-              : updatedAt
-                ? `${isStale ? "Stale · " : "Updated "}${updatedAt.toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}`
-                : dataStatus?.source === "local"
-                  ? "Local fallback"
-                  : "Latest available"}
-          </span>
+          {(isStale || dataStatus?.source === "local" || dataStatus?.source === "qa") && (
+            <span className={`text-[10px] font-mono ${isStale || dataStatus?.source === "local" ? "text-amber-300" : "text-slate-400"}`}>
+              {dataStatus?.source === "qa" ? "QA data" : dataStatus?.source === "local" ? "Local fallback" : "Stale data"}
+            </span>
+          )}
           {isFreePlan && (
             <Link
               href="/pricing"

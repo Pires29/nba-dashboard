@@ -102,23 +102,23 @@ const ResponsiveLayout = ({
     setTeammateModes({});
   };
 
-  const updatedLabel = dataStatus?.updatedAt
-    ? new Date(dataStatus.updatedAt).toLocaleString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-    : null;
+  const showDataWarning =
+    dataStatus?.isStale ||
+    dataStatus?.source === "qa" ||
+    dataStatus?.source === "unavailable" ||
+    dataStatus?.source === "local";
 
   return (
     <div className="relative z-10 mx-auto flex w-full max-w-[1440px] flex-1 flex-col px-4 sm:px-5 lg:px-6">
       <div className="flex flex-1 flex-col gap-4 py-4 lg:gap-6 lg:py-6">
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-white/[0.07] bg-white/[0.02] px-3 py-2 font-mono text-[9px] uppercase tracking-wider text-slate-400">
-          <span className={dataStatus?.isStale ? "text-amber-300" : ""}>{updatedLabel ? `${dataStatus?.isStale ? "Data may be out of date · updated" : "Data updated"} ${updatedLabel}` : dataStatus?.source === "qa" ? "Controlled QA data" : "Latest available data"}</span>
-          {dataStatus?.source === "unavailable" && <span className="text-amber-300">Player logs unavailable</span>}
-          {dataStatus?.source === "local" && <span className="text-amber-300">Local fallback data</span>}
-        </div>
+        {showDataWarning && (
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-white/[0.07] bg-white/[0.02] px-3 py-2 font-mono text-[9px] uppercase tracking-wider text-slate-400">
+            {dataStatus?.isStale && <span className="text-amber-300">Data may be out of date</span>}
+            {dataStatus?.source === "qa" && <span>Controlled QA data</span>}
+            {dataStatus?.source === "unavailable" && <span className="text-amber-300">Player logs unavailable</span>}
+            {dataStatus?.source === "local" && <span className="text-amber-300">Local fallback data</span>}
+          </div>
+        )}
         <div className="flex min-w-0 flex-col gap-4 lg:gap-6">
           <div className="grid min-w-0 items-start gap-4 lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-6">
             <PlayerSelectionControls
@@ -225,6 +225,7 @@ const ResponsiveLayout = ({
                   <TeamStats
                     homeTeamStats={team1Formatted}
                     awayTeamStats={team2Formatted}
+                    selectedPlayerTeamId={player?.TEAM_ID}
                   />
                 </div>
               </Card>
