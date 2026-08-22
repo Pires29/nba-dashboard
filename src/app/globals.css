@@ -143,6 +143,51 @@
   background: rgba(255, 255, 255, 0.2);
 }
 
+.compact-horizontal-scrollbar {
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+  scrollbar-width: thin;
+}
+
+.compact-horizontal-scrollbar::-webkit-scrollbar {
+  height: 3px;
+}
+
+.mobile-visible-horizontal-scrollbar {
+  scrollbar-color: rgba(148, 163, 184, 0.45) rgba(255, 255, 255, 0.04);
+  scrollbar-width: thin;
+}
+
+.mobile-visible-horizontal-scrollbar::-webkit-scrollbar {
+  height: 6px;
+}
+
+.mobile-visible-horizontal-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.mobile-visible-horizontal-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.45);
+}
+
+@media (min-width: 640px) {
+  .mobile-visible-horizontal-scrollbar {
+    scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+  }
+
+  .mobile-visible-horizontal-scrollbar::-webkit-scrollbar {
+    height: 3px;
+  }
+}
+
+.search-with-custom-clear::-webkit-search-cancel-button {
+  display: none;
+  appearance: none;
+}
+
+.search-with-custom-clear::-ms-clear {
+  display: none;
+}
+
 html,
 body {
   height: 100%;

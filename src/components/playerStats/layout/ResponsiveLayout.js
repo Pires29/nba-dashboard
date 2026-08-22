@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useState } from "react";
 import Card from "@/components/ui/playerStats/Card";
 import DeferredRender from "@/components/ui/DeferredRender";
 import Injuries from "../Injuries";
@@ -64,6 +65,43 @@ const ResponsiveLayout = ({
   lockedPlayerName,
   dataStatus,
 }) => {
+  const minuteSliderMax = 48;
+  const maxTeammates = 3;
+  const [rangeMinMinutes, setRangeMinMinutes] = useState(0);
+  const [rangeMaxMinutes, setRangeMaxMinutes] = useState(minuteSliderMax);
+  const [selectedTeammateIds, setSelectedTeammateIds] = useState([]);
+  const [teammateModes, setTeammateModes] = useState({});
+  const hasMinuteFilter =
+    rangeMinMinutes !== 0 || rangeMaxMinutes !== minuteSliderMax;
+  const hasTeammateFilter = Object.keys(teammateModes).length > 0;
+  const activeMobileFilterCount =
+    Number(hasMinuteFilter) + Number(hasTeammateFilter);
+  const resetMinuteFilter = () => {
+    setRangeMinMinutes(0);
+    setRangeMaxMinutes(minuteSliderMax);
+  };
+  const selectedTeammates = teammateImpact.filter((entry) =>
+    selectedTeammateIds.includes(String(entry.playerId)),
+  );
+  const handleTeammateChange = (playerId) => {
+    if (!playerId || selectedTeammateIds.length >= maxTeammates) return;
+    setSelectedTeammateIds((ids) =>
+      ids.includes(playerId) ? ids : [...ids, playerId],
+    );
+  };
+  const removeTeammate = (playerId) => {
+    setSelectedTeammateIds((ids) => ids.filter((id) => id !== playerId));
+    setTeammateModes((modes) => {
+      const next = { ...modes };
+      delete next[playerId];
+      return next;
+    });
+  };
+  const clearTeammates = () => {
+    setSelectedTeammateIds([]);
+    setTeammateModes({});
+  };
+
   const updatedLabel = dataStatus?.updatedAt
     ? new Date(dataStatus.updatedAt).toLocaleString("en-GB", {
         day: "2-digit",
@@ -95,6 +133,21 @@ const ResponsiveLayout = ({
               team2Formatted={team2Formatted}
               initialSelectedName={initialSelectedName}
               initialActiveTeam={initialActiveTeam}
+              minuteSliderMax={minuteSliderMax}
+              rangeMinMinutes={rangeMinMinutes}
+              rangeMaxMinutes={rangeMaxMinutes}
+              setRangeMinMinutes={setRangeMinMinutes}
+              setRangeMaxMinutes={setRangeMaxMinutes}
+              hasMinuteFilter={hasMinuteFilter}
+              activeMobileFilterCount={activeMobileFilterCount}
+              resetMinuteFilter={resetMinuteFilter}
+              teammateImpact={teammateImpact}
+              maxTeammates={maxTeammates}
+              selectedTeammates={selectedTeammates}
+              selectedTeammateIds={selectedTeammateIds}
+              teammateModes={teammateModes}
+              setSelectedTeammateIds={setSelectedTeammateIds}
+              setTeammateModes={setTeammateModes}
             />
 
             <div className="flex min-w-0 flex-col gap-4 lg:gap-6">
@@ -116,6 +169,19 @@ const ResponsiveLayout = ({
                 availabilityGames={availabilityGames}
                 initialStat={initialStat}
                 logsAvailable={dataStatus?.logsAvailable}
+                minuteSliderMax={minuteSliderMax}
+                rangeMinMinutes={rangeMinMinutes}
+                rangeMaxMinutes={rangeMaxMinutes}
+                setRangeMinMinutes={setRangeMinMinutes}
+                setRangeMaxMinutes={setRangeMaxMinutes}
+                maxTeammates={maxTeammates}
+                selectedTeammates={selectedTeammates}
+                selectedTeammateIds={selectedTeammateIds}
+                teammateModes={teammateModes}
+                setTeammateModes={setTeammateModes}
+                onTeammateChange={handleTeammateChange}
+                onRemoveTeammate={removeTeammate}
+                onClearTeammates={clearTeammates}
               />
             )}
 

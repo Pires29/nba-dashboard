@@ -337,3 +337,255 @@ To github.com:Pires29/nba-dashboard.git
 ✅ Done in 142.5s (2.4 min)
    Active data source: Supabase Storage
 ℹ️ Favorites cleanup skipped: no deployed app URL configured
+/home/renato/Projetos/Renato/nba-dashboard/update_data.py:300: DeprecationWarning: ScoreboardV2 has known issues with line score data for 2025-26 season games (October 22 - December 25, 2025). Please use ScoreboardV3 instead. ScoreboardV3 is fully backward compatible and works for all historical seasons. See: https://github.com/swar/nba_api/issues/596
+  scoreboard = scoreboardv2.ScoreboardV2(
+🚀 NBA data pipeline — 2026-08-19 10:00:01
+   Season: 2025-26 | Prev: 2024-25
+   Local JSON fallback updates: disabled
+
+📊 Fetching player stats (totals)...
+
+🏀 Fetching team stats (offense + defense)...
+
+👥 Fetching rosters (one request per team)...
+  [1/30] ATL: 24 players
+  [2/30] BOS: 19 players
+  [3/30] CLE: 17 players
+  [4/30] NOP: 20 players
+  [5/30] CHI: 16 players
+  [6/30] DAL: 22 players
+  [7/30] DEN: 19 players
+  [8/30] GSW: 18 players
+  [9/30] HOU: 21 players
+  [10/30] LAC: 24 players
+  [11/30] LAL: 19 players
+  [12/30] MIA: 17 players
+  [13/30] MIL: 22 players
+  [14/30] MIN: 17 players
+  [15/30] BKN: 17 players
+  [16/30] NYK: 17 players
+  [17/30] ORL: 17 players
+  [18/30] IND: 17 players
+  [19/30] PHI: 20 players
+  [20/30] PHX: 20 players
+  [21/30] POR: 19 players
+  [22/30] SAC: 15 players
+  [23/30] SAS: 18 players
+  [24/30] OKC: 17 players
+  [25/30] TOR: 21 players
+  [26/30] UTA: 22 players
+  [27/30] MEM: 22 players
+  [28/30] WAS: 19 players
+  [29/30] DET: 20 players
+  [30/30] CHA: 22 players
+
+📅 Fetching schedule (next 2 days)...
+  08/19/2026: 0 games
+  08/20/2026: 0 games
+
+🏆 Fetching standings for 2025-26...
+
+🏥 Fetching injuries (ESPN)...
+
+🎮 Fetching regular season game logs (2025-26) in 1 request...
+  📦 26651 total game log rows
+
+🎮 Fetching regular season game logs (2024-25) in 1 request...
+  📦 26306 total game log rows
+
+🎮 Fetching playoffs game logs (2025-26) in 1 request...
+  📦 1921 total game log rows
+
+💾 Building output files...
+
+☁️  Uploading 769 player files to Storage...
+  [50/769] players uploaded
+  [100/769] players uploaded
+  [150/769] players uploaded
+  [200/769] players uploaded
+  [250/769] players uploaded
+  [300/769] players uploaded
+  [350/769] players uploaded
+  [400/769] players uploaded
+  [450/769] players uploaded
+  [500/769] players uploaded
+  [550/769] players uploaded
+  [600/769] players uploaded
+  [650/769] players uploaded
+  [700/769] players uploaded
+  [750/769] players uploaded
+  [769/769] players uploaded
+✅ Storage version published: 20260819T090127Z
+🧹 Removed old Storage version 20260814T135127Z (778 objects)
+
+✅ Done in 132.2s (2.2 min)
+   Active data source: Supabase Storage
+ℹ️ Favorites cleanup skipped: no deployed app URL configured
+/home/renato/Projetos/Renato/nba-dashboard/update_data.py:300: DeprecationWarning: ScoreboardV2 has known issues with line score data for 2025-26 season games (October 22 - December 25, 2025). Please use ScoreboardV3 instead. ScoreboardV3 is fully backward compatible and works for all historical seasons. See: https://github.com/swar/nba_api/issues/596
+  scoreboard = scoreboardv2.ScoreboardV2(
+🚀 NBA data pipeline — 2026-08-20 10:00:02
+   Season: 2025-26 | Prev: 2024-25
+   Local JSON fallback updates: disabled
+
+📊 Fetching player stats (totals)...
+
+🏀 Fetching team stats (offense + defense)...
+
+👥 Fetching rosters (one request per team)...
+  [1/30] ATL: 24 players
+  [2/30] BOS: 19 players
+  [3/30] CLE: 17 players
+  [4/30] NOP: 20 players
+  [5/30] CHI: 16 players
+  [6/30] DAL: 22 players
+  [7/30] DEN: 19 players
+  [8/30] GSW: 18 players
+  [9/30] HOU: 21 players
+  [10/30] LAC: 24 players
+  [11/30] LAL: 19 players
+  [12/30] MIA: 17 players
+  [13/30] MIL: 22 players
+  [14/30] MIN: 17 players
+  [15/30] BKN: 17 players
+  [16/30] NYK: 17 players
+  [17/30] ORL: 17 players
+  [18/30] IND: 17 players
+  [19/30] PHI: 20 players
+  [20/30] PHX: 20 players
+  [21/30] POR: 19 players
+  [22/30] SAC: 15 players
+  [23/30] SAS: 18 players
+  [24/30] OKC: 17 players
+  [25/30] TOR: 21 players
+  [26/30] UTA: 22 players
+  [27/30] MEM: 22 players
+  [28/30] WAS: 19 players
+  [29/30] DET: 20 players
+  [30/30] CHA: 22 players
+
+📅 Fetching schedule (next 2 days)...
+  08/20/2026: 0 games
+  08/21/2026: 0 games
+
+🏆 Fetching standings for 2025-26...
+
+🏥 Fetching injuries (ESPN)...
+
+🎮 Fetching regular season game logs (2025-26) in 1 request...
+  📦 26651 total game log rows
+
+🎮 Fetching regular season game logs (2024-25) in 1 request...
+  📦 26306 total game log rows
+
+🎮 Fetching playoffs game logs (2025-26) in 1 request...
+  📦 1921 total game log rows
+
+💾 Building output files...
+
+☁️  Uploading 769 player files to Storage...
+  [50/769] players uploaded
+  [100/769] players uploaded
+  [150/769] players uploaded
+  [200/769] players uploaded
+  [250/769] players uploaded
+  [300/769] players uploaded
+  [350/769] players uploaded
+  [400/769] players uploaded
+  [450/769] players uploaded
+  [500/769] players uploaded
+  [550/769] players uploaded
+  [600/769] players uploaded
+  [650/769] players uploaded
+  [700/769] players uploaded
+  [750/769] players uploaded
+  [769/769] players uploaded
+✅ Storage version published: 20260820T090202Z
+🧹 Removed old Storage version 20260817T090131Z (778 objects)
+
+✅ Done in 171.9s (2.9 min)
+   Active data source: Supabase Storage
+ℹ️ Favorites cleanup skipped: no deployed app URL configured
+/home/renato/Projetos/Renato/nba-dashboard/update_data.py:300: DeprecationWarning: ScoreboardV2 has known issues with line score data for 2025-26 season games (October 22 - December 25, 2025). Please use ScoreboardV3 instead. ScoreboardV3 is fully backward compatible and works for all historical seasons. See: https://github.com/swar/nba_api/issues/596
+  scoreboard = scoreboardv2.ScoreboardV2(
+🚀 NBA data pipeline — 2026-08-21 10:00:02
+   Season: 2025-26 | Prev: 2024-25
+   Local JSON fallback updates: disabled
+
+📊 Fetching player stats (totals)...
+
+🏀 Fetching team stats (offense + defense)...
+
+👥 Fetching rosters (one request per team)...
+  [1/30] ATL: 24 players
+  [2/30] BOS: 19 players
+  [3/30] CLE: 17 players
+  [4/30] NOP: 20 players
+  [5/30] CHI: 16 players
+  [6/30] DAL: 22 players
+  [7/30] DEN: 19 players
+  [8/30] GSW: 18 players
+  [9/30] HOU: 21 players
+  [10/30] LAC: 25 players
+  [11/30] LAL: 19 players
+  [12/30] MIA: 17 players
+  [13/30] MIL: 22 players
+  [14/30] MIN: 17 players
+  [15/30] BKN: 17 players
+  [16/30] NYK: 17 players
+  [17/30] ORL: 17 players
+  [18/30] IND: 17 players
+  [19/30] PHI: 20 players
+  [20/30] PHX: 20 players
+  [21/30] POR: 19 players
+  [22/30] SAC: 15 players
+  [23/30] SAS: 18 players
+  [24/30] OKC: 17 players
+  [25/30] TOR: 21 players
+  [26/30] UTA: 22 players
+  [27/30] MEM: 22 players
+  [28/30] WAS: 18 players
+  [29/30] DET: 20 players
+  [30/30] CHA: 22 players
+
+📅 Fetching schedule (next 2 days)...
+  08/21/2026: 0 games
+  ⚠️ Error on 08/22/2026: Expecting value: line 1 column 1 (char 0)
+
+🏆 Fetching standings for 2025-26...
+
+🏥 Fetching injuries (ESPN)...
+
+🎮 Fetching regular season game logs (2025-26) in 1 request...
+  📦 26651 total game log rows
+
+🎮 Fetching regular season game logs (2024-25) in 1 request...
+  📦 26306 total game log rows
+
+🎮 Fetching playoffs game logs (2025-26) in 1 request...
+  📦 1921 total game log rows
+
+💾 Building output files...
+
+☁️  Uploading 769 player files to Storage...
+  [50/769] players uploaded
+  [100/769] players uploaded
+  [150/769] players uploaded
+  [200/769] players uploaded
+  [250/769] players uploaded
+  [300/769] players uploaded
+  [350/769] players uploaded
+  [400/769] players uploaded
+  [450/769] players uploaded
+  [500/769] players uploaded
+  [550/769] players uploaded
+  [600/769] players uploaded
+  [650/769] players uploaded
+  [700/769] players uploaded
+  [750/769] players uploaded
+  [769/769] players uploaded
+✅ Storage version published: 20260821T090124Z
+🧹 Removed old Storage version 20260818T090136Z (778 objects)
+
+✅ Done in 124.5s (2.1 min)
+   Active data source: Supabase Storage
+ℹ️ Favorites cleanup skipped: no deployed app URL configured

@@ -8,6 +8,7 @@ import { getAvailablePlayers } from "@/lib/getAvailablePlayers";
 import { readJson, RequestError } from "@/lib/security";
 import { getNbaData } from "@/lib/nbaDataSource";
 import { getQaContext } from "@/lib/qa/context";
+import { resolveQaPlan } from "@/lib/qa/plan";
 import { getQaFavorites, setQaFavorites } from "@/lib/qa/favorites";
 
 const FAVORITE_STATS = new Set([
@@ -46,7 +47,7 @@ export async function POST(req) {
     const avg = Number(body.avg);
     const gameDate = body.gameDate;
     const allowedPlayers = getAvailablePlayers(
-      qa?.persona ?? session.user.plan ?? "free",
+      resolveQaPlan(qa?.persona, session.user.plan),
       qa?.data ?? (await getNbaData()),
     );
 

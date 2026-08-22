@@ -2,6 +2,7 @@ import { getAvailablePlayers } from "@/lib/getAvailablePlayers";
 import { getCurrentSession } from "@/lib/getCurrentSession";
 import PropsTableWrapper from "./PropsTableWrapper";
 import { getQaContext } from "@/lib/qa/context";
+import { resolveQaPlan } from "@/lib/qa/plan";
 import { getNbaData } from "@/lib/nbaDataSource";
 
 const SERVER_STARTED_AT = Date.now();
@@ -34,6 +35,15 @@ const getSingleParam = (value) => {
   return value;
 };
 
+const getFirstParam = (params, keys) => {
+  for (const key of keys) {
+    const value = getSingleParam(params?.[key]);
+    if (value != null && value !== "") return value;
+  }
+
+  return undefined;
+};
+
 const getListParam = (value) => {
   const single = getSingleParam(value);
   if (!single) return [];
@@ -42,6 +52,17 @@ const getListParam = (value) => {
     .split(",")
     .map((item) => item.trim())
     .filter(Boolean);
+};
+
+const getListParamFromKeys = (params, keys) => getListParam(getFirstParam(params, keys));
+
+const clampHitRateParam = (value) => {
+  if (value === "") return "";
+
+  const numberValue = Number(value);
+  if (!Number.isFinite(numberValue)) return "";
+
+  return String(Math.min(100, Math.max(0, numberValue)));
 };
 
 const parseHitRateFilters = (value) => {
@@ -54,10 +75,30 @@ const parseHitRateFilters = (value) => {
       const [period, min = "", max = ""] = chunk.split(":");
       if (!PERIODS.has(period)) return null;
 
-      return { period, min, max };
+      return {
+        period,
+        min: clampHitRateParam(min),
+        max: clampHitRateParam(max),
+      };
     })
     .filter(Boolean);
 };
+
+const MATCHUP_CODE_TO_VALUE = {
+  f: "favorable",
+  n: "neutral",
+  u: "unfavorable",
+};
+
+const INJURY_CODE_TO_VALUE = {
+  out: "Out",
+  dtd: "Day-To-Day",
+  doubtful: "Doubtful",
+  q: "Questionable",
+};
+
+const normalizeMatchupFilter = (value) => MATCHUP_CODE_TO_VALUE[value] ?? value;
+const normalizeInjuryFilter = (value) => INJURY_CODE_TO_VALUE[value] ?? value;
 
 const MATCHUP_RANK = (rank) => {
   if (rank == null) return { label: "—", color: "text-slate-500" };
@@ -105,25 +146,43 @@ export default async function PropsPage({ searchParams }) {
   const session = await getCurrentSession();
   const qa = await getQaContext();
   const nbaData = qa?.data ?? (await getNbaData());
-  const plan = qa?.persona ?? session?.user?.plan ?? "free";
+  const plan = resolveQaPlan(qa?.persona, session?.user?.plan);
   const allowedPlayerIds = getAvailablePlayers(plan, nbaData);
   const selectedStatParam = getSingleParam(resolvedSearchParams?.stat);
-  const sortPeriodParam = getSingleParam(resolvedSearchParams?.sortPeriod);
-  const filterTeam = getSingleParam(resolvedSearchParams?.team) ?? "";
-  const filterGame = getSingleParam(resolvedSearchParams?.game) ?? "";
-  const search = getSingleParam(resolvedSearchParams?.search) ?? "";
-  const filterMatchup = getListParam(resolvedSearchParams?.matchup).filter(
-    (item) => MATCHUP_FILTERS.has(item),
+  const sortPeriodParam = getFirstParam(resolvedSearchParams, [
+    "sort",
+    "sortPeriod",
+  ]);
+  const sortDirectionParam = getFirstParam(resolvedSearchParams, [
+    "dir",
+    "sortDirection",
+  ]);
+  const filterTeam = getListParamFromKeys(resolvedSearchParams, ["team"]);
+  const filterGame = getListParamFromKeys(resolvedSearchParams, [
+    "games",
+    "game",
+  ]);
+  const search = getFirstParam(resolvedSearchParams, ["q", "search"]) ?? "";
+  const filterMatchup = getListParamFromKeys(resolvedSearchParams, [
+    "matchup",
+  ])
+    .map(normalizeMatchupFilter)
+    .filter((item) => MATCHUP_FILTERS.has(item));
+  const filterInjury = getListParamFromKeys(resolvedSearchParams, [
+    "hide",
+    "injury",
+  ])
+    .map(normalizeInjuryFilter)
+    .filter((item) => INJURY_FILTERS.has(item));
+  const filterHitRates = parseHitRateFilters(
+    getFirstParam(resolvedSearchParams, ["hr", "hitRates"]),
   );
-  const filterInjury = getListParam(resolvedSearchParams?.injury).filter(
-    (item) => INJURY_FILTERS.has(item),
-  );
-  const filterHitRates = parseHitRateFilters(resolvedSearchParams?.hitRates);
 
   const selectedStat = STATS.has(selectedStatParam)
     ? selectedStatParam
     : "points";
   const sortPeriod = PERIODS.has(sortPeriodParam) ? sortPeriodParam : "L5";
+  const sortDirection = sortDirectionParam === "asc" ? "asc" : "desc";
 
   const [rawProps, standings, schedule, injuries] = await Promise.all([
     nbaData.props,
@@ -173,11 +232,14 @@ export default async function PropsPage({ searchParams }) {
         return false;
       }
 
-      if (filterTeam && p.team !== filterTeam) return false;
+      if (filterTeam.length > 0 && !filterTeam.includes(p.team)) return false;
 
-      if (filterGame) {
-        const [homeId, awayId] = filterGame.split("-").map(Number);
-        if (p.team_id !== homeId && p.team_id !== awayId) return false;
+      if (filterGame.length > 0) {
+        const isInSelectedGame = filterGame.some((gameKey) => {
+          const [homeId, awayId] = gameKey.split("-").map(Number);
+          return p.team_id === homeId || p.team_id === awayId;
+        });
+        if (!isInSelectedGame) return false;
       }
 
       if (filterMatchup.length > 0) {
@@ -207,23 +269,33 @@ export default async function PropsPage({ searchParams }) {
       const bData = b.props?.[selectedStat]?.[sortPeriod];
       const aHr = aData?.hit_rate ?? 0;
       const bHr = bData?.hit_rate ?? 0;
-      if (bHr !== aHr) return bHr - aHr;
+      if (bHr !== aHr) {
+        return sortDirection === "asc" ? aHr - bHr : bHr - aHr;
+      }
 
       const aGames = aData?.games ?? 0;
       const bGames = bData?.games ?? 0;
-      if (bGames !== aGames) return bGames - aGames;
+      if (bGames !== aGames) {
+        return sortDirection === "asc" ? aGames - bGames : bGames - aGames;
+      }
 
-      return (b.avg_minutes || 0) - (a.avg_minutes || 0);
+      return sortDirection === "asc"
+        ? (a.avg_minutes || 0) - (b.avg_minutes || 0)
+        : (b.avg_minutes || 0) - (a.avg_minutes || 0);
     });
-
-  const allTeams = [...new Set(safeProps.map((p) => p.team))].sort();
 
   const teamNameMap = safeStandings.reduce((acc, t) => {
     acc[t.TeamID] = t.TeamName;
     return acc;
   }, {});
 
-  const slimSchedule = safeSchedule.map(
+  const propTeamIds = new Set(safeProps.map((prop) => Number(prop.team_id)));
+
+  const slimSchedule = safeSchedule.filter(
+    ({ home_team_id, visitor_team_id }) =>
+      propTeamIds.has(Number(home_team_id)) ||
+      propTeamIds.has(Number(visitor_team_id)),
+  ).map(
     ({ home_team_id, visitor_team_id, status }) => ({
       home_team_id,
       visitor_team_id,
@@ -277,7 +349,6 @@ export default async function PropsPage({ searchParams }) {
     <PropsTableWrapper
       basePath="/props"
       enrichedProps={enrichedProps}
-      allTeams={allTeams}
       standings={teamNameMap}
       schedule={slimSchedule}
       injuries={slimInjuries}
@@ -293,6 +364,7 @@ export default async function PropsPage({ searchParams }) {
       initialFilters={{
         selectedStat,
         sortPeriod,
+        sortDirection,
         filterTeam,
         filterGame,
         filterMatchup,

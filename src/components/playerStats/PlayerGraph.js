@@ -13,17 +13,7 @@ const PlayerGraphChart = dynamic(() => import("./PlayerGraphChart"), {
   ssr: false,
 });
 
-const FavoritePropButton = dynamic(() => import("./FavoritePropButton"), {
-  ssr: false,
-  loading: () => (
-    <div className="h-[34px] w-[98px] rounded-lg border border-white/[0.08] bg-white/[0.03]" />
-  ),
-});
-
 const statOptions = PLAYER_GRAPH_STATS;
-const MAX_TEAMMATES = 3;
-const MINUTE_SLIDER_MAX = 48;
-
 const PlayerGraph = ({
   playerStats,
   selectedStat,
@@ -32,7 +22,6 @@ const PlayerGraph = ({
   onNumberChange,
   activeFilter,
   onFilterChange,
-  gameInfo,
   opponentAbbr: currentOpponentAbbr,
   hasCurrentGames,
   hasPreviousGames,
@@ -48,13 +37,18 @@ const PlayerGraph = ({
   onClearTeammates,
   teammateFilter,
   onTeammateFilterChange,
+  minuteSliderMax = 48,
+  rangeMinMinutes,
+  rangeMaxMinutes,
+  setRangeMinMinutes,
+  setRangeMaxMinutes,
+  maxTeammates = 3,
+  teammateModes,
+  setTeammateModes,
 }) => {
   const [shouldRenderChart, setShouldRenderChart] = useState(false);
-  const [rangeMinMinutes, setRangeMinMinutes] = useState(0);
-  const [rangeMaxMinutes, setRangeMaxMinutes] = useState(MINUTE_SLIDER_MAX);
   const [advancedPanel, setAdvancedPanel] = useState(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [teammateModes, setTeammateModes] = useState({});
   const [teammateModalOpen, setTeammateModalOpen] = useState(false);
 
   useEffect(() => {
@@ -87,7 +81,7 @@ const PlayerGraph = ({
     : null;
 
   const minMinutes = rangeMinMinutes === 0 ? null : rangeMinMinutes;
-  const maxMinutes = rangeMaxMinutes === MINUTE_SLIDER_MAX ? null : rangeMaxMinutes;
+  const maxMinutes = rangeMaxMinutes === minuteSliderMax ? null : rangeMaxMinutes;
   const hasMinuteFilter = minMinutes != null || maxMinutes != null;
   const teammateRules = selectedTeammates
     .filter((entry) => teammateModes[String(entry.playerId)])
@@ -112,7 +106,7 @@ const PlayerGraph = ({
   };
   const resetMinuteFilter = () => {
     setRangeMinMinutes(0);
-    setRangeMaxMinutes(MINUTE_SLIDER_MAX);
+    setRangeMaxMinutes(minuteSliderMax);
   };
   const resetAdvancedFilters = () => {
     resetTeammateFilters();
@@ -131,7 +125,7 @@ const PlayerGraph = ({
       });
       return;
     }
-    if (!selectedTeammateIds.includes(playerId) && selectedTeammates.length >= MAX_TEAMMATES) return;
+    if (!selectedTeammateIds.includes(playerId) && selectedTeammates.length >= maxTeammates) return;
     if (!selectedTeammateIds.includes(playerId)) onTeammateChange(playerId);
     setTeammateModes((modes) => ({ ...modes, [playerId]: mode }));
   };
@@ -166,15 +160,6 @@ const PlayerGraph = ({
     selectedStatGraphData?.chartByViewKey?.[selectedViewKey] ?? null;
   const chartPoints = chartData?.points ?? [];
   const betLine = selectedStatGraphData?.betLine ?? null;
-  const hitRate =
-    selectedStatGraphData?.rateByViewKey?.[selectedViewKey]?.rate ?? null;
-
-  const hitRateColorClass =
-    hitRate == null || !chartPoints.length
-      ? "text-white"
-      : hitRate >= 50
-        ? "text-emerald-400"
-        : "text-red-400";
 
   const periodOptions = selectedStatGraphData?.periodOptions ?? baseStatGraphData?.periodOptions ?? [];
   const contextOptions = selectedStatGraphData?.contextOptions ?? baseStatGraphData?.contextOptions ?? [];
@@ -230,32 +215,56 @@ const PlayerGraph = ({
       selectedStat={selectedStat}
       betLine={chartData?.betLine ?? betLine}
       yTicks={chartData?.yTicks ?? []}
+      showMinutesLine={hasMinuteFilter}
     />
   );
 
   return (
     <div className="relative flex h-full w-full min-w-0 flex-col gap-5 p-4 sm:p-5">
       {/* ── Stat selector — desktop only ── */}
-      <div className="hidden lg:grid grid-cols-6 gap-2 xl:grid-cols-11">
-        {statOptions.map((option) => (
-          <button
-            key={option}
-            onClick={() => onStatChange(option)}
-            className={`min-w-0 rounded-lg border px-2 py-2 text-[10px] font-bold uppercase tracking-wider transition-all duration-150 font-mono
-              ${
-                selectedStat === option
-                  ? "bg-slate-700 border-slate-500 text-white"
-                  : "bg-transparent border-white/6 text-slate-400 hover:text-slate-300 hover:border-white/10"
-              }`}
-          >
-            {option}
-          </button>
-        ))}
+      <div className="hidden items-stretch gap-2 lg:grid lg:grid-cols-[minmax(0,1fr)_42px]">
+        <div className="compact-horizontal-scrollbar min-w-0 overflow-x-auto">
+          <div className="flex min-w-max gap-2 pb-1">
+          {statOptions.map((option) => (
+            <button
+              key={option}
+              onClick={() => onStatChange(option)}
+              className={`min-w-[100px] shrink-0 rounded-lg border px-2 py-2 text-[10px] font-bold uppercase tracking-wider transition-all duration-150 font-mono
+                ${
+                  selectedStat === option
+                    ? "bg-slate-700 border-slate-500 text-white"
+                    : "bg-transparent border-white/6 text-slate-400 hover:text-slate-300 hover:border-white/10"
+                }`}
+            >
+              {option}
+            </button>
+          ))}
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => setFiltersOpen((open) => !open)}
+          aria-expanded={filtersOpen}
+          aria-label={`Filters${hasAdvancedFilters ? `, ${Number(teammateRules.length > 0) + Number(hasMinuteFilter)} active` : ""}`}
+          className={`relative flex h-9 w-10 items-center justify-center rounded-lg border transition-colors ${filtersOpen || hasAdvancedFilters ? "border-orange-400/40 bg-orange-500/10 text-orange-200" : "border-white/[0.08] bg-white/[0.02] text-slate-300 hover:border-white/15"}`}
+        >
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5">
+            <path
+              d="M4 6h16M7 12h10M10 18h4"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+          </svg>
+          {hasAdvancedFilters && (
+            <span className="absolute right-3 top-2 h-1.5 w-1.5 rounded-full bg-orange-300" />
+          )}
+        </button>
       </div>
 
       {/* ── Mobile dropdowns — hidden on desktop ── */}
-      <div className="lg:hidden flex gap-2">
-        <label className="flex-1 min-w-0">
+      <div className="flex gap-2 lg:hidden">
+        <label className="relative flex-1 min-w-0">
           <span className="sr-only">Select period</span>
           <select
             value={mobileViewValue}
@@ -271,28 +280,36 @@ const PlayerGraph = ({
               onFilterChange(null);
               onNumberChange(nextNumber === "Full" ? "Full" : Number(nextNumber));
             }}
-            className="w-full rounded-lg border border-white/[0.06] bg-white/[0.03] px-3 py-2 text-[11px] font-mono font-bold uppercase tracking-widest text-slate-300"
+            style={{ colorScheme: "dark" }}
+            className="w-full appearance-none rounded-lg border border-white/[0.06] bg-white/[0.03] px-3 py-2 pr-9 text-[10px] font-mono font-bold uppercase tracking-widest text-slate-300"
           >
             {mobileViewOptions.map((option) => (
-              <option key={option.value} value={option.value}>
+              <option key={option.value} value={option.value} className="bg-[#0D1828] text-slate-100">
                 {option.label}
               </option>
             ))}
           </select>
+          <svg aria-hidden="true" viewBox="0 0 20 20" fill="currentColor" className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500">
+            <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.17l3.71-3.94a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06Z" clipRule="evenodd" />
+          </svg>
         </label>
-        <label className="flex-1 min-w-0">
+        <label className="relative flex-1 min-w-0">
           <span className="sr-only">Select stat</span>
           <select
             value={selectedStat}
             onChange={(event) => onStatChange(event.target.value)}
-            className="w-full rounded-lg border border-white/[0.06] bg-white/[0.03] px-3 py-2 text-[11px] font-mono font-bold uppercase tracking-widest text-slate-300"
+            style={{ colorScheme: "dark" }}
+            className="w-full appearance-none rounded-lg border border-white/[0.06] bg-white/[0.03] px-3 py-2 pr-9 text-[10px] font-mono font-bold uppercase tracking-widest text-slate-300"
           >
             {statOptions.map((option) => (
-              <option key={option} value={option}>
+              <option key={option} value={option} className="bg-[#0D1828] text-slate-100">
                 {option}
               </option>
             ))}
           </select>
+          <svg aria-hidden="true" viewBox="0 0 20 20" fill="currentColor" className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500">
+            <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.17l3.71-3.94a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06Z" clipRule="evenodd" />
+          </svg>
         </label>
       </div>
 
@@ -361,7 +378,7 @@ const PlayerGraph = ({
                 </button>
               </span>
             ))}
-            {selectedTeammates.length < MAX_TEAMMATES ? (
+            {selectedTeammates.length < maxTeammates ? (
             <label className="min-w-0">
               <span className="sr-only">Add teammate</span>
               <select
@@ -446,13 +463,13 @@ const PlayerGraph = ({
           <div
             className="relative h-2 rounded-full bg-white/[0.08]"
             style={{
-              background: `linear-gradient(to right, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.08) ${(rangeMinMinutes / MINUTE_SLIDER_MAX) * 100}%, #f97316 ${(rangeMinMinutes / MINUTE_SLIDER_MAX) * 100}%, #f97316 ${(rangeMaxMinutes / MINUTE_SLIDER_MAX) * 100}%, rgba(255,255,255,0.08) ${(rangeMaxMinutes / MINUTE_SLIDER_MAX) * 100}%, rgba(255,255,255,0.08) 100%)`,
+              background: `linear-gradient(to right, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.08) ${(rangeMinMinutes / minuteSliderMax) * 100}%, #f97316 ${(rangeMinMinutes / minuteSliderMax) * 100}%, #f97316 ${(rangeMaxMinutes / minuteSliderMax) * 100}%, rgba(255,255,255,0.08) ${(rangeMaxMinutes / minuteSliderMax) * 100}%, rgba(255,255,255,0.08) 100%)`,
             }}
           >
             <input
               type="range"
               min="0"
-              max={MINUTE_SLIDER_MAX}
+              max={minuteSliderMax}
               value={rangeMinMinutes}
               onChange={(event) => setRangeMinMinutes(Math.min(Number(event.target.value), rangeMaxMinutes))}
               aria-label="Minimum minutes"
@@ -461,7 +478,7 @@ const PlayerGraph = ({
             <input
               type="range"
               min="0"
-              max={MINUTE_SLIDER_MAX}
+              max={minuteSliderMax}
               value={rangeMaxMinutes}
               onChange={(event) => setRangeMaxMinutes(Math.max(Number(event.target.value), rangeMinMinutes))}
               aria-label="Maximum minutes"
@@ -479,68 +496,19 @@ const PlayerGraph = ({
       </div>
       )}
 
-      {/* ── Line stats + Add prop ── */}
-      <div className="order-2 flex items-stretch gap-2">
-      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-3 sm:px-4">
-        <div className="flex items-baseline gap-1.5">
-          <span className="font-black text-2xl text-white font-mono">
-            {betLine?.toFixed(1) ?? "—"}
-          </span>
-          <span className="text-[10px] text-slate-400 uppercase tracking-widest">
-            over
-          </span>
-        </div>
-        <div className="h-6 w-px bg-white/6" />
-        <div className="flex items-baseline gap-1.5">
-          <span
-            className={`font-black text-2xl font-mono ${hitRateColorClass}`}
-          >
-            {chartPoints.length && betLine != null ? `${hitRate}%` : "—%"}
-          </span>
-          <span className="text-[10px] text-slate-400 uppercase tracking-widest">
-            hit rate
-          </span>
-        </div>
-        <div className="h-6 w-px bg-white/6" />
-        <div className="flex items-baseline gap-1.5">
-          <span className="font-black text-2xl text-white font-mono">
-            {chartPoints.length}
-          </span>
-          <span className="text-[10px] text-slate-400 uppercase tracking-widest">
-            games
-          </span>
-        </div>
-
-        <div className="w-full sm:ml-auto sm:w-auto">
-            <FavoritePropButton
-              playerStats={playerStats}
-              selectedStat={selectedStat}
-              betLine={betLine}
-              gameInfo={gameInfo}
-            />
-        </div>
-      </div>
-        <button
-          type="button"
-          onClick={() => setFiltersOpen((open) => !open)}
-          aria-expanded={filtersOpen}
-          className={`flex-shrink-0 rounded-xl border px-4 py-2 font-mono text-[10px] font-bold uppercase tracking-wider transition-colors ${filtersOpen || hasAdvancedFilters ? "border-orange-400/40 bg-orange-500/10 text-orange-200" : "border-white/[0.08] bg-white/[0.02] text-slate-300 hover:border-white/15"}`}
-        >
-          Filters{hasAdvancedFilters ? ` · ${Number(teammateRules.length > 0) + Number(hasMinuteFilter)}` : ""}
-        </button>
-      </div>
-
       {/* ── Chart ── */}
-      <div className={`relative order-3 h-[300px] w-full min-w-0 flex-none overflow-hidden rounded-xl lg:h-[360px] ${filtersOpen ? "lg:pr-[330px]" : ""}`}>
+      <div className={`relative order-3 h-[300px] w-full min-w-0 flex-none overflow-hidden rounded-xl lg:h-[360px] ${filtersOpen ? "lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-4" : ""}`}>
         {isFilteredView && chartPoints.length > 0 && chartPoints.length < 5 && (
           <div className="absolute right-2 top-2 z-10 rounded-md border border-amber-400/20 bg-[#0D1828]/95 px-2 py-1 font-mono text-[8px] uppercase tracking-wider text-amber-300">
             Small sample · {chartPoints.length} games
           </div>
         )}
         {shouldShowChart ? (
-          chartContent
+          <div className="h-full min-h-0 min-w-0">
+            {chartContent}
+          </div>
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
+          <div className="w-full h-full min-w-0 flex items-center justify-center">
             <div className="flex flex-col items-center justify-center p-6 gap-3 text-center border border-white/[0.06] bg-white/[0.02] rounded-xl">
               <div className="w-10 h-10 rounded-full bg-white/[0.04] border border-white/[0.06] flex items-center justify-center">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -565,7 +533,7 @@ const PlayerGraph = ({
           </div>
         )}
         {filtersOpen && (
-          <aside className="absolute inset-0 z-30 flex flex-col overflow-y-auto border border-orange-400/20 bg-[#0D1828]/[0.98] p-4 shadow-2xl lg:inset-y-0 lg:left-auto lg:right-0 lg:w-[320px]">
+          <aside className="absolute inset-0 z-30 flex flex-col overflow-y-auto rounded-xl border border-orange-400/20 bg-[#0D1828]/[0.98] p-4 shadow-2xl lg:static lg:z-auto lg:w-[320px]">
             <div className="flex items-center justify-between border-b border-white/[0.07] pb-3">
               <div>
                 <p className="font-mono text-[11px] font-bold uppercase tracking-widest text-white">Filters</p>
@@ -598,7 +566,7 @@ const PlayerGraph = ({
                       <button type="button" onClick={() => setTeammateRule(entry, entry.mode)} aria-label={`Remove ${entry.playerName}`} className="absolute left-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded text-sm text-slate-500 hover:bg-white/[0.06] hover:text-white">×</button>
                     </div>
                   ))}
-                  {teammateRules.length < MAX_TEAMMATES && (
+                  {teammateRules.length < maxTeammates && (
                     <button type="button" onClick={() => setTeammateModalOpen(true)} aria-label="Add teammate filter" className="flex min-h-[74px] items-center justify-center rounded-lg border border-dashed border-white/[0.1] font-mono text-lg text-slate-500 hover:border-orange-400/25 hover:text-orange-200">+</button>
                   )}
                 </div>
@@ -619,9 +587,9 @@ const PlayerGraph = ({
                 <span>{rangeMinMinutes} min</span><span>{rangeMaxMinutes} min</span>
               </div>
               <div className="mt-4 px-1">
-                <div className="relative h-2 rounded-full" style={{ background: `linear-gradient(to right, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.08) ${(rangeMinMinutes / MINUTE_SLIDER_MAX) * 100}%, #f97316 ${(rangeMinMinutes / MINUTE_SLIDER_MAX) * 100}%, #f97316 ${(rangeMaxMinutes / MINUTE_SLIDER_MAX) * 100}%, rgba(255,255,255,0.08) ${(rangeMaxMinutes / MINUTE_SLIDER_MAX) * 100}%, rgba(255,255,255,0.08) 100%)` }}>
-                  <input type="range" min="0" max={MINUTE_SLIDER_MAX} value={rangeMinMinutes} onChange={(event) => setRangeMinMinutes(Math.min(Number(event.target.value), rangeMaxMinutes))} aria-label="Minimum minutes" className="pointer-events-none absolute -top-[5px] left-0 z-20 h-3 w-full appearance-none bg-transparent [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-orange-300 [&::-moz-range-thumb]:bg-[#0D1828] [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-orange-300 [&::-webkit-slider-thumb]:bg-[#0D1828]" />
-                  <input type="range" min="0" max={MINUTE_SLIDER_MAX} value={rangeMaxMinutes} onChange={(event) => setRangeMaxMinutes(Math.max(Number(event.target.value), rangeMinMinutes))} aria-label="Maximum minutes" className="pointer-events-none absolute -top-[5px] left-0 z-10 h-3 w-full appearance-none bg-transparent [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-orange-300 [&::-moz-range-thumb]:bg-[#0D1828] [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-orange-300 [&::-webkit-slider-thumb]:bg-[#0D1828]" />
+                <div className="relative h-2 rounded-full" style={{ background: `linear-gradient(to right, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.08) ${(rangeMinMinutes / minuteSliderMax) * 100}%, #f97316 ${(rangeMinMinutes / minuteSliderMax) * 100}%, #f97316 ${(rangeMaxMinutes / minuteSliderMax) * 100}%, rgba(255,255,255,0.08) ${(rangeMaxMinutes / minuteSliderMax) * 100}%, rgba(255,255,255,0.08) 100%)` }}>
+                  <input type="range" min="0" max={minuteSliderMax} value={rangeMinMinutes} onChange={(event) => setRangeMinMinutes(Math.min(Number(event.target.value), rangeMaxMinutes))} aria-label="Minimum minutes" className="pointer-events-none absolute -top-[5px] left-0 z-20 h-3 w-full appearance-none bg-transparent [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-orange-300 [&::-moz-range-thumb]:bg-[#0D1828] [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-orange-300 [&::-webkit-slider-thumb]:bg-[#0D1828]" />
+                  <input type="range" min="0" max={minuteSliderMax} value={rangeMaxMinutes} onChange={(event) => setRangeMaxMinutes(Math.max(Number(event.target.value), rangeMinMinutes))} aria-label="Maximum minutes" className="pointer-events-none absolute -top-[5px] left-0 z-10 h-3 w-full appearance-none bg-transparent [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-orange-300 [&::-moz-range-thumb]:bg-[#0D1828] [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-orange-300 [&::-webkit-slider-thumb]:bg-[#0D1828]" />
                 </div>
                 <div className="mt-3 flex justify-between font-mono text-[8px] text-slate-500"><span>0</span><span>12</span><span>24</span><span>36</span><span>48</span></div>
               </div>
@@ -696,7 +664,7 @@ const PlayerGraph = ({
               {teammateImpact.map((entry) => {
                 const playerId = String(entry.playerId);
                 const selectedMode = teammateModes[playerId];
-                const atLimit = !selectedTeammateIds.includes(playerId) && selectedTeammates.length >= MAX_TEAMMATES;
+                const atLimit = !selectedTeammateIds.includes(playerId) && selectedTeammates.length >= maxTeammates;
                 return (
                   <div key={entry.playerId} className={`grid grid-cols-[40px_40px_minmax(0,1fr)_60px_70px_70px] items-center gap-2 border-b border-white/[0.05] px-4 py-2.5 ${atLimit ? "opacity-40" : "hover:bg-white/[0.025]"}`}>
                     {[
@@ -714,7 +682,7 @@ const PlayerGraph = ({
               })}
             </div>
             <div className="flex items-center justify-between border-t border-white/[0.08] px-4 py-3">
-              <span className="font-mono text-[9px] text-slate-500">{teammateRules.length}/{MAX_TEAMMATES} selected</span>
+              <span className="font-mono text-[9px] text-slate-500">{teammateRules.length}/{maxTeammates} selected</span>
               <button type="button" onClick={() => setTeammateModalOpen(false)} className="rounded-lg border border-orange-400/35 bg-orange-500/10 px-5 py-2 font-mono text-[10px] font-bold uppercase tracking-wider text-orange-200 hover:bg-orange-500/15">Done</button>
             </div>
           </div>

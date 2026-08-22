@@ -3,7 +3,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies, headers } from "next/headers";
 export const QA_COOKIE = "nba_qa_scenario";
 export const QA_SCENARIOS = ["regular", "no-games", "partial-data"];
-export const QA_PERSONAS = ["free", "trial", "pro"];
+export const QA_PERSONAS = ["account", "free", "trial", "pro"];
 
 export function isQaEnabled() {
   if (process.env.QA_MODE !== "true") return false;

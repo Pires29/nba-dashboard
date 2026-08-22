@@ -5,7 +5,6 @@ import PropsTable from "@/components/props/PropsTable";
 export default function PropsTableWrapper({
   basePath,
   enrichedProps,
-  allTeams,
   standings,
   schedule,
   injuries,
@@ -20,7 +19,6 @@ export default function PropsTableWrapper({
         key={JSON.stringify(initialFilters)}
         basePath={basePath}
         enrichedProps={enrichedProps}
-        allTeams={allTeams}
         standings={standings}
         schedule={schedule}
         injuries={injuries}

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import PlayerHeadshotImage from "@/components/PlayerHeadshotImage";
 import { useState } from "react";
 import FavoritesMobileList from "@/components/favorites/FavoritesMobileList";
+import FavoritesLoadingState from "@/components/favorites/FavoritesLoadingState";
 
 const HIT_RATE_COLOR = (rate) => {
   if (rate == null) return "text-slate-600";
@@ -43,11 +44,7 @@ export default function FavoritesPage() {
     );
 
   if (loading) {
-    return (
-      <div className="flex min-h-full flex-1 flex-col items-center justify-center bg-gradient-to-b from-[#0D1B2E] to-[#060E1A]">
-        <div className="h-28 w-[min(420px,calc(100%-32px))] animate-pulse rounded-xl border border-white/[0.08] bg-white/[0.03]" aria-label="Loading favorites" />
-      </div>
-    );
+    return <FavoritesLoadingState />;
   }
 
   return (
@@ -65,11 +62,27 @@ export default function FavoritesPage() {
         <div className="relative z-10 mx-auto flex min-h-full w-full max-w-[1400px] flex-1 flex-col gap-4 px-4 py-5 sm:px-6">
         {/* Header */}
         <div className="flex flex-wrap items-center gap-3 flex-shrink-0">
+          <button
+            type="button"
+            onClick={() => router.push("/props")}
+            aria-label="Back to props"
+            className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.03] text-slate-400 transition-colors hover:border-orange-500/35 hover:bg-orange-500/10 hover:text-orange-200"
+          >
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="h-4 w-4">
+              <path
+                d="M15 6l-6 6 6 6"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
           <div className="w-1 h-5 rounded-sm bg-orange-500" />
-          <h1 className="font-mono font-black text-sm tracking-widest text-white uppercase">
+          <h1 className="font-mono text-[16px] font-black uppercase tracking-widest text-white">
             Favorites
           </h1>
-          <span className="text-[10px] font-mono text-slate-600 border border-white/[0.06] rounded px-2 py-0.5">
+          <span className="rounded border border-white/[0.06] px-2.5 py-1 text-[11px] font-mono text-slate-500">
             {favorites.length} saved
           </span>
 

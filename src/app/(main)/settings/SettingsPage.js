@@ -202,13 +202,31 @@ export default function SettingsPage({ session }) {
       <div className="fixed top-1/3 left-1/2 -translate-x-1/2 w-[500px] h-[300px] rounded-full bg-orange-500/4 blur-[120px] pointer-events-none" />
 
       <div className="max-w-[640px] mx-auto px-6 py-12 relative z-10">
-        <div className="mb-10">
-          <p className="text-[10px] font-mono uppercase tracking-[0.25em] text-orange-400 mb-2">
-            Account
-          </p>
-          <h1 className="text-3xl font-black text-white tracking-tight">
-            Settings
-          </h1>
+        <div className="mb-10 flex items-start gap-3">
+          <button
+            type="button"
+            onClick={() => router.push("/props")}
+            aria-label="Back to props"
+            className="mt-1 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.03] text-slate-400 transition-colors hover:border-orange-500/35 hover:bg-orange-500/10 hover:text-orange-200"
+          >
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="h-4 w-4">
+              <path
+                d="M15 6l-6 6 6 6"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+          <div>
+            <p className="text-[10px] font-mono uppercase tracking-[0.25em] text-orange-400 mb-2">
+              Account
+            </p>
+            <h1 className="text-3xl font-black text-white tracking-tight">
+              Settings
+            </h1>
+          </div>
         </div>
 
         <div className="flex flex-col gap-5">

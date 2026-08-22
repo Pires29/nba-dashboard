@@ -2,11 +2,12 @@ import { getCurrentSession } from "@/lib/getCurrentSession";
 import Link from "next/link";
 import ProfileMenuClient from "./ProfileMenuClient";
 import { getQaContext } from "@/lib/qa/context";
+import { resolveQaPlan } from "@/lib/qa/plan";
 
 const Navbar = async () => {
   const session = await getCurrentSession();
   const qa = await getQaContext();
-  const activePlan = qa?.persona ?? session?.user?.plan ?? "free";
+  const activePlan = resolveQaPlan(qa?.persona, session?.user?.plan);
   const isFreePlan = activePlan === "free";
 
   return (

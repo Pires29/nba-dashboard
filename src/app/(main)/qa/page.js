@@ -8,6 +8,8 @@ import {
 } from "@/lib/qa/context";
 import { activateQaScenario, clearQaScenario } from "./actions";
 import { getAvailablePlayers } from "@/lib/getAvailablePlayers";
+import { getCurrentSession } from "@/lib/getCurrentSession";
+import { resolveQaPlan } from "@/lib/qa/plan";
 
 export const metadata = { title: "QA Console", robots: { index: false, follow: false } };
 
@@ -15,9 +17,11 @@ const label = (value) => value.replaceAll("-", " ");
 
 export default async function QaPage() {
   if (!(await isQaRequestAllowed())) notFound();
+  const session = await getCurrentSession();
   const qa = await getQaContext();
   const firstGame = qa?.data.games[0];
-  const availableIds = qa ? getAvailablePlayers(qa.persona, qa.data) : new Set();
+  const activePlan = resolveQaPlan(qa?.persona, session?.user?.plan);
+  const availableIds = qa ? getAvailablePlayers(activePlan, qa.data) : new Set();
   const gameRoster = qa?.data.rosters.filter(
     (player) => firstGame && [firstGame.home_team_id, firstGame.visitor_team_id].includes(player.TEAM_ID),
   ) ?? [];
@@ -30,13 +34,13 @@ export default async function QaPage() {
         <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-orange-400">Local QA console</p>
         <h1 className="mt-2 text-3xl font-black text-white">Test the product with controlled data</h1>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-400">
-          Select a persona and dataset. The choice applies to Server Components and protected player APIs without changing your database account.
+          Select controlled data and either use your real account plan or override it with a test persona. Nothing here changes your database account.
         </p>
 
         <form action={activateQaScenario} className="mt-8 grid gap-4 rounded-xl border border-white/[0.07] bg-[#060E1A]/60 p-5 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
           <label className="text-xs font-bold text-slate-300">
             Persona
-            <select name="persona" defaultValue={qa?.persona ?? "free"} className="mt-2 block w-full rounded-lg border border-white/10 bg-[#0D1828] px-3 py-3 text-sm text-white">
+            <select name="persona" defaultValue={qa?.persona ?? "account"} className="mt-2 block w-full rounded-lg border border-white/10 bg-[#0D1828] px-3 py-3 text-sm text-white">
               {QA_PERSONAS.map((persona) => <option key={persona} value={persona}>{label(persona)}</option>)}
             </select>
           </label>
@@ -51,7 +55,7 @@ export default async function QaPage() {
 
         <div className="mt-6 flex flex-wrap items-center gap-3">
           <span className={`rounded-full border px-3 py-1.5 font-mono text-[10px] font-bold uppercase ${qa ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400" : "border-white/10 text-slate-500"}`}>
-            {qa ? `${qa.persona} · ${qa.scenario}` : "QA inactive"}
+            {qa ? `${qa.persona === "account" ? `account (${activePlan})` : qa.persona} · ${qa.scenario}` : "QA inactive"}
           </span>
           {qa && <form action={clearQaScenario}><button className="text-xs font-bold text-slate-400 hover:text-white">Return to real data</button></form>}
         </div>

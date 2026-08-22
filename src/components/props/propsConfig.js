@@ -12,6 +12,20 @@ export const STATS = [
   "ra",
 ];
 
+export const STAT_LABELS = {
+  points: "Points",
+  assists: "Assists",
+  rebounds: "Rebounds",
+  blocks: "Blocks",
+  steals: "Steals",
+  turnovers: "Turnovers",
+  fg3m: "FG3M",
+  pra: "PRA",
+  pa: "PA",
+  pr: "PR",
+  ra: "RA",
+};
+
 export const PERIODS = ["L5", "L10", "L20", "full", "h2h"];
 
 export const PERIOD_LABELS = {
@@ -52,7 +66,15 @@ export function roundToBettingLine(value) {
 
 export const serializeList = (items) => items.join(",");
 
+export const isHitRateFilterActive = (filter) =>
+  filter.min !== "" || filter.max !== "";
+
 export const serializeHitRates = (filters) =>
   filters
-    .map((filter) => `${filter.period}:${filter.min}:${filter.max}`)
+    .filter(isHitRateFilterActive)
+    .map((filter) => {
+      const min = filter.min === "0" ? "" : filter.min;
+      const max = filter.max === "100" ? "" : filter.max;
+      return [filter.period, min, max].join(":").replace(/:+$/, "");
+    })
     .join(",");

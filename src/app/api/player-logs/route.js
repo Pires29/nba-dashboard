@@ -3,13 +3,14 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { NextResponse } from "next/server";
 import { getQaContext } from "@/lib/qa/context";
+import { resolveQaPlan } from "@/lib/qa/plan";
 import { getNbaData, getNbaPlayerLogs } from "@/lib/nbaDataSource";
 
 export async function GET(req) {
   const session = await getServerSession(authOptions);
   const qa = await getQaContext();
   const nbaData = qa?.data ?? (await getNbaData());
-  const plan = qa?.persona ?? session?.user?.plan ?? "free";
+  const plan = resolveQaPlan(qa?.persona, session?.user?.plan);
   const allowedPlayerIds = getAvailablePlayers(plan, nbaData);
 
   const { searchParams } = new URL(req.url);

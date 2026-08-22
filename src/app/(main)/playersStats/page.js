@@ -4,6 +4,7 @@ import { getAvailablePlayers } from "@/lib/getAvailablePlayers";
 import { getCurrentSession } from "@/lib/getCurrentSession";
 import LockedPlayerState from "@/components/playerStats/LockedPlayerState";
 import { getQaContext } from "@/lib/qa/context";
+import { resolveQaPlan } from "@/lib/qa/plan";
 import { getNbaData, getNbaPlayerLogs } from "@/lib/nbaDataSource";
 
 const SERVER_STARTED_AT = Date.now();
@@ -18,7 +19,7 @@ export default async function Page({ searchParams }) {
   const session = await getCurrentSession();
   const qa = await getQaContext();
   const nbaData = qa?.data ?? (await getNbaData());
-  const plan = qa?.persona ?? session?.user?.plan ?? "free";
+  const plan = resolveQaPlan(qa?.persona, session?.user?.plan);
   const allowedPlayerIds = getAvailablePlayers(plan, nbaData);
 
   const rawRosterData = nbaData.rosters;

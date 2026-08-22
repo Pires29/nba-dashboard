@@ -198,6 +198,14 @@ Colocar nas settings algo a dizer para atualizar o plano , atualmente nao da
 
 Nas Settings deveria aparecer Season Pass em vez de apenas Pro.
 
+Adicionar dados reais de um dia aleatorio da season passada para testes na aplicacao
+
+Verificar se quando o trial é cancelado se não cobra na mesma o utilizador 
+
+Mudar nome
+
+Precos
+
 Gerar formas de formar graficos
 
 odds de casas de apostas

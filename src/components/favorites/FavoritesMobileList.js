@@ -36,12 +36,13 @@ export default function FavoritesMobileList({
                 </span>
                 <span className="min-w-0">
                   <span className="block truncate text-sm font-semibold text-white">{favorite.playerName}</span>
-                  <span className="mt-1 block text-[10px] font-mono text-slate-400">{favorite.team} · {favorite.stat.toUpperCase()}</span>
+                  <span className="mt-1 block text-[10px] font-mono text-slate-400">{favorite.team}</span>
                 </span>
               </button>
               <span className="text-right">
                 <span className="block text-base font-black font-mono text-white">{favorite.avg?.toFixed(1) ?? "—"}</span>
-                <span className="block text-[9px] font-mono text-slate-400">{formatDate(favorite.createdAt)}</span>
+                <span className="mt-0.5 block text-[9px] font-mono font-bold uppercase tracking-wider text-slate-400">{favorite.stat}</span>
+                <span className="mt-0.5 block text-[9px] font-mono text-slate-400">{formatDate(favorite.createdAt)}</span>
               </span>
             </div>
             {!selectMode && (

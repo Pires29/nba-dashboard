@@ -19,7 +19,7 @@ function Placeholder({ className = "" }) {
       className={`h-full w-full text-slate-500 ${className}`}
     >
       <rect width="80" height="80" fill="#0D1828" />
-      <circle cx="40" cy="23" r="15" fill="currentColor" opacity="0.55" />
+      <circle cx="40" cy="32" r="15" fill="currentColor" opacity="0.55" />
       <path d="M13 80c2-18 11-29 27-29s25 11 27 29H13Z" fill="currentColor" opacity="0.55" />
     </svg>
   );

@@ -26,7 +26,7 @@ const FavoritePropButton = ({ playerStats, selectedStat, betLine, gameInfo }) =>
         onClick={() =>
           toggleFavorite(playerObj, selectedStat, betLine, gameInfo)
         }
-        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[10px] font-mono font-bold transition-all
+        className={`flex items-center gap-1.5 rounded-md border px-[11px] py-2 text-[10px] font-mono font-bold transition-all
           ${
             isFav
               ? "border-orange-500/40 bg-orange-500/10 text-orange-400"
@@ -50,7 +50,7 @@ const FavoritePropButton = ({ playerStats, selectedStat, betLine, gameInfo }) =>
                 fill="none"
               />
             </svg>
-            Saved
+            <span className="hidden sm:inline">Saved</span>
           </>
         ) : (
           <>
@@ -66,7 +66,7 @@ const FavoritePropButton = ({ playerStats, selectedStat, betLine, gameInfo }) =>
               <line x1="12" y1="5" x2="12" y2="19" />
               <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
-            Add prop
+            <span className="hidden sm:inline">Add prop</span>
           </>
         )}
       </button>

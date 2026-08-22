@@ -1,2 +1,5 @@
-import { PageSkeleton } from "@/components/ui/PageState";
-export default function Loading() { return <PageSkeleton label="Loading favorites" />; }
+import FavoritesLoadingState from "@/components/favorites/FavoritesLoadingState";
+
+export default function Loading() {
+  return <FavoritesLoadingState />;
+}

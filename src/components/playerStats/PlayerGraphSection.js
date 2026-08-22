@@ -17,8 +17,6 @@ const PlayerContextGraph = dynamic(() => import("./PlayerContextGraph"), {
   loading: () => <PlayerContextGraphSkeleton />,
 });
 
-const MAX_TEAMMATES = 3;
-
 const PlayerGraphSection = ({
   player,
   injuryStatus,
@@ -34,30 +32,48 @@ const PlayerGraphSection = ({
   logsAvailable = true,
   teammateImpact = [],
   availabilityGames,
+  minuteSliderMax,
+  rangeMinMinutes,
+  rangeMaxMinutes,
+  setRangeMinMinutes,
+  setRangeMaxMinutes,
+  maxTeammates,
+  selectedTeammates,
+  selectedTeammateIds,
+  teammateModes,
+  setTeammateModes,
+  onTeammateChange,
+  onRemoveTeammate,
+  onClearTeammates,
 }) => {
   const [selectedStat, setSelectedStat] = useState(initialStat || "points");
   const [selectedNumber, setSelectedNumber] = useState(5);
   const [activeFilter, setActiveFilter] = useState(null);
-  const [selectedTeammateIds, setSelectedTeammateIds] = useState([]);
   const [teammateFilter, setTeammateFilter] = useState(null);
-  const selectedTeammates = teammateImpact.filter(
-    (entry) => selectedTeammateIds.includes(String(entry.playerId)),
-  );
-
-  const handleTeammateChange = (playerId) => {
-    if (!playerId || selectedTeammateIds.length >= MAX_TEAMMATES) return;
-    setSelectedTeammateIds((ids) =>
-      ids.includes(playerId) ? ids : [...ids, playerId],
-    );
-    setTeammateFilter(null);
-  };
-  const removeTeammate = (playerId) => {
-    setSelectedTeammateIds((ids) => ids.filter((id) => id !== playerId));
-    setTeammateFilter(null);
-  };
-  const clearTeammates = () => {
-    setSelectedTeammateIds([]);
-    setTeammateFilter(null);
+  const selectedViewKey =
+    activeFilter ?? (selectedNumber === "Full" ? "FULL" : `L${selectedNumber}`);
+  const selectedStatGraphData =
+    statGraphData?.[selectedStat] ?? statGraphData?.points ?? null;
+  const selectedChartData =
+    selectedStatGraphData?.chartByViewKey?.[selectedViewKey] ?? null;
+  const selectedBetLine = selectedStatGraphData?.betLine ?? null;
+  const selectedHitRate =
+    selectedStatGraphData?.rateByViewKey?.[selectedViewKey]?.rate ?? null;
+  const selectedGames = selectedChartData?.points?.length ?? 0;
+  const lineSummary = {
+    rawBetLine: selectedBetLine,
+    betLine: selectedBetLine != null ? selectedBetLine.toFixed(1) : "—",
+    hitRate:
+      selectedGames && selectedBetLine != null && selectedHitRate != null
+        ? `${selectedHitRate}%`
+        : "—%",
+    hitRateClassName:
+      selectedHitRate == null || !selectedGames
+        ? "text-white"
+        : selectedHitRate >= 50
+          ? "text-emerald-400"
+          : "text-red-400",
+    games: selectedGames,
   };
 
   return (
@@ -68,11 +84,15 @@ const PlayerGraphSection = ({
       <div className="flex-shrink-0 border-b border-white/[0.07] bg-white/[0.015]">
         <PlayerInfo
           playerData={player}
+          playerStats={playerStats}
           injuryStatus={injuryStatus}
+          selectedStat={selectedStat}
+          lineSummary={lineSummary}
+          gameInfo={currentGame}
         />
       </div>
 
-      <div className="min-h-[480px] min-w-0 lg:flex lg:min-h-0 lg:w-full lg:flex-1">
+      <div className="min-w-0 md:min-h-[480px] lg:flex lg:min-h-0 lg:w-full lg:flex-1">
         <Suspense fallback={<PlayerGraphSkeleton />}>
           <PlayerGraph
             playerStats={playerStats}
@@ -92,12 +112,29 @@ const PlayerGraphSection = ({
             availabilityGames={availabilityGames}
             selectedTeammates={selectedTeammates}
             selectedTeammateIds={selectedTeammateIds}
-            onTeammateChange={handleTeammateChange}
-            onRemoveTeammate={removeTeammate}
-            onClearTeammates={clearTeammates}
+            onTeammateChange={(playerId) => {
+              onTeammateChange(playerId);
+              setTeammateFilter(null);
+            }}
+            onRemoveTeammate={(playerId) => {
+              onRemoveTeammate(playerId);
+              setTeammateFilter(null);
+            }}
+            onClearTeammates={() => {
+              onClearTeammates();
+              setTeammateFilter(null);
+            }}
             teammateFilter={teammateFilter}
             onTeammateFilterChange={setTeammateFilter}
             logsAvailable={logsAvailable}
+            minuteSliderMax={minuteSliderMax}
+            rangeMinMinutes={rangeMinMinutes}
+            rangeMaxMinutes={rangeMaxMinutes}
+            setRangeMinMinutes={setRangeMinMinutes}
+            setRangeMaxMinutes={setRangeMaxMinutes}
+            maxTeammates={maxTeammates}
+            teammateModes={teammateModes}
+            setTeammateModes={setTeammateModes}
           />
         </Suspense>
       </div>

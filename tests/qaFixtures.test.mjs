@@ -2,6 +2,14 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { getQaFixtures } from "../src/lib/qa/fixtures.js";
 import { selectFreePlayerIds } from "../src/lib/playerEntitlements.js";
+import { resolveQaPlan } from "../src/lib/qa/plan.js";
+
+test("account QA persona keeps the authenticated database plan", () => {
+  assert.equal(resolveQaPlan("account", "trial"), "trial");
+  assert.equal(resolveQaPlan("account", "pro"), "pro");
+  assert.equal(resolveQaPlan("free", "pro"), "free");
+  assert.equal(resolveQaPlan(undefined, undefined), "free");
+});
 
 test("regular QA fixture provides a realistic large dataset", () => {
   const data = getQaFixtures("regular");

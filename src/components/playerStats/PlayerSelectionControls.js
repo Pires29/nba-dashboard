@@ -27,6 +27,20 @@ const PlayerSelectionControls = ({
   team2Formatted,
   initialSelectedName,
   initialActiveTeam,
+  minuteSliderMax,
+  rangeMinMinutes,
+  rangeMaxMinutes,
+  setRangeMinMinutes,
+  setRangeMaxMinutes,
+  hasMinuteFilter,
+  activeMobileFilterCount = 0,
+  teammateImpact = [],
+  maxTeammates = 3,
+  selectedTeammates = [],
+  selectedTeammateIds = [],
+  teammateModes = {},
+  setSelectedTeammateIds,
+  setTeammateModes,
 }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -34,8 +48,59 @@ const PlayerSelectionControls = ({
   const [selectedName, setSelectedName] = useState(initialSelectedName);
   const [activeTeam, setActiveTeam] = useState(initialActiveTeam);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [draftRangeMinMinutes, setDraftRangeMinMinutes] = useState(rangeMinMinutes);
+  const [draftRangeMaxMinutes, setDraftRangeMaxMinutes] = useState(rangeMaxMinutes);
+  const [draftSelectedTeammateIds, setDraftSelectedTeammateIds] = useState(selectedTeammateIds);
+  const [draftTeammateModes, setDraftTeammateModes] = useState(teammateModes);
   const desktopCardRef = useRef(null);
   const [desktopCardHeight, setDesktopCardHeight] = useState(null);
+
+  const openMobileSheet = () => {
+    setDraftRangeMinMinutes(rangeMinMinutes);
+    setDraftRangeMaxMinutes(rangeMaxMinutes);
+    setDraftSelectedTeammateIds(selectedTeammateIds);
+    setDraftTeammateModes(teammateModes);
+    setSheetOpen(true);
+  };
+
+  const applyMobileFilters = () => {
+    setRangeMinMinutes(draftRangeMinMinutes);
+    setRangeMaxMinutes(draftRangeMaxMinutes);
+    setSelectedTeammateIds(draftSelectedTeammateIds);
+    setTeammateModes(draftTeammateModes);
+    setSheetOpen(false);
+  };
+
+  const resetDraftMinuteFilter = () => {
+    setDraftRangeMinMinutes(0);
+    setDraftRangeMaxMinutes(minuteSliderMax);
+  };
+
+  const setDraftTeammateRule = (entry, mode) => {
+    const playerId = String(entry.playerId);
+    const selectedMode = draftTeammateModes[playerId];
+    if (selectedMode === mode) {
+      setDraftSelectedTeammateIds((ids) => ids.filter((id) => id !== playerId));
+      setDraftTeammateModes((modes) => {
+        const next = { ...modes };
+        delete next[playerId];
+        return next;
+      });
+      return;
+    }
+
+    const alreadySelected = draftSelectedTeammateIds.includes(playerId);
+    if (!alreadySelected && draftSelectedTeammateIds.length >= maxTeammates) return;
+    if (!alreadySelected) {
+      setDraftSelectedTeammateIds((ids) => [...ids, playerId]);
+    }
+    setDraftTeammateModes((modes) => ({ ...modes, [playerId]: mode }));
+  };
+
+  const resetDraftTeammates = () => {
+    setDraftSelectedTeammateIds([]);
+    setDraftTeammateModes({});
+  };
 
   useEffect(() => {
     let frameId;
@@ -162,7 +227,7 @@ const PlayerSelectionControls = ({
 
       <button
         aria-label="Open filters"
-        onClick={() => setSheetOpen(true)}
+        onClick={openMobileSheet}
         disabled={isPending}
         className="fixed bottom-6 right-5 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-orange-500 text-white shadow-[0_4px_24px_rgba(232,93,4,0.45)] transition-transform active:scale-95 lg:hidden"
       >
@@ -181,6 +246,11 @@ const PlayerSelectionControls = ({
             d="M6 13.5V3.75m0 9.75a1.5 1.5 0 0 1 0 3m0-3a1.5 1.5 0 0 0 0 3m0 3.75V16.5m12-3V3.75m0 9.75a1.5 1.5 0 0 1 0 3m0-3a1.5 1.5 0 0 0 0 3m0 3.75V16.5m-6-9V3.75m0 3.75a1.5 1.5 0 0 1 0 3m0-3a1.5 1.5 0 0 0 0 3m0 9.75V10.5"
           />
         </svg>
+        {activeMobileFilterCount > 0 && (
+          <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-sky-400 px-1 font-mono text-[10px] font-black text-[#07111f]">
+            {activeMobileFilterCount}
+          </span>
+        )}
       </button>
 
       {sheetOpen && (
@@ -197,6 +267,22 @@ const PlayerSelectionControls = ({
           handleSelectPlayer={handleSelectPlayer}
           handleGameSelect={handleGameSelect}
           setSheetOpen={setSheetOpen}
+          minuteSliderMax={minuteSliderMax}
+          rangeMinMinutes={draftRangeMinMinutes}
+          rangeMaxMinutes={draftRangeMaxMinutes}
+          setRangeMinMinutes={setDraftRangeMinMinutes}
+          setRangeMaxMinutes={setDraftRangeMaxMinutes}
+          hasMinuteFilter={draftRangeMinMinutes !== 0 || draftRangeMaxMinutes !== minuteSliderMax}
+          activeMobileFilterCount={activeMobileFilterCount}
+          resetMinuteFilter={resetDraftMinuteFilter}
+          onApplyFilters={applyMobileFilters}
+          teammateImpact={teammateImpact}
+          maxTeammates={maxTeammates}
+          selectedTeammates={selectedTeammates}
+          selectedTeammateIds={draftSelectedTeammateIds}
+          teammateModes={draftTeammateModes}
+          onSetTeammateRule={setDraftTeammateRule}
+          onResetTeammates={resetDraftTeammates}
         />
       )}
     </>

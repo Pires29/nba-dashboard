@@ -112,6 +112,42 @@ const TeamStatsPlaceholder = () => (
   </div>
 );
 
+const getTeamAbbreviation = (teamName) => {
+  if (!teamName) return "TM";
+  const words = teamName.trim().split(/\s+/).filter(Boolean);
+  const source = words.length > 1 ? words[words.length - 1] : words[0];
+  return source.slice(0, 3).toUpperCase();
+};
+
+const TeamLogo = ({ team }) => {
+  const [failed, setFailed] = useState(false);
+  const abbreviation = getTeamAbbreviation(team?.teamName);
+
+  if (failed || !team?.teamID) {
+    return (
+      <span
+        aria-label={team?.teamName ?? "Team"}
+        className="flex h-7 w-7 min-w-7 flex-shrink-0 items-center justify-center rounded-md border border-white/[0.08] bg-white/[0.04] font-mono text-[8px] font-black uppercase tracking-tight text-slate-300"
+      >
+        {abbreviation}
+      </span>
+    );
+  }
+
+  return (
+    <Image
+      src={`https://cdn.nba.com/logos/nba/${team.teamID}/global/L/logo.svg`}
+      width={20}
+      height={20}
+      loading="lazy"
+      alt={team.teamName}
+      unoptimized
+      onError={() => setFailed(true)}
+      className="h-5 w-5 min-h-[20px] min-w-[20px] flex-shrink-0 object-contain"
+    />
+  );
+};
+
 const TeamStats = ({ homeTeamStats, awayTeamStats }) => {
   const [homeSide, setHomeSide] = useState("offense");
   const [awaySide, setAwaySide] = useState("offense");
@@ -143,15 +179,7 @@ const TeamStats = ({ homeTeamStats, awayTeamStats }) => {
       <div className="flex items-center justify-between gap-2">
         {/* Home logo + toggle */}
         <div className="flex items-center gap-2 min-w-0 flex-1">
-          <Image
-            src={`https://cdn.nba.com/logos/nba/${homeTeamStats.teamID}/global/L/logo.svg`}
-            width={20}
-            height={20}
-            loading="lazy"
-            alt={homeTeamStats.teamName}
-            unoptimized
-            className="w-5 h-5 min-w-[20px] min-h-[20px] object-contain flex-shrink-0"
-          />
+          <TeamLogo team={homeTeamStats} />
           <div className="min-w-0 shrink">
             <SideToggle
               side={homeSide}
@@ -187,15 +215,7 @@ const TeamStats = ({ homeTeamStats, awayTeamStats }) => {
               label={`${awayTeamStats.teamName} stats side`}
             />
           </div>
-          <Image
-            src={`https://cdn.nba.com/logos/nba/${awayTeamStats.teamID}/global/L/logo.svg`}
-            width={20}
-            height={20}
-            loading="lazy"
-            alt={awayTeamStats.teamName}
-            unoptimized
-            className="w-5 h-5 min-w-[20px] min-h-[20px] object-contain flex-shrink-0"
-          />
+          <TeamLogo team={awayTeamStats} />
         </div>
       </div>
 
