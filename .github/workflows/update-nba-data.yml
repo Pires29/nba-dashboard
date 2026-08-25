@@ -1,0 +1,67 @@
+name: Update NBA data
+
+on:
+  workflow_dispatch:
+  schedule:
+    # GitHub schedules use UTC. The job below gates execution by
+    # America/New_York time so daylight saving changes do not shift updates.
+    - cron: "0 0-1,14-23 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: update-nba-data
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+      SUPABASE_STORAGE_BUCKET: ${{ secrets.SUPABASE_STORAGE_BUCKET }}
+      NBA_STORAGE_MANIFEST: current.json
+      NBA_WRITE_LOCAL_DATA: "false"
+
+    steps:
+      - name: Check update window
+        id: window
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "run_update=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          ny_hour="$(TZ=America/New_York date +%H)"
+          case "$ny_hour" in
+            10|15|18|20)
+              echo "run_update=true" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "run_update=false" >> "$GITHUB_OUTPUT"
+              echo "Skipping: current America/New_York hour is $ny_hour."
+              ;;
+          esac
+
+      - name: Checkout
+        if: steps.window.outputs.run_update == 'true'
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        if: steps.window.outputs.run_update == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install Python dependencies
+        if: steps.window.outputs.run_update == 'true'
+        run: pip install -r requirements.txt
+
+      - name: Publish NBA data snapshot
+        if: steps.window.outputs.run_update == 'true'
+        run: python update_data.py
