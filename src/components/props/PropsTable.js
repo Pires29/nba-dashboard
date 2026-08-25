@@ -528,7 +528,7 @@ export default function PropsTable({
               {(closeDropdown) => (
                 <>
                   <p className="text-[9px] font-mono text-slate-600 uppercase tracking-widest mb-2">
-                    Select Games
+                    Select Games · Times ET
                   </p>
                   <div className="max-h-72 overflow-y-auto pr-1">
                     <div className="flex flex-col gap-1">

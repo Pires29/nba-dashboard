@@ -29,6 +29,7 @@ import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import UTC, datetime, timedelta
 from collections import defaultdict
+from zoneinfo import ZoneInfo
 
 from nba_api.stats.endpoints import (
     leaguedashplayerstats,
@@ -72,6 +73,7 @@ OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "src", "app", "data")
 PIPELINE_ENV_FILE = os.path.join(os.path.dirname(__file__), ".env.pipeline")
 
 SCHEDULE_DAYS_AHEAD = 2
+NBA_SCHEDULE_TIMEZONE = ZoneInfo("America/New_York")
 QA_SNAPSHOT_DATE = os.getenv("NBA_QA_DATE", "").strip()
 STORAGE_MANIFEST_PATH = os.getenv("NBA_STORAGE_MANIFEST", "current.json").strip() or "current.json"
 STORAGE_VERSION_ALIAS = os.getenv("NBA_STORAGE_VERSION", "").strip()
@@ -327,8 +329,9 @@ def fetch_raw_schedule():
         dates = [qa_date.strftime("%m/%d/%Y")]
         print(f"\n📅 Fetching QA schedule ({QA_SNAPSHOT_DATE})...")
     else:
+        schedule_today = datetime.now(NBA_SCHEDULE_TIMEZONE)
         dates = [
-            (datetime.today() + timedelta(days=i)).strftime("%m/%d/%Y")
+            (schedule_today + timedelta(days=i)).strftime("%m/%d/%Y")
             for i in range(SCHEDULE_DAYS_AHEAD)
         ]
         print(f"\n📅 Fetching schedule (next {SCHEDULE_DAYS_AHEAD} days)...")

@@ -35,9 +35,9 @@ const GameSelector = ({ team1Id, team2Id, games, teams, onSelect, disabled }) =>
 
   return (
     <label className="relative block">
-      <span className="sr-only">Select game</span>
+      <span className="sr-only">Select game. Scheduled times are shown in ET.</span>
       <select
-        aria-label="Select game"
+        aria-label="Select game. Scheduled times are shown in ET."
         value={selectedGame ? buildGameValue(selectedGame) : ""}
         onChange={(event) => {
           const game = games.find(
@@ -77,6 +77,9 @@ const GameSelector = ({ team1Id, team2Id, games, teams, onSelect, disabled }) =>
           strokeLinejoin="round"
         />
       </svg>
+      <span className="mt-1 block text-right text-[9px] font-mono uppercase tracking-widest text-slate-600">
+        Times ET
+      </span>
     </label>
   );
 };
