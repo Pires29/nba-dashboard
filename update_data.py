@@ -79,6 +79,8 @@ STORAGE_MANIFEST_PATH = os.getenv("NBA_STORAGE_MANIFEST", "current.json").strip(
 STORAGE_VERSION_ALIAS = os.getenv("NBA_STORAGE_VERSION", "").strip()
 SLEEP_BETWEEN_REQUESTS = (1.0, 2.0)
 REQUEST_TIMEOUT = 120
+NBA_API_RETRIES = 3
+NBA_API_RETRY_BASE_SLEEP = 20
 
 ESPN_INJURIES_URL = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/injuries"
 
@@ -199,6 +201,18 @@ def fix_nan(obj):
 def random_sleep():
     time.sleep(random.uniform(*SLEEP_BETWEEN_REQUESTS))
 
+def retry_request(label, fn, attempts=NBA_API_RETRIES):
+    for attempt in range(1, attempts + 1):
+        try:
+            return fn()
+        except Exception as error:
+            if attempt == attempts:
+                raise
+            delay = NBA_API_RETRY_BASE_SLEEP * attempt
+            print(f"  ⚠️ {label} failed on attempt {attempt}/{attempts}: {error}")
+            print(f"  ↪ Retrying in {delay}s...")
+            time.sleep(delay)
+
 def safe_round(val, digits=2):
     """Round only if val is a valid number."""
     try:
@@ -243,39 +257,51 @@ def parse_opponent_from_matchup(matchup_str, player_team_abbr):
 
 def fetch_raw_player_stats():
     print("\n📊 Fetching player stats (totals)...")
-    df = leaguedashplayerstats.LeagueDashPlayerStats(
-        season=SEASON,
-        season_type_all_star="Regular Season",
-        per_mode_detailed="Totals",
-        headers=NBA_HEADERS,
-        timeout=REQUEST_TIMEOUT,
-    ).get_data_frames()[0]
+    df = retry_request(
+        "Player stats",
+        lambda: leaguedashplayerstats.LeagueDashPlayerStats(
+            season=SEASON,
+            season_type_all_star="Regular Season",
+            per_mode_detailed="Totals",
+            headers=NBA_HEADERS,
+            timeout=REQUEST_TIMEOUT,
+        ).get_data_frames()[0],
+    )
     return df
 
 def fetch_raw_team_stats():
     print("\n🏀 Fetching team stats (offense + defense)...")
-    df_off = leaguedashteamstats.LeagueDashTeamStats(
-        season=SEASON, season_type_all_star="Regular Season",
-        measure_type_detailed_defense="Base", per_mode_detailed="PerGame",
-        rank="Y", headers=NBA_HEADERS, timeout=REQUEST_TIMEOUT,
-    ).get_data_frames()[0]
+    df_off = retry_request(
+        "Team offense stats",
+        lambda: leaguedashteamstats.LeagueDashTeamStats(
+            season=SEASON, season_type_all_star="Regular Season",
+            measure_type_detailed_defense="Base", per_mode_detailed="PerGame",
+            rank="Y", headers=NBA_HEADERS, timeout=REQUEST_TIMEOUT,
+        ).get_data_frames()[0],
+    )
     random_sleep()
-    df_def = leaguedashteamstats.LeagueDashTeamStats(
-        season=SEASON, season_type_all_star="Regular Season",
-        measure_type_detailed_defense="Opponent", per_mode_detailed="PerGame",
-        rank="Y", headers=NBA_HEADERS, timeout=REQUEST_TIMEOUT,
-    ).get_data_frames()[0]
+    df_def = retry_request(
+        "Team defense stats",
+        lambda: leaguedashteamstats.LeagueDashTeamStats(
+            season=SEASON, season_type_all_star="Regular Season",
+            measure_type_detailed_defense="Opponent", per_mode_detailed="PerGame",
+            rank="Y", headers=NBA_HEADERS, timeout=REQUEST_TIMEOUT,
+        ).get_data_frames()[0],
+    )
     return df_off, df_def
 
 def fetch_raw_game_logs(season, season_type="Regular Season"):
     print(f"\n🎮 Fetching {season_type.lower()} game logs ({season}) in 1 request...")
-    df = leaguegamelog.LeagueGameLog(
-        season=season,
-        season_type_all_star=season_type,
-        player_or_team_abbreviation="P",
-        headers=NBA_HEADERS,
-        timeout=REQUEST_TIMEOUT,
-    ).get_data_frames()[0]
+    df = retry_request(
+        f"{season_type} game logs {season}",
+        lambda: leaguegamelog.LeagueGameLog(
+            season=season,
+            season_type_all_star=season_type,
+            player_or_team_abbreviation="P",
+            headers=NBA_HEADERS,
+            timeout=REQUEST_TIMEOUT,
+        ).get_data_frames()[0],
+    )
     print(f"  📦 {len(df)} total game log rows")
     return df
 
@@ -287,10 +313,13 @@ def fetch_raw_rosters():
     total = len(team_entries)
     for i, (team_id, team_abbr) in enumerate(team_entries):
         try:
-            roster_df = commonteamroster.CommonTeamRoster(
-                team_id=team_id, season=ROSTER_SEASON,
-                headers=NBA_HEADERS, timeout=REQUEST_TIMEOUT,
-            ).get_data_frames()[0]
+            roster_df = retry_request(
+                f"{team_abbr} roster",
+                lambda: commonteamroster.CommonTeamRoster(
+                    team_id=team_id, season=ROSTER_SEASON,
+                    headers=NBA_HEADERS, timeout=REQUEST_TIMEOUT,
+                ).get_data_frames()[0],
+            )
 
             raw_rosters[team_id] = roster_df[[
                 "PLAYER_ID", "PLAYER", "NUM", "POSITION", "HEIGHT", "WEIGHT", "BIRTH_DATE"
@@ -339,9 +368,12 @@ def fetch_raw_schedule():
     all_games = []
     for date in dates:
         try:
-            scoreboard = scoreboardv2.ScoreboardV2(
-                game_date=date, league_id="00", day_offset=0,
-                headers=NBA_HEADERS, timeout=REQUEST_TIMEOUT,
+            scoreboard = retry_request(
+                f"Schedule {date}",
+                lambda: scoreboardv2.ScoreboardV2(
+                    game_date=date, league_id="00", day_offset=0,
+                    headers=NBA_HEADERS, timeout=REQUEST_TIMEOUT,
+                ),
             )
             games = scoreboard.get_normalized_dict()["GameHeader"]
             for game in games:
@@ -369,14 +401,20 @@ def fetch_raw_schedule():
 
 def fetch_raw_standings():
     print(f"\n🏆 Fetching standings for {SEASON}...")
-    return leaguestandings.LeagueStandings(
-        league_id="00", season=SEASON,
-        headers=NBA_HEADERS, timeout=REQUEST_TIMEOUT,
-    ).get_data_frames()[0]
+    return retry_request(
+        "Standings",
+        lambda: leaguestandings.LeagueStandings(
+            league_id="00", season=SEASON,
+            headers=NBA_HEADERS, timeout=REQUEST_TIMEOUT,
+        ).get_data_frames()[0],
+    )
 
 def fetch_raw_injuries():
     print("\n🏥 Fetching injuries (ESPN)...")
-    response = requests.get(ESPN_INJURIES_URL, timeout=15)
+    response = retry_request(
+        "ESPN injuries",
+        lambda: requests.get(ESPN_INJURIES_URL, timeout=30),
+    )
     response.raise_for_status()
     return response.json()
 
