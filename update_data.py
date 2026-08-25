@@ -77,6 +77,7 @@ NBA_SCHEDULE_TIMEZONE = ZoneInfo("America/New_York")
 QA_SNAPSHOT_DATE = os.getenv("NBA_QA_DATE", "").strip()
 STORAGE_MANIFEST_PATH = os.getenv("NBA_STORAGE_MANIFEST", "current.json").strip() or "current.json"
 STORAGE_VERSION_ALIAS = os.getenv("NBA_STORAGE_VERSION", "").strip()
+NBA_PROXY_URL = os.getenv("NBA_PROXY_URL", "").strip() or None
 SLEEP_BETWEEN_REQUESTS = (1.0, 2.0)
 REQUEST_TIMEOUT = 120
 NBA_API_RETRIES = 3
@@ -163,7 +164,7 @@ def load_pipeline_env():
 def configure_runtime_from_env():
     """Refresh runtime options after .env.pipeline has been loaded."""
     global SEASON, PREV_SEASON, ROSTER_SEASON
-    global QA_SNAPSHOT_DATE, STORAGE_MANIFEST_PATH, STORAGE_VERSION_ALIAS
+    global QA_SNAPSHOT_DATE, STORAGE_MANIFEST_PATH, STORAGE_VERSION_ALIAS, NBA_PROXY_URL
 
     SEASON = os.getenv("NBA_STATS_SEASON", season_label(stats_season_start))
     PREV_SEASON = os.getenv(
@@ -177,6 +178,7 @@ def configure_runtime_from_env():
     QA_SNAPSHOT_DATE = os.getenv("NBA_QA_DATE", "").strip()
     STORAGE_MANIFEST_PATH = os.getenv("NBA_STORAGE_MANIFEST", "current.json").strip() or "current.json"
     STORAGE_VERSION_ALIAS = os.getenv("NBA_STORAGE_VERSION", "").strip()
+    NBA_PROXY_URL = os.getenv("NBA_PROXY_URL", "").strip() or None
 
 
 def load_json(filename):
@@ -212,6 +214,15 @@ def retry_request(label, fn, attempts=NBA_API_RETRIES):
             print(f"  ⚠️ {label} failed on attempt {attempt}/{attempts}: {error}")
             print(f"  ↪ Retrying in {delay}s...")
             time.sleep(delay)
+
+def nba_endpoint_kwargs():
+    kwargs = {
+        "headers": NBA_HEADERS,
+        "timeout": REQUEST_TIMEOUT,
+    }
+    if NBA_PROXY_URL:
+        kwargs["proxy"] = NBA_PROXY_URL
+    return kwargs
 
 def safe_round(val, digits=2):
     """Round only if val is a valid number."""
@@ -263,8 +274,7 @@ def fetch_raw_player_stats():
             season=SEASON,
             season_type_all_star="Regular Season",
             per_mode_detailed="Totals",
-            headers=NBA_HEADERS,
-            timeout=REQUEST_TIMEOUT,
+            **nba_endpoint_kwargs(),
         ).get_data_frames()[0],
     )
     return df
@@ -276,7 +286,7 @@ def fetch_raw_team_stats():
         lambda: leaguedashteamstats.LeagueDashTeamStats(
             season=SEASON, season_type_all_star="Regular Season",
             measure_type_detailed_defense="Base", per_mode_detailed="PerGame",
-            rank="Y", headers=NBA_HEADERS, timeout=REQUEST_TIMEOUT,
+            rank="Y", **nba_endpoint_kwargs(),
         ).get_data_frames()[0],
     )
     random_sleep()
@@ -285,7 +295,7 @@ def fetch_raw_team_stats():
         lambda: leaguedashteamstats.LeagueDashTeamStats(
             season=SEASON, season_type_all_star="Regular Season",
             measure_type_detailed_defense="Opponent", per_mode_detailed="PerGame",
-            rank="Y", headers=NBA_HEADERS, timeout=REQUEST_TIMEOUT,
+            rank="Y", **nba_endpoint_kwargs(),
         ).get_data_frames()[0],
     )
     return df_off, df_def
@@ -298,8 +308,7 @@ def fetch_raw_game_logs(season, season_type="Regular Season"):
             season=season,
             season_type_all_star=season_type,
             player_or_team_abbreviation="P",
-            headers=NBA_HEADERS,
-            timeout=REQUEST_TIMEOUT,
+            **nba_endpoint_kwargs(),
         ).get_data_frames()[0],
     )
     print(f"  📦 {len(df)} total game log rows")
@@ -317,7 +326,7 @@ def fetch_raw_rosters():
                 f"{team_abbr} roster",
                 lambda: commonteamroster.CommonTeamRoster(
                     team_id=team_id, season=ROSTER_SEASON,
-                    headers=NBA_HEADERS, timeout=REQUEST_TIMEOUT,
+                    **nba_endpoint_kwargs(),
                 ).get_data_frames()[0],
             )
 
@@ -372,7 +381,7 @@ def fetch_raw_schedule():
                 f"Schedule {date}",
                 lambda: scoreboardv2.ScoreboardV2(
                     game_date=date, league_id="00", day_offset=0,
-                    headers=NBA_HEADERS, timeout=REQUEST_TIMEOUT,
+                    **nba_endpoint_kwargs(),
                 ),
             )
             games = scoreboard.get_normalized_dict()["GameHeader"]
@@ -405,7 +414,7 @@ def fetch_raw_standings():
         "Standings",
         lambda: leaguestandings.LeagueStandings(
             league_id="00", season=SEASON,
-            headers=NBA_HEADERS, timeout=REQUEST_TIMEOUT,
+            **nba_endpoint_kwargs(),
         ).get_data_frames()[0],
     )
 

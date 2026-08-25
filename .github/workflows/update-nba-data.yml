@@ -2,10 +2,11 @@ name: Update NBA data
 
 on:
   workflow_dispatch:
-  schedule:
-    # GitHub schedules use UTC. The job below gates execution by
-    # America/New_York time so daylight saving changes do not shift updates.
-    - cron: "0 0-1,14-23 * * *"
+  # Re-enable after NBA_PROXY_URL is confirmed working in GitHub Actions.
+  # schedule:
+  #   # GitHub schedules use UTC. The job below gates execution by
+  #   # America/New_York time so daylight saving changes do not shift updates.
+  #   - cron: "0 0-1,14-23 * * *"
 
 permissions:
   contents: read
@@ -23,6 +24,7 @@ jobs:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
       SUPABASE_STORAGE_BUCKET: ${{ secrets.SUPABASE_STORAGE_BUCKET }}
+      NBA_PROXY_URL: ${{ secrets.NBA_PROXY_URL }}
       NBA_STORAGE_MANIFEST: current.json
       NBA_WRITE_LOCAL_DATA: "false"
 
