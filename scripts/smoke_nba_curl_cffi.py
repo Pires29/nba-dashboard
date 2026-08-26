@@ -1,31 +1,23 @@
-import os
+from datetime import datetime, timedelta
 
-from curl_cffi import requests
+from update_data import (
+    PLAYER_STATS_PARAMS,
+    ROSTER_SEASON,
+    SEASON,
+    TEAM_ABBREV_MAP,
+    nba_proxy_mapping,
+    nba_result_set_dataframe,
+    nba_stats_get_json,
+)
 
 
-NBA_STATS_URL = "https://stats.nba.com/stats/leaguedashplayerstats"
-
-NBA_HEADERS = {
-    "Accept": "application/json, text/plain, */*",
-    "Accept-Language": "en-US,en;q=0.9",
-    "Origin": "https://www.nba.com",
-    "Referer": "https://www.nba.com/",
-    "x-nba-stats-origin": "stats",
-    "x-nba-stats-token": "true",
-}
-
-PLAYER_STATS_PARAMS = {
-    "College": "",
+TEAM_STATS_PARAMS = {
     "Conference": "",
-    "Country": "",
     "DateFrom": "",
     "DateTo": "",
     "Division": "",
-    "DraftPick": "",
-    "DraftYear": "",
     "GameScope": "",
     "GameSegment": "",
-    "Height": "",
     "LastNGames": "0",
     "LeagueID": "00",
     "Location": "",
@@ -35,46 +27,76 @@ PLAYER_STATS_PARAMS = {
     "Outcome": "",
     "PORound": "0",
     "PaceAdjust": "N",
-    "PerMode": "Totals",
+    "PerMode": "PerGame",
     "Period": "0",
     "PlayerExperience": "",
     "PlayerPosition": "",
     "PlusMinus": "N",
-    "Rank": "N",
-    "Season": os.getenv("NBA_STATS_SEASON", "2025-26"),
+    "Rank": "Y",
+    "Season": SEASON,
     "SeasonSegment": "",
     "SeasonType": "Regular Season",
     "ShotClockRange": "",
     "StarterBench": "",
     "TeamID": "0",
-    "TwoWay": "",
+    "TwoWay": "0",
     "VsConference": "",
     "VsDivision": "",
-    "Weight": "",
+}
+
+GAME_LOG_PARAMS = {
+    "Counter": "0",
+    "DateFrom": "",
+    "DateTo": "",
+    "Direction": "ASC",
+    "LeagueID": "00",
+    "PlayerOrTeam": "P",
+    "Season": SEASON,
+    "SeasonType": "Regular Season",
+    "Sorter": "DATE",
+}
+
+STANDINGS_PARAMS = {
+    "LeagueID": "00",
+    "Season": SEASON,
+    "SeasonType": "Regular Season",
+}
+
+ROSTER_PARAMS = {
+    "LeagueID": "00",
+    "Season": ROSTER_SEASON,
+    "TeamID": str(next(iter(TEAM_ABBREV_MAP))),
 }
 
 
+def count_first_result_set(endpoint, params):
+    payload = nba_stats_get_json(endpoint, params)
+    df = nba_result_set_dataframe(payload)
+    print(f"✅ {endpoint}: {len(df)} rows")
+
+
+def smoke_all():
+    today = datetime.now().strftime("%m/%d/%Y")
+    tomorrow = (datetime.now() + timedelta(days=1)).strftime("%m/%d/%Y")
+    tests = [
+        ("leaguedashplayerstats", {**PLAYER_STATS_PARAMS, "Season": SEASON}),
+        ("leaguedashteamstats", TEAM_STATS_PARAMS),
+        ("leaguegamelog", GAME_LOG_PARAMS),
+        ("leaguestandings", STANDINGS_PARAMS),
+        ("commonteamroster", ROSTER_PARAMS),
+        ("scoreboardv2", {"DayOffset": "0", "GameDate": today, "LeagueID": "00"}),
+        ("scoreboardv2", {"DayOffset": "0", "GameDate": tomorrow, "LeagueID": "00"}),
+    ]
+
+    for endpoint, params in tests:
+        count_first_result_set(endpoint, params)
+
+
 def main():
-    proxy = os.getenv("NBA_PROXY_URL", "").strip()
-    proxies = {"http": proxy, "https": proxy} if proxy else None
-    print(f"curl_cffi smoke test: proxy {'enabled' if proxy else 'disabled'}")
-
-    response = requests.get(
-        NBA_STATS_URL,
-        params=PLAYER_STATS_PARAMS,
-        headers=NBA_HEADERS,
-        impersonate="chrome",
-        proxies=proxies,
-        timeout=120,
+    print(
+        f"curl_cffi smoke test: proxy {'enabled' if nba_proxy_mapping() else 'disabled'}"
     )
-    print(f"HTTP {response.status_code}")
-    response.raise_for_status()
-
-    payload = response.json()
-    result_sets = payload.get("resultSets") or payload.get("resultSet") or []
-    first_set = result_sets[0] if isinstance(result_sets, list) and result_sets else {}
-    rows = first_set.get("rowSet", [])
-    print(f"curl_cffi NBA smoke test passed: {len(rows)} player rows")
+    smoke_all()
 
 
 if __name__ == "__main__":
