@@ -31,6 +31,7 @@ from curl_cffi import requests as curl_requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import UTC, datetime, timedelta
 from collections import defaultdict
+from urllib.parse import urlparse
 from zoneinfo import ZoneInfo
 
 # ============================================================
@@ -978,12 +979,37 @@ def build_props(schedule, raw_rosters, df_player_stats, df_current_logs):
 
 def storage_config():
     load_pipeline_env()
-    url = os.getenv("SUPABASE_URL", "").rstrip("/")
+    raw_url = os.getenv("SUPABASE_URL", "").strip().strip('"').strip("'")
     secret = os.getenv("SUPABASE_SECRET_KEY", "")
-    bucket = os.getenv("SUPABASE_STORAGE_BUCKET", "")
+    bucket = os.getenv("SUPABASE_STORAGE_BUCKET", "").strip().strip('"').strip("'").strip("/")
+    parsed_url = urlparse(raw_url)
+    url = f"{parsed_url.scheme}://{parsed_url.netloc}".rstrip("/")
     if not url or not secret or not bucket:
         raise RuntimeError("SUPABASE_URL, SUPABASE_SECRET_KEY and SUPABASE_STORAGE_BUCKET are required")
+    if not parsed_url.scheme or not parsed_url.netloc:
+        raise RuntimeError("SUPABASE_URL must look like https://PROJECT_REF.supabase.co")
+    if "/" in bucket:
+        raise RuntimeError("SUPABASE_STORAGE_BUCKET must be only the bucket name, for example nba-data")
     return url, secret, bucket
+
+
+def validate_storage_access(config):
+    url, secret, bucket = config
+    response = requests.post(
+        f"{url}/storage/v1/object/list/{bucket}",
+        headers={
+            "apikey": secret,
+            "Authorization": f"Bearer {secret}",
+            "Content-Type": "application/json",
+        },
+        json={"prefix": "", "limit": 1, "offset": 0},
+        timeout=30,
+    )
+    if not response.ok:
+        raise RuntimeError(
+            f"Storage preflight failed for bucket '{bucket}': "
+            f"HTTP {response.status_code} {response.text[:200]}"
+        )
 
 
 def upload_storage_json(path, data, config):
@@ -1190,6 +1216,10 @@ def run():
         print(f"   QA snapshot date: {QA_SNAPSHOT_DATE}")
     print(f"   Storage manifest: {STORAGE_MANIFEST_PATH}")
     print(f"   Local JSON fallback updates: {'enabled' if write_local_data else 'disabled'}")
+
+    storage = storage_config()
+    validate_storage_access(storage)
+    print("   Storage preflight: ok")
 
     # ── 1. Fetch all raw data ──────────────────────────────────────────────
     df_player_stats       = fetch_raw_player_stats();     random_sleep()
