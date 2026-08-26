@@ -49,7 +49,7 @@ jobs:
 
           ny_hour="$(TZ=America/New_York date +%H)"
           case "$ny_hour" in
-            10|15|18|20)
+            10|15|17|18|19|20)
               echo "run_update=true" >> "$GITHUB_OUTPUT"
               ;;
             *)
