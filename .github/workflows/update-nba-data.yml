@@ -10,6 +10,7 @@ on:
         type: choice
         options:
           - smoke
+          - smoke-curl-cffi
           - full
   # Re-enable after NBA_PROXY_URL is confirmed working in GitHub Actions.
   # schedule:
@@ -77,6 +78,10 @@ jobs:
         if: steps.window.outputs.run_update == 'true' && inputs.mode == 'smoke'
         run: |
           python -c "from update_data import fetch_raw_player_stats; df = fetch_raw_player_stats(); print(f'NBA API smoke test passed: {len(df)} player rows')"
+
+      - name: Smoke test NBA API with curl_cffi
+        if: steps.window.outputs.run_update == 'true' && inputs.mode == 'smoke-curl-cffi'
+        run: python scripts/smoke_nba_curl_cffi.py
 
       - name: Publish NBA data snapshot
         if: steps.window.outputs.run_update == 'true' && inputs.mode == 'full'

@@ -1,3 +1,4 @@
+curl_cffi
 nba_api
 pandas
 requests
