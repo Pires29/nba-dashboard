@@ -26,13 +26,14 @@ import os
 import time
 import random
 import requests
+import pandas as pd
+from curl_cffi import requests as curl_requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import UTC, datetime, timedelta
 from collections import defaultdict
 from zoneinfo import ZoneInfo
 
 from nba_api.stats.endpoints import (
-    leaguedashplayerstats,
     leaguegamelog,
     leaguedashteamstats,
     scoreboardv2,
@@ -84,6 +85,7 @@ NBA_API_RETRIES = 3
 NBA_API_RETRY_BASE_SLEEP = 20
 
 ESPN_INJURIES_URL = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/injuries"
+NBA_STATS_BASE_URL = "https://stats.nba.com/stats"
 
 NBA_HEADERS = {
     "Host": "stats.nba.com",
@@ -131,6 +133,44 @@ ESPN_TEAM_NAME_TO_ID = {
 
 # Prop stat keys used throughout
 ALL_PROP_STATS = ["pts", "reb", "ast", "stl", "blk", "tov", "fg3m", "pra", "pa", "pr", "ra"]
+
+PLAYER_STATS_PARAMS = {
+    "College": "",
+    "Conference": "",
+    "Country": "",
+    "DateFrom": "",
+    "DateTo": "",
+    "Division": "",
+    "DraftPick": "",
+    "DraftYear": "",
+    "GameScope": "",
+    "GameSegment": "",
+    "Height": "",
+    "LastNGames": "0",
+    "LeagueID": "00",
+    "Location": "",
+    "MeasureType": "Base",
+    "Month": "0",
+    "OpponentTeamID": "0",
+    "Outcome": "",
+    "PORound": "0",
+    "PaceAdjust": "N",
+    "PerMode": "Totals",
+    "Period": "0",
+    "PlayerExperience": "",
+    "PlayerPosition": "",
+    "PlusMinus": "N",
+    "Rank": "N",
+    "SeasonSegment": "",
+    "SeasonType": "Regular Season",
+    "ShotClockRange": "",
+    "StarterBench": "",
+    "TeamID": "0",
+    "TwoWay": "",
+    "VsConference": "",
+    "VsDivision": "",
+    "Weight": "",
+}
 
 # ============================================================
 # HELPERS
@@ -224,6 +264,36 @@ def nba_endpoint_kwargs():
         kwargs["proxy"] = NBA_PROXY_URL
     return kwargs
 
+def nba_proxy_mapping():
+    if not NBA_PROXY_URL:
+        return None
+    return {"http": NBA_PROXY_URL, "https": NBA_PROXY_URL}
+
+def nba_stats_get_json(endpoint, params):
+    response = curl_requests.get(
+        f"{NBA_STATS_BASE_URL}/{endpoint}",
+        params=params,
+        headers=NBA_HEADERS,
+        impersonate="chrome",
+        proxies=nba_proxy_mapping(),
+        timeout=REQUEST_TIMEOUT,
+    )
+    response.raise_for_status()
+    return response.json()
+
+def nba_result_set_dataframe(payload):
+    result_sets = payload.get("resultSets") or payload.get("resultSet") or []
+    if isinstance(result_sets, dict):
+        result_set = result_sets
+    elif result_sets:
+        result_set = result_sets[0]
+    else:
+        return pd.DataFrame()
+
+    headers = result_set.get("headers", [])
+    rows = result_set.get("rowSet", [])
+    return pd.DataFrame(rows, columns=headers)
+
 def safe_round(val, digits=2):
     """Round only if val is a valid number."""
     try:
@@ -270,12 +340,12 @@ def fetch_raw_player_stats():
     print("\n📊 Fetching player stats (totals)...")
     df = retry_request(
         "Player stats",
-        lambda: leaguedashplayerstats.LeagueDashPlayerStats(
-            season=SEASON,
-            season_type_all_star="Regular Season",
-            per_mode_detailed="Totals",
-            **nba_endpoint_kwargs(),
-        ).get_data_frames()[0],
+        lambda: nba_result_set_dataframe(
+            nba_stats_get_json(
+                "leaguedashplayerstats",
+                {**PLAYER_STATS_PARAMS, "Season": SEASON},
+            ),
+        ),
     )
     return df
 
