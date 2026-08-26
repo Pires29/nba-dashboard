@@ -1,4 +1,5 @@
 import { Geist, Geist_Mono } from "next/font/google";
+import AppToaster from "@/components/AppToaster";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -29,7 +30,10 @@ export default function RootLayout({ children }) {
         <link rel="dns-prefetch" href="https://ak-static.cms.nba.com" />
         <link rel="dns-prefetch" href="https://cdn.nba.com" />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <AppToaster />
+      </body>
     </html>
   );
 }

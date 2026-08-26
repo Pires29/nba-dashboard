@@ -1,6 +1,7 @@
 export const runtime = "nodejs";
 
 import prisma from "../../../../../prisma/prismaClient";
+import { getFavoriteCleanupCutoff } from "@/lib/favoriteCleanup";
 
 export async function DELETE(req) {
   // Verify the secret so this cannot be called by anyone
@@ -11,7 +12,7 @@ export async function DELETE(req) {
 
   const deleted = await prisma.favorite.deleteMany({
     where: {
-      gameDate: { lt: new Date() },
+      gameDate: { lt: getFavoriteCleanupCutoff() },
     },
   });
 

@@ -1,6 +1,5 @@
 "use client";
 
-import AppToaster from "@/components/AppToaster";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useRouter } from "next/navigation";
 import PlayerHeadshotImage from "@/components/PlayerHeadshotImage";
@@ -317,7 +316,6 @@ export default function FavoritesPage() {
         )}
         </div>
       </div>
-      <AppToaster />
     </>
   );
 }

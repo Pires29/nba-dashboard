@@ -159,7 +159,7 @@ function TrialBanner({ userPlan }) {
 
 // ─── Pro Banner ──────────────────────────────────────────────────────────────
 
-function ProBanner({ userPlan, onManage }) {
+function ProBanner({ userPlan, onManage, onRenew, loading }) {
   const renewDate = formatRenewDate(userPlan?.planRenewsAt);
   const daysLeft = getDaysUntil(userPlan?.planRenewsAt);
   const isSeasonPlan = userPlan?.planInterval === "season";
@@ -253,6 +253,13 @@ function ProBanner({ userPlan, onManage }) {
         {!isSeasonPlan && (
           <>
             <div className="flex items-center gap-3 pt-5 border-t border-white/[0.05]">
+              <button
+                onClick={onRenew}
+                disabled={loading}
+                className="px-6 py-2.5 rounded-xl text-[11px] font-mono font-bold uppercase tracking-widest bg-orange-500 hover:bg-orange-400 disabled:opacity-50 text-white transition-all shadow-[0_0_20px_rgba(249,115,22,0.25)]"
+              >
+                {loading ? "Redirecting..." : "Upgrade to Season Pass"}
+              </button>
               <button
                 onClick={onManage}
                 className="px-6 py-2.5 rounded-xl text-[11px] font-mono font-bold uppercase tracking-widest border border-white/10 hover:border-white/20 text-slate-400 hover:text-white transition-all"

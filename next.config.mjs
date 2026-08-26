@@ -34,6 +34,10 @@ const nextConfig = {
         protocol: "https",
         hostname: "cdn.nba.com",
       },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+      },
     ],
   },
 };

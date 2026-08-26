@@ -9,7 +9,7 @@ export function validateCheckoutPlan({ billing, user, prices }) {
     return { valid: false, status: 400, error: "Invalid billing option" };
   }
   if (user.stripeSubscriptionId) {
-    if (user.plan === "trial" && billing === "season") {
+    if ((user.plan === "trial" || user.plan === "pro") && billing === "season") {
       return {
         valid: true,
         priceId: prices[billing],

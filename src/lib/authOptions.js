@@ -2,6 +2,7 @@ import GoogleProviderModule from "next-auth/providers/google";
 import CredentialsProviderModule from "next-auth/providers/credentials";
 import prisma from "../../prisma/prismaClient";
 import { authorizeCredentials } from "@/lib/credentialsAuth";
+import { enrichSessionWithUser } from "@/lib/enrichSessionWithUser";
 import { isValidEmail, normalizeEmail } from "@/lib/security";
 
 const GoogleProvider = GoogleProviderModule.default ?? GoogleProviderModule;
@@ -50,35 +51,7 @@ export const authOptions = {
     },
 
     async session({ session }) {
-      const email = normalizeEmail(session.user?.email);
-      if (!isValidEmail(email)) return session;
-      const dbUser = await prisma.user.findUnique({
-        where: { email },
-      });
-
-      if (dbUser) {
-        const planExpired =
-          dbUser.plan === "pro" &&
-          dbUser.planInterval === "season" &&
-          dbUser.planRenewsAt &&
-          dbUser.planRenewsAt <= new Date();
-
-        if (planExpired) {
-          await prisma.user.update({
-            where: { id: dbUser.id },
-            data: { plan: "free", planRenewsAt: null, planInterval: null },
-          });
-        }
-
-        session.user.id = dbUser.id;
-        session.user.plan = planExpired ? "free" : (dbUser.plan ?? "free");
-        session.user.planRenewsAt = planExpired
-          ? null
-          : (dbUser.planRenewsAt ?? null);
-        session.user.planInterval = planExpired ? null : dbUser.planInterval;
-      }
-
-      return session;
+      return enrichSessionWithUser(session);
     },
   },
 };

@@ -49,14 +49,26 @@ test("trial may buy a season pass while retaining its subscription until payment
   );
 });
 
-test("pro account with an active subscription cannot open another checkout", () => {
-  for (const billing of ["monthly", "season"]) {
-    assert.equal(validateCheckoutPlan({
-      billing,
+test("pro account with an active monthly subscription may buy a season pass", () => {
+  assert.deepEqual(
+    validateCheckoutPlan({
+      billing: "season",
       user: { plan: "pro", stripeSubscriptionId: "sub_active" },
       prices,
-    }).status, 409);
-  }
+    }),
+    {
+      valid: true,
+      priceId: "price_season",
+      mode: "payment",
+      applyTrial: false,
+      priorSubscriptionId: "sub_active",
+    },
+  );
+  assert.equal(validateCheckoutPlan({
+    billing: "monthly",
+    user: { plan: "pro", stripeSubscriptionId: "sub_active" },
+    prices,
+  }).status, 409);
 });
 
 test("active season pass cannot open another checkout without a subscription id", () => {

@@ -44,7 +44,7 @@ export function LoginForm() {
       title="Welcome back"
       subtitle="Sign in to your account to continue"
     >
-      <form onSubmit={handleLogin} className="flex flex-col gap-4">
+      <form onSubmit={handleLogin} className="flex flex-col gap-3 sm:gap-4">
         <AuthInput
           id="email"
           type="email"
@@ -71,7 +71,7 @@ export function LoginForm() {
             id="password"
             type="password"
             required
-            className="w-full px-3 py-2.5 rounded-lg bg-[#0A1120] border border-white/[0.08] text-slate-200 text-sm font-mono placeholder:text-slate-700 focus:outline-none focus:border-orange-500/40 focus:ring-1 focus:ring-orange-500/20 transition-all"
+            className="w-full rounded-lg border border-white/[0.08] bg-[#0A1120] px-3 py-2 text-sm font-mono text-slate-200 transition-all placeholder:text-slate-700 focus:border-orange-500/40 focus:outline-none focus:ring-1 focus:ring-orange-500/20 sm:py-2.5"
           />
         </div>
 
@@ -85,7 +85,7 @@ export function LoginForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-2.5 rounded-lg bg-orange-500 hover:bg-orange-400 disabled:opacity-50 text-white text-[12px] font-mono font-bold uppercase tracking-widest transition-all duration-150 shadow-[0_0_20px_rgba(249,115,22,0.25)] hover:shadow-[0_0_28px_rgba(249,115,22,0.4)]"
+          className="w-full rounded-lg bg-orange-500 py-2.5 font-mono text-[12px] font-bold uppercase tracking-widest text-white shadow-[0_0_20px_rgba(249,115,22,0.25)] transition-all duration-150 hover:bg-orange-400 hover:shadow-[0_0_28px_rgba(249,115,22,0.4)] disabled:opacity-50"
         >
           {loading ? "Signing in..." : "Sign in"}
         </button>
@@ -94,8 +94,8 @@ export function LoginForm() {
 
         <button
           type="button"
-          onClick={() => signIn("google", { callbackUrl: "/" })}
-          className="w-full py-2.5 rounded-lg bg-[#0A1120] border border-white/[0.08] hover:border-white/20 text-slate-400 hover:text-white text-[12px] font-mono uppercase tracking-widest transition-all duration-150 flex items-center justify-center gap-2"
+          onClick={() => signIn("google", { callbackUrl })}
+          className="flex w-full items-center justify-center gap-2 rounded-lg border border-white/[0.08] bg-[#0A1120] py-2.5 font-mono text-[12px] uppercase tracking-widest text-slate-400 transition-all duration-150 hover:border-white/20 hover:text-white"
         >
           <GoogleIcon />
           Continue with Google
@@ -104,7 +104,7 @@ export function LoginForm() {
         <p className="text-center text-[11px] font-mono text-slate-600 mt-1">
           No account?{" "}
           <Link
-            href="/signup"
+            href={callbackUrl === "/" ? "/signup" : `/signup?callbackUrl=${encodeURIComponent(callbackUrl)}`}
             className="text-orange-500/70 hover:text-orange-400 transition-colors"
           >
             Sign up

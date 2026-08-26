@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { authorizeCredentials } from "../src/lib/credentialsAuth.js";
+import { enrichSessionWithUser } from "../src/lib/enrichSessionWithUser.js";
 
 const user = {
   id: "user_1",
@@ -49,4 +50,25 @@ test("credentials authentication rejects invalid passwords and rate-limited atte
     ),
     null,
   );
+});
+
+test("session enrichment keeps the base session when the database lookup fails", async () => {
+  const session = { user: { email: "user@example.com", name: "Test User" } };
+  const result = await enrichSessionWithUser(
+    session,
+    {
+      db: {
+        user: {
+          findUnique: async () => {
+            const error = new Error("database unavailable");
+            error.code = "ENOTFOUND";
+            throw error;
+          },
+        },
+      },
+    },
+  );
+
+  assert.equal(result, session);
+  assert.deepEqual(result.user, { email: "user@example.com", name: "Test User" });
 });

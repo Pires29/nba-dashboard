@@ -3,18 +3,21 @@
 import { useState } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   AuthLayout,
   AuthInput,
   Divider,
   GoogleIcon,
 } from "@/components/AuthLayout";
+import { safeInternalPath } from "@/lib/security";
 
 export function SignupForm() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = safeInternalPath(searchParams.get("callbackUrl"), "/");
 
   const handleSignup = async (e) => {
     e.preventDefault();
@@ -60,7 +63,7 @@ export function SignupForm() {
         setError("Account created, but sign-in failed");
         setLoading(false);
       } else {
-        router.push("/");
+        router.push(callbackUrl);
         router.refresh();
       }
     } catch (err) {
@@ -74,7 +77,7 @@ export function SignupForm() {
       title="Create account"
       subtitle="Join to access NBA stats & player props"
     >
-      <form onSubmit={handleSignup} className="flex flex-col gap-4">
+      <form onSubmit={handleSignup} className="flex flex-col gap-3 sm:gap-4">
         <AuthInput
           id="name"
           type="text"
@@ -114,12 +117,12 @@ export function SignupForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-2.5 rounded-lg bg-orange-500 hover:bg-orange-400 disabled:opacity-50 text-white text-[12px] font-mono font-bold uppercase tracking-widest transition-all duration-150 shadow-[0_0_20px_rgba(249,115,22,0.25)] hover:shadow-[0_0_28px_rgba(249,115,22,0.4)]"
+          className="w-full rounded-lg bg-orange-500 py-2.5 font-mono text-[12px] font-bold uppercase tracking-widest text-white shadow-[0_0_20px_rgba(249,115,22,0.25)] transition-all duration-150 hover:bg-orange-400 hover:shadow-[0_0_28px_rgba(249,115,22,0.4)] disabled:opacity-50"
         >
           {loading ? "Creating account..." : "Create Account"}
         </button>
 
-        <p className="text-center text-[10px] font-mono text-slate-600 leading-relaxed">
+        <p className="text-center font-mono text-[10px] leading-relaxed text-slate-600">
           By creating an account, you agree to our{" "}
           <Link
             href="/terms"
@@ -140,17 +143,17 @@ export function SignupForm() {
 
         <button
           type="button"
-          onClick={() => signIn("google", { callbackUrl: "/" })}
-          className="w-full py-2.5 rounded-lg bg-[#0A1120] border border-white/[0.08] hover:border-white/20 text-slate-400 hover:text-white text-[12px] font-mono uppercase tracking-widest transition-all duration-150 flex items-center justify-center gap-2"
+          onClick={() => signIn("google", { callbackUrl })}
+          className="flex w-full items-center justify-center gap-2 rounded-lg border border-white/[0.08] bg-[#0A1120] py-2.5 font-mono text-[12px] uppercase tracking-widest text-slate-400 transition-all duration-150 hover:border-white/20 hover:text-white"
         >
           <GoogleIcon />
           Sign up with Google
         </button>
 
-        <p className="text-center text-[11px] font-mono text-slate-600 mt-1">
+        <p className="mt-0 text-center font-mono text-[11px] text-slate-600 sm:mt-1">
           Already have an account?{" "}
           <Link
-            href="/login"
+            href={callbackUrl === "/" ? "/login" : `/login?callbackUrl=${encodeURIComponent(callbackUrl)}`}
             className="text-orange-500/70 hover:text-orange-400 transition-colors"
           >
             Sign in

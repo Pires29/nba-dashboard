@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 export const AuthLayout = ({ title, subtitle, children }) => (
-  <div className="min-h-screen bg-gradient-to-b from-[#0D1B2E] to-[#060E1A] flex items-center justify-center px-4 relative">
+  <div className="relative flex min-h-screen w-full overflow-x-hidden bg-gradient-to-b from-[#0D1B2E] to-[#060E1A] px-4 py-5 sm:py-10">
     <div
       className="fixed inset-0 pointer-events-none opacity-10"
       style={{
@@ -10,13 +10,13 @@ export const AuthLayout = ({ title, subtitle, children }) => (
         backgroundSize: "40px 40px",
       }}
     />
-    <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full bg-orange-500/5 blur-3xl pointer-events-none" />
+    <div className="absolute top-1/3 left-1/2 h-96 w-[min(24rem,100vw)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-orange-500/5 blur-3xl pointer-events-none" />
 
-    <div className="relative z-10 w-full max-w-sm">
+    <div className="relative z-10 mx-auto my-auto w-full min-w-0 max-w-sm">
       {/* Back button */}
       <Link
         href="/"
-        className="flex items-center gap-1.5 mb-6 text-slate-600 hover:text-slate-400 transition-colors w-fit group"
+        className="mb-4 flex w-fit items-center gap-1.5 text-slate-600 transition-colors hover:text-slate-400 sm:mb-6 group"
       >
         <svg
           width="14"
@@ -37,7 +37,7 @@ export const AuthLayout = ({ title, subtitle, children }) => (
       </Link>
 
       {/* Logo */}
-      <div className="flex items-center justify-center gap-2.5 mb-8">
+      <div className="mb-5 flex items-center justify-center gap-2.5 sm:mb-8">
         <div className="w-8 h-8 rounded-lg bg-orange-500 flex items-center justify-center shadow-[0_0_16px_rgba(249,115,22,0.5)]">
           <svg width="16" height="16" viewBox="0 0 14 14" fill="none">
             <circle cx="7" cy="7" r="6" stroke="white" strokeWidth="1.5" />
@@ -54,9 +54,9 @@ export const AuthLayout = ({ title, subtitle, children }) => (
       </div>
 
       {/* Card */}
-      <div className="relative rounded-2xl border border-white/[0.07] bg-gradient-to-b from-[#162035] to-[#0F1828] shadow-[0_24px_60px_rgba(0,0,0,0.6)] overflow-hidden p-6">
+      <div className="relative overflow-hidden rounded-2xl border border-white/[0.07] bg-gradient-to-b from-[#162035] to-[#0F1828] p-5 shadow-[0_24px_60px_rgba(0,0,0,0.6)] sm:p-6">
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-orange-500 via-amber-400 to-transparent" />
-        <div className="mb-6">
+        <div className="mb-5 sm:mb-6">
           <h1 className="text-xl font-black text-white tracking-tight">
             {title}
           </h1>
@@ -71,7 +71,7 @@ export const AuthLayout = ({ title, subtitle, children }) => (
 );
 
 export const AuthInput = ({ id, type, label, placeholder, required }) => (
-  <div className="flex flex-col gap-1.5">
+  <div className="flex flex-col gap-1 sm:gap-1.5">
     <label
       htmlFor={id}
       className="text-[11px] font-mono uppercase tracking-widest text-slate-500"
@@ -84,7 +84,7 @@ export const AuthInput = ({ id, type, label, placeholder, required }) => (
       type={type}
       placeholder={placeholder}
       required={required}
-      className="w-full px-3 py-2.5 rounded-lg bg-[#0A1120] border border-white/[0.08] text-slate-200 text-sm font-mono placeholder:text-slate-700 focus:outline-none focus:border-orange-500/40 focus:ring-1 focus:ring-orange-500/20 transition-all"
+      className="w-full rounded-lg border border-white/[0.08] bg-[#0A1120] px-3 py-2 text-sm font-mono text-slate-200 transition-all placeholder:text-slate-700 focus:border-orange-500/40 focus:outline-none focus:ring-1 focus:ring-orange-500/20 sm:py-2.5"
     />
   </div>
 );

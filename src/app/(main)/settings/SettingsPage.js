@@ -131,6 +131,7 @@ export default function SettingsPage({ session }) {
   const [cancelLoading, setCancelLoading] = useState(false);
   const [cancelled, setCancelled] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [seasonLoading, setSeasonLoading] = useState(false);
   const [actionError, setActionError] = useState("");
   const router = useRouter();
 
@@ -161,7 +162,7 @@ export default function SettingsPage({ session }) {
         return;
       }
       setShowDeleteModal(false);
-      await signOut({ callbackUrl: "/" });
+      await signOut({ callbackUrl: "/?signedOut=1" });
     } catch (err) {
       setActionError("Unable to connect. Please try again.");
     } finally {
@@ -186,6 +187,28 @@ export default function SettingsPage({ session }) {
       setActionError("Unable to connect. Please try again.");
     } finally {
       setCancelLoading(false);
+    }
+  };
+
+  const handleSeasonUpgrade = async () => {
+    setSeasonLoading(true);
+    setActionError("");
+    try {
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ billing: "season" }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (data.url) {
+        window.location.href = data.url;
+        return;
+      }
+      setActionError(data.error || "Unable to start season checkout");
+    } catch (err) {
+      setActionError("Unable to connect. Please try again.");
+    } finally {
+      setSeasonLoading(false);
     }
   };
 
@@ -278,9 +301,9 @@ export default function SettingsPage({ session }) {
             />
             <SectionLabel>Plan</SectionLabel>
 
-            <div className="flex items-center justify-between mb-4">
+            <div className="mb-4">
               <div>
-                <div className="flex items-center gap-2 mb-1">
+                <div className="mb-2 flex flex-wrap items-center gap-2">
                   <span
                     className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold uppercase tracking-widest ${hasSubscription ? "bg-orange-500/15 text-orange-400 border border-orange-500/20" : "bg-slate-700/50 text-slate-400 border border-white/10"}`}
                   >
@@ -333,20 +356,27 @@ export default function SettingsPage({ session }) {
             </div>
 
             {hasSubscription && !isSeasonPlan && !cancelled ? (
-              <div className="flex flex-col gap-3">
-                <p className="text-[11px] font-mono text-slate-600 leading-relaxed">
-                  By cancelling, you&apos;ll keep Pro access until{" "}
-                  <span className="text-slate-400">
-                    {renewsAt ?? "the end of your current period"}
-                  </span>
-                  . After that, you&apos;ll automatically switch to the Free plan.
-                </p>
+              <div className="space-y-2.5">
+                <button
+                  onClick={handleSeasonUpgrade}
+                  disabled={seasonLoading}
+                  className="w-full py-2.5 rounded-xl bg-orange-500 hover:bg-orange-400 disabled:opacity-50 text-white text-[11px] font-mono font-bold uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(249,115,22,0.22)]"
+                >
+                  {seasonLoading ? "Redirecting..." : "Upgrade to Season Pass"}
+                </button>
                 <button
                   onClick={() => setShowCancelModal(true)}
                   className="w-full py-2.5 rounded-xl border border-red-500/20 hover:border-red-500/30 hover:bg-red-500/5 text-red-400 text-[11px] font-mono uppercase tracking-widest transition-all"
                 >
                   Cancel subscription
                 </button>
+                <p className="text-[10px] font-mono leading-relaxed text-slate-600">
+                  Cancelling keeps Pro access until{" "}
+                  <span className="text-slate-400">
+                    {renewsAt ?? "the end of your current period"}
+                  </span>
+                  .
+                </p>
               </div>
             ) : !hasSubscription ? (
               <a
