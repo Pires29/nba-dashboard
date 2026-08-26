@@ -2,6 +2,15 @@ name: Update NBA data
 
 on:
   workflow_dispatch:
+    inputs:
+      mode:
+        description: "Run a quick NBA API smoke test or publish the full dataset"
+        required: true
+        default: smoke
+        type: choice
+        options:
+          - smoke
+          - full
   # Re-enable after NBA_PROXY_URL is confirmed working in GitHub Actions.
   # schedule:
   #   # GitHub schedules use UTC. The job below gates execution by
@@ -64,6 +73,11 @@ jobs:
         if: steps.window.outputs.run_update == 'true'
         run: pip install -r requirements.txt
 
+      - name: Smoke test NBA API
+        if: steps.window.outputs.run_update == 'true' && inputs.mode == 'smoke'
+        run: |
+          python -c "from update_data import fetch_raw_player_stats; df = fetch_raw_player_stats(); print(f'NBA API smoke test passed: {len(df)} player rows')"
+
       - name: Publish NBA data snapshot
-        if: steps.window.outputs.run_update == 'true'
+        if: steps.window.outputs.run_update == 'true' && inputs.mode == 'full'
         run: python update_data.py
