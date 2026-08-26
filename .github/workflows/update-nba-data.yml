@@ -10,7 +10,6 @@ on:
         type: choice
         options:
           - smoke
-          - smoke-curl-cffi-all
           - full
   schedule:
     # GitHub schedules use UTC. The job below gates execution by
@@ -33,7 +32,6 @@ jobs:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
       SUPABASE_STORAGE_BUCKET: ${{ secrets.SUPABASE_STORAGE_BUCKET }}
-      NBA_PROXY_URL: ${{ secrets.NBA_PROXY_URL }}
       NBA_STORAGE_MANIFEST: current.json
       NBA_WRITE_LOCAL_DATA: "false"
 
@@ -77,10 +75,6 @@ jobs:
         if: steps.window.outputs.run_update == 'true' && inputs.mode == 'smoke'
         run: |
           python -c "from update_data import fetch_raw_player_stats; df = fetch_raw_player_stats(); print(f'NBA API smoke test passed: {len(df)} player rows')"
-
-      - name: Smoke test all NBA API endpoints with curl_cffi
-        if: steps.window.outputs.run_update == 'true' && inputs.mode == 'smoke-curl-cffi-all'
-        run: python scripts/smoke_nba_curl_cffi.py
 
       - name: Publish NBA data snapshot
         if: steps.window.outputs.run_update == 'true' && inputs.mode == 'full'

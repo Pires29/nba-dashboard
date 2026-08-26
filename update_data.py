@@ -71,7 +71,6 @@ NBA_SCHEDULE_TIMEZONE = ZoneInfo("America/New_York")
 QA_SNAPSHOT_DATE = os.getenv("NBA_QA_DATE", "").strip()
 STORAGE_MANIFEST_PATH = os.getenv("NBA_STORAGE_MANIFEST", "current.json").strip() or "current.json"
 STORAGE_VERSION_ALIAS = os.getenv("NBA_STORAGE_VERSION", "").strip()
-NBA_PROXY_URL = os.getenv("NBA_PROXY_URL", "").strip() or None
 SLEEP_BETWEEN_REQUESTS = (1.0, 2.0)
 REQUEST_TIMEOUT = 120
 NBA_API_RETRIES = 3
@@ -244,7 +243,7 @@ def load_pipeline_env():
 def configure_runtime_from_env():
     """Refresh runtime options after .env.pipeline has been loaded."""
     global SEASON, PREV_SEASON, ROSTER_SEASON
-    global QA_SNAPSHOT_DATE, STORAGE_MANIFEST_PATH, STORAGE_VERSION_ALIAS, NBA_PROXY_URL
+    global QA_SNAPSHOT_DATE, STORAGE_MANIFEST_PATH, STORAGE_VERSION_ALIAS
 
     SEASON = os.getenv("NBA_STATS_SEASON", season_label(stats_season_start))
     PREV_SEASON = os.getenv(
@@ -258,7 +257,6 @@ def configure_runtime_from_env():
     QA_SNAPSHOT_DATE = os.getenv("NBA_QA_DATE", "").strip()
     STORAGE_MANIFEST_PATH = os.getenv("NBA_STORAGE_MANIFEST", "current.json").strip() or "current.json"
     STORAGE_VERSION_ALIAS = os.getenv("NBA_STORAGE_VERSION", "").strip()
-    NBA_PROXY_URL = os.getenv("NBA_PROXY_URL", "").strip() or None
 
 
 def load_json(filename):
@@ -295,18 +293,12 @@ def retry_request(label, fn, attempts=NBA_API_RETRIES):
             print(f"  ↪ Retrying in {delay}s...")
             time.sleep(delay)
 
-def nba_proxy_mapping():
-    if not NBA_PROXY_URL:
-        return None
-    return {"http": NBA_PROXY_URL, "https": NBA_PROXY_URL}
-
 def nba_stats_get_json(endpoint, params):
     response = curl_requests.get(
         f"{NBA_STATS_BASE_URL}/{endpoint}",
         params=params,
         headers=NBA_HEADERS,
         impersonate="chrome",
-        proxies=nba_proxy_mapping(),
         timeout=REQUEST_TIMEOUT,
     )
     response.raise_for_status()
