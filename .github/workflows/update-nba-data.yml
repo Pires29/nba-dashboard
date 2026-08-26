@@ -12,11 +12,10 @@ on:
           - smoke
           - smoke-curl-cffi-all
           - full
-  # Re-enable after NBA_PROXY_URL is confirmed working in GitHub Actions.
-  # schedule:
-  #   # GitHub schedules use UTC. The job below gates execution by
-  #   # America/New_York time so daylight saving changes do not shift updates.
-  #   - cron: "0 0-1,14-23 * * *"
+  schedule:
+    # GitHub schedules use UTC. The job below gates execution by
+    # America/New_York time so daylight saving changes do not shift updates.
+    - cron: "0 0-1,14-23 * * *"
 
 permissions:
   contents: read
