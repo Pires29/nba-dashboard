@@ -17,7 +17,7 @@ OUTPUT (minified JSON):
   game_logs_playoffs.json   → { [playerId]: [{ gid, date, opp, pts, reb, ast, stl, blk, tov, min }] }
 
 Dependencies:
-  pip install nba_api requests pandas
+  pip install curl_cffi requests pandas
 """
 
 import json
@@ -32,14 +32,6 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import UTC, datetime, timedelta
 from collections import defaultdict
 from zoneinfo import ZoneInfo
-
-from nba_api.stats.endpoints import (
-    leaguegamelog,
-    leaguedashteamstats,
-    scoreboardv2,
-    leaguestandings,
-    commonteamroster,
-)
 
 # ============================================================
 # CONFIG
@@ -172,6 +164,53 @@ PLAYER_STATS_PARAMS = {
     "Weight": "",
 }
 
+TEAM_STATS_PARAMS = {
+    "Conference": "",
+    "DateFrom": "",
+    "DateTo": "",
+    "Division": "",
+    "GameScope": "",
+    "GameSegment": "",
+    "LastNGames": "0",
+    "LeagueID": "00",
+    "Location": "",
+    "MeasureType": "Base",
+    "Month": "0",
+    "OpponentTeamID": "0",
+    "Outcome": "",
+    "PORound": "0",
+    "PaceAdjust": "N",
+    "PerMode": "PerGame",
+    "Period": "0",
+    "PlayerExperience": "",
+    "PlayerPosition": "",
+    "PlusMinus": "N",
+    "Rank": "Y",
+    "SeasonSegment": "",
+    "SeasonType": "Regular Season",
+    "ShotClockRange": "",
+    "StarterBench": "",
+    "TeamID": "0",
+    "TwoWay": "0",
+    "VsConference": "",
+    "VsDivision": "",
+}
+
+GAME_LOG_PARAMS = {
+    "Counter": "0",
+    "DateFrom": "",
+    "DateTo": "",
+    "Direction": "ASC",
+    "LeagueID": "00",
+    "PlayerOrTeam": "P",
+    "Sorter": "DATE",
+}
+
+STANDINGS_PARAMS = {
+    "LeagueID": "00",
+    "SeasonType": "Regular Season",
+}
+
 # ============================================================
 # HELPERS
 # ============================================================
@@ -254,15 +293,6 @@ def retry_request(label, fn, attempts=NBA_API_RETRIES):
             print(f"  ⚠️ {label} failed on attempt {attempt}/{attempts}: {error}")
             print(f"  ↪ Retrying in {delay}s...")
             time.sleep(delay)
-
-def nba_endpoint_kwargs():
-    kwargs = {
-        "headers": NBA_HEADERS,
-        "timeout": REQUEST_TIMEOUT,
-    }
-    if NBA_PROXY_URL:
-        kwargs["proxy"] = NBA_PROXY_URL
-    return kwargs
 
 def nba_proxy_mapping():
     if not NBA_PROXY_URL:
@@ -353,20 +383,22 @@ def fetch_raw_team_stats():
     print("\n🏀 Fetching team stats (offense + defense)...")
     df_off = retry_request(
         "Team offense stats",
-        lambda: leaguedashteamstats.LeagueDashTeamStats(
-            season=SEASON, season_type_all_star="Regular Season",
-            measure_type_detailed_defense="Base", per_mode_detailed="PerGame",
-            rank="Y", **nba_endpoint_kwargs(),
-        ).get_data_frames()[0],
+        lambda: nba_result_set_dataframe(
+            nba_stats_get_json(
+                "leaguedashteamstats",
+                {**TEAM_STATS_PARAMS, "Season": SEASON, "MeasureType": "Base"},
+            ),
+        ),
     )
     random_sleep()
     df_def = retry_request(
         "Team defense stats",
-        lambda: leaguedashteamstats.LeagueDashTeamStats(
-            season=SEASON, season_type_all_star="Regular Season",
-            measure_type_detailed_defense="Opponent", per_mode_detailed="PerGame",
-            rank="Y", **nba_endpoint_kwargs(),
-        ).get_data_frames()[0],
+        lambda: nba_result_set_dataframe(
+            nba_stats_get_json(
+                "leaguedashteamstats",
+                {**TEAM_STATS_PARAMS, "Season": SEASON, "MeasureType": "Opponent"},
+            ),
+        ),
     )
     return df_off, df_def
 
@@ -374,12 +406,12 @@ def fetch_raw_game_logs(season, season_type="Regular Season"):
     print(f"\n🎮 Fetching {season_type.lower()} game logs ({season}) in 1 request...")
     df = retry_request(
         f"{season_type} game logs {season}",
-        lambda: leaguegamelog.LeagueGameLog(
-            season=season,
-            season_type_all_star=season_type,
-            player_or_team_abbreviation="P",
-            **nba_endpoint_kwargs(),
-        ).get_data_frames()[0],
+        lambda: nba_result_set_dataframe(
+            nba_stats_get_json(
+                "leaguegamelog",
+                {**GAME_LOG_PARAMS, "Season": season, "SeasonType": season_type},
+            ),
+        ),
     )
     print(f"  📦 {len(df)} total game log rows")
     return df
@@ -394,10 +426,16 @@ def fetch_raw_rosters():
         try:
             roster_df = retry_request(
                 f"{team_abbr} roster",
-                lambda: commonteamroster.CommonTeamRoster(
-                    team_id=team_id, season=ROSTER_SEASON,
-                    **nba_endpoint_kwargs(),
-                ).get_data_frames()[0],
+                lambda: nba_result_set_dataframe(
+                    nba_stats_get_json(
+                        "commonteamroster",
+                        {
+                            "LeagueID": "00",
+                            "Season": ROSTER_SEASON,
+                            "TeamID": str(team_id),
+                        },
+                    ),
+                ),
             )
 
             raw_rosters[team_id] = roster_df[[
@@ -449,20 +487,21 @@ def fetch_raw_schedule():
         try:
             scoreboard = retry_request(
                 f"Schedule {date}",
-                lambda: scoreboardv2.ScoreboardV2(
-                    game_date=date, league_id="00", day_offset=0,
-                    **nba_endpoint_kwargs(),
+                lambda: nba_result_set_dataframe(
+                    nba_stats_get_json(
+                        "scoreboardv2",
+                        {"DayOffset": "0", "GameDate": date, "LeagueID": "00"},
+                    ),
                 ),
             )
-            games = scoreboard.get_normalized_dict()["GameHeader"]
-            for game in games:
+            for _, game in scoreboard.iterrows():
                 all_games.append({
                     "date": game["GAME_DATE_EST"],
                     "visitor_team_id": game["VISITOR_TEAM_ID"],
                     "home_team_id": game["HOME_TEAM_ID"],
                     "status": game["GAME_STATUS_TEXT"],
                 })
-            print(f"  {date}: {len(games)} games")
+            print(f"  {date}: {len(scoreboard)} games")
         except Exception as e:
             print(f"  ⚠️ Error on {date}: {e}")
         random_sleep()
@@ -482,10 +521,12 @@ def fetch_raw_standings():
     print(f"\n🏆 Fetching standings for {SEASON}...")
     return retry_request(
         "Standings",
-        lambda: leaguestandings.LeagueStandings(
-            league_id="00", season=SEASON,
-            **nba_endpoint_kwargs(),
-        ).get_data_frames()[0],
+        lambda: nba_result_set_dataframe(
+            nba_stats_get_json(
+                "leaguestandings",
+                {**STANDINGS_PARAMS, "Season": SEASON},
+            ),
+        ),
     )
 
 def fetch_raw_injuries():
