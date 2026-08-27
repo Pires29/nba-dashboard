@@ -3,9 +3,14 @@ import Link from "next/link";
 import ProfileMenuClient from "./ProfileMenuClient";
 import { getQaContext } from "@/lib/qa/context";
 import { resolveQaPlan } from "@/lib/qa/plan";
+import SessionExpiredSignOut from "./SessionExpiredSignOut";
 
 const Navbar = async () => {
   const session = await getCurrentSession();
+  if (session?.user?.accountDeleted) {
+    return <SessionExpiredSignOut />;
+  }
+
   const qa = await getQaContext();
   const activePlan = resolveQaPlan(qa?.persona, session?.user?.plan);
   const isFreePlan = activePlan === "free";

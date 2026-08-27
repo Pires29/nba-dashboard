@@ -10,7 +10,9 @@ import {
   normalizeEmail,
   readJson,
   RequestError,
+  validatePassword,
 } from "@/lib/security";
+import { sendVerificationForUser } from "@/lib/emailVerification";
 
 export async function POST(req) {
   try {
@@ -24,16 +26,18 @@ export async function POST(req) {
     const name = typeof body.name === "string" ? body.name.trim() : "";
     const email = normalizeEmail(body.email);
     const password = typeof body.password === "string" ? body.password : "";
+    const flowId = typeof body.flowId === "string" ? body.flowId : "";
 
     if (!name || !email || !password)
       return NextResponse.json({ error: "Campos em falta" }, { status: 400 });
 
-    if (name.length > 100 || password.length > 128)
+    if (name.length > 100)
       return NextResponse.json({ error: "Invalid input" }, { status: 400 });
 
-    if (password.length < 8)
+    const passwordError = validatePassword(password);
+    if (passwordError)
       return NextResponse.json(
-        { error: "Password must be at least 8 characters long" },
+        { error: passwordError },
         { status: 400 },
       );
 
@@ -52,9 +56,11 @@ export async function POST(req) {
 
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    await prisma.user.create({
+    const user = await prisma.user.create({
       data: { name, email, password: hashedPassword },
     });
+
+    await sendVerificationForUser(user, req, { flowId });
 
     return NextResponse.json({ success: true }, { status: 201 });
   } catch (err) {

@@ -11,6 +11,7 @@ import {
   GoogleIcon,
 } from "@/components/AuthLayout";
 import { safeInternalPath } from "@/lib/security";
+import { moveAuthFormFocus } from "@/lib/authFormKeyboard";
 
 export function SignupForm() {
   const [error, setError] = useState(null);
@@ -36,12 +37,13 @@ export function SignupForm() {
 
     setLoading(true);
     setError(null);
+    const flowId = crypto.randomUUID();
 
     try {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, flowId }),
       });
 
       const data = await res.json();
@@ -52,21 +54,12 @@ export function SignupForm() {
         return;
       }
 
-      // Account created — sign in automatically
-      const result = await signIn("credentials", {
-        redirect: false,
-        email,
-        password,
-      });
-
-      if (result?.error) {
-        setError("Account created, but sign-in failed");
-        setLoading(false);
-      } else {
-        router.push(callbackUrl);
-        router.refresh();
-      }
-    } catch (err) {
+      const destination = `/verify-request?email=${encodeURIComponent(email)}&flow=${encodeURIComponent(flowId)}${
+        callbackUrl === "/" ? "" : `&callbackUrl=${encodeURIComponent(callbackUrl)}`
+      }`;
+      router.push(destination);
+      router.refresh();
+    } catch {
       setError("Connection error");
       setLoading(false);
     }
@@ -76,6 +69,7 @@ export function SignupForm() {
     <AuthLayout
       title="Create account"
       subtitle="Join to access NBA stats & player props"
+      backHref="/login"
     >
       <form onSubmit={handleSignup} className="flex flex-col gap-3 sm:gap-4">
         <AuthInput
@@ -84,6 +78,8 @@ export function SignupForm() {
           label="Full Name"
           placeholder="John Doe"
           required
+          data-auth-field
+          onKeyDown={moveAuthFormFocus}
         />
         <AuthInput
           id="email"
@@ -91,6 +87,8 @@ export function SignupForm() {
           label="Email"
           placeholder="m@example.com"
           required
+          data-auth-field
+          onKeyDown={moveAuthFormFocus}
         />
         <AuthInput
           id="password"
@@ -98,6 +96,8 @@ export function SignupForm() {
           label="Password"
           placeholder="Min. 8 characters"
           required
+          data-auth-field
+          onKeyDown={moveAuthFormFocus}
         />
         <AuthInput
           id="confirm-password"
@@ -105,6 +105,8 @@ export function SignupForm() {
           label="Confirm Password"
           placeholder="Repeat password"
           required
+          data-auth-field
+          onKeyDown={moveAuthFormFocus}
         />
 
         {error && (

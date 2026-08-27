@@ -24,6 +24,9 @@ export async function authorizeCredentials(
   const user = await db.user.findUnique({ where: { email } });
   if (!user?.password) return null;
   if (!(await comparePassword(credentials.password, user.password))) return null;
+  if (!user.emailVerifiedAt) {
+    throw new Error("EMAIL_NOT_VERIFIED");
+  }
 
   return {
     id: user.id,

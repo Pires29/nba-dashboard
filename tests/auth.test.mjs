@@ -9,6 +9,7 @@ const user = {
   email: "user@example.com",
   image: null,
   password: "stored-hash",
+  emailVerifiedAt: new Date("2026-08-26T10:00:00Z"),
 };
 
 const dependencies = (overrides = {}) => ({
@@ -52,6 +53,23 @@ test("credentials authentication rejects invalid passwords and rate-limited atte
   );
 });
 
+test("credentials authentication reports unverified emails after a valid password", async () => {
+  await assert.rejects(
+    authorizeCredentials(
+      { email: user.email, password: "correct-password" },
+      {},
+      dependencies({
+        db: {
+          user: {
+            findUnique: async () => ({ ...user, emailVerifiedAt: null }),
+          },
+        },
+      }),
+    ),
+    /EMAIL_NOT_VERIFIED/,
+  );
+});
+
 test("session enrichment keeps the base session when the database lookup fails", async () => {
   const session = { user: { email: "user@example.com", name: "Test User" } };
   const result = await enrichSessionWithUser(
@@ -71,4 +89,23 @@ test("session enrichment keeps the base session when the database lookup fails",
 
   assert.equal(result, session);
   assert.deepEqual(result.user, { email: "user@example.com", name: "Test User" });
+});
+
+test("session enrichment marks sessions invalid when the user no longer exists", async () => {
+  const session = {
+    user: {
+      id: "stale",
+      email: "user@example.com",
+      name: "Test User",
+      plan: "pro",
+    },
+  };
+  const result = await enrichSessionWithUser(session, {
+    db: { user: { findUnique: async () => null } },
+  });
+
+  assert.equal(result, session);
+  assert.equal(result.user.id, undefined);
+  assert.equal(result.user.plan, "free");
+  assert.equal(result.user.accountDeleted, true);
 });

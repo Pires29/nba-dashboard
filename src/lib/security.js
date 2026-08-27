@@ -16,6 +16,18 @@ export function isValidEmail(value) {
   return value.length <= 254 && EMAIL_PATTERN.test(value);
 }
 
+export function validatePassword(value) {
+  if (typeof value !== "string" || value.length > 128) {
+    return "Invalid input";
+  }
+
+  if (value.length < 8) {
+    return "Password must be at least 8 characters long";
+  }
+
+  return null;
+}
+
 export function safeInternalPath(value, fallback = "/") {
   if (typeof value !== "string" || !value.startsWith("/")) return fallback;
   if (value.startsWith("//") || value.includes("\\")) return fallback;
@@ -58,4 +70,3 @@ export function getRequestIp(req) {
   const forwarded = req.headers.get("x-forwarded-for");
   return forwarded?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || "unknown";
 }
-

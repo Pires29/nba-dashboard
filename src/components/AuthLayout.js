@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export const AuthLayout = ({ title, subtitle, children }) => (
+export const AuthLayout = ({ title, subtitle, children, backHref = "/" }) => (
   <div className="relative flex min-h-screen w-full overflow-x-hidden bg-gradient-to-b from-[#0D1B2E] to-[#060E1A] px-4 py-5 sm:py-10">
     <div
       className="fixed inset-0 pointer-events-none opacity-10"
@@ -15,7 +15,7 @@ export const AuthLayout = ({ title, subtitle, children }) => (
     <div className="relative z-10 mx-auto my-auto w-full min-w-0 max-w-sm">
       {/* Back button */}
       <Link
-        href="/"
+        href={backHref}
         className="mb-4 flex w-fit items-center gap-1.5 text-slate-600 transition-colors hover:text-slate-400 sm:mb-6 group"
       >
         <svg
@@ -70,7 +70,7 @@ export const AuthLayout = ({ title, subtitle, children }) => (
   </div>
 );
 
-export const AuthInput = ({ id, type, label, placeholder, required }) => (
+export const AuthInput = ({ id, type, label, placeholder, required, ...props }) => (
   <div className="flex flex-col gap-1 sm:gap-1.5">
     <label
       htmlFor={id}
@@ -84,6 +84,7 @@ export const AuthInput = ({ id, type, label, placeholder, required }) => (
       type={type}
       placeholder={placeholder}
       required={required}
+      {...props}
       className="w-full rounded-lg border border-white/[0.08] bg-[#0A1120] px-3 py-2 text-sm font-mono text-slate-200 transition-all placeholder:text-slate-700 focus:border-orange-500/40 focus:outline-none focus:ring-1 focus:ring-orange-500/20 sm:py-2.5"
     />
   </div>

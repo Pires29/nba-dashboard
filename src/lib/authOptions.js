@@ -28,10 +28,12 @@ export const authOptions = {
   ],
   secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
-    async signIn({ user }) {
+    async signIn({ user, account, profile }) {
       if (!user.email) return false;
       const email = normalizeEmail(user.email);
       if (!isValidEmail(email)) return false;
+      const isVerifiedGoogleEmail =
+        account?.provider === "google" && profile?.email_verified !== false;
 
       const existingUser = await prisma.user.findUnique({
         where: { email },
@@ -43,7 +45,13 @@ export const authOptions = {
             name: user.name,
             email,
             image: user.image,
+            emailVerifiedAt: isVerifiedGoogleEmail ? new Date() : null,
           },
+        });
+      } else if (isVerifiedGoogleEmail && !existingUser.emailVerifiedAt) {
+        await prisma.user.update({
+          where: { id: existingUser.id },
+          data: { emailVerifiedAt: new Date() },
         });
       }
 
