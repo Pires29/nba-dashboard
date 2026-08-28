@@ -1,5 +1,6 @@
 import { getCurrentSession } from "@/lib/getCurrentSession";
 import Link from "next/link";
+import PricingLink from "./PricingLink";
 import ProfileMenuClient from "./ProfileMenuClient";
 import { getQaContext } from "@/lib/qa/context";
 import { resolveQaPlan } from "@/lib/qa/plan";
@@ -50,8 +51,7 @@ const Navbar = async () => {
           )}
           {/* Upgrade button — Free plan only */}
           {isFreePlan && (
-            <Link
-              href="/#pricing"
+            <PricingLink
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-500/10 border border-orange-500/30 hover:bg-orange-500/20 hover:border-orange-500/50 transition-all duration-150 group"
             >
               <svg
@@ -69,7 +69,7 @@ const Navbar = async () => {
               <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-orange-400 group-hover:text-orange-300 transition-colors">
                 Upgrade
               </span>
-            </Link>
+            </PricingLink>
           )}
 
           <ProfileMenuClient session={session} />

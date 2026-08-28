@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { signOut } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
+import PricingLink from "./PricingLink";
 
 const ProfileMenuClient = ({ session }) => {
   const [open, setOpen] = useState(false);
@@ -125,8 +126,7 @@ const ProfileMenuClient = ({ session }) => {
           {/* Menu items */}
           <div className="py-1">
             {/* Manage Plan — new */}
-            <Link
-              href="/#pricing"
+            <PricingLink
               onClick={() => setOpen(false)}
               className="flex items-center gap-3 px-4 py-2.5 hover:bg-orange-500/10 transition-colors group"
             >
@@ -155,7 +155,7 @@ const ProfileMenuClient = ({ session }) => {
                   </span>
                 )}
               </div>
-            </Link>
+            </PricingLink>
 
             {/* Settings */}
             <Link

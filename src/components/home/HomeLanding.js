@@ -71,6 +71,22 @@ export default function HomeLanding({ user }) {
   }, []);
 
   useEffect(() => {
+    const scrollToHash = () => {
+      const id = window.location.hash.slice(1);
+      if (!id) return;
+      window.requestAnimationFrame(() => {
+        document
+          .getElementById(id)
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    };
+
+    scrollToHash();
+    window.addEventListener("hashchange", scrollToHash);
+    return () => window.removeEventListener("hashchange", scrollToHash);
+  }, []);
+
+  useEffect(() => {
     if (searchParams.get("signedOut") !== "1") return;
     if (signedOutToastShown.current) return;
     signedOutToastShown.current = true;
@@ -144,7 +160,7 @@ export default function HomeLanding({ user }) {
   }
 
   return (
-    <div className="overflow-hidden bg-[#060b13] text-white">
+    <div className="overflow-hidden scroll-smooth bg-[#060b13] text-white">
       <div className="pointer-events-none fixed inset-0 opacity-[0.12] [background-image:linear-gradient(rgba(255,255,255,.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.04)_1px,transparent_1px)] [background-size:48px_48px]" />
       <section className="relative mx-auto max-w-[1240px] px-6 pb-20 pt-20 sm:pt-28 lg:pb-28">
         <div className="absolute left-1/2 top-20 h-[420px] w-[720px] -translate-x-1/2 rounded-full bg-orange-500/[0.08] blur-[140px]" />
