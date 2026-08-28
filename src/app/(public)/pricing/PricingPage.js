@@ -35,21 +35,22 @@ const BILLING_OPTIONS = [
     period: "trial",
     badge: "Free",
     badgeColor: "green",
-    description: "Then €3.99/mo · Card required",
-    savings: "Full Pro access, cancel anytime",
+    description: "Then €7.99/mo · Renews automatically",
+    savings: "Full Pro access for 7 days",
   },
   {
     id: "monthly",
     label: "Monthly",
-    price: 3.99,
+    price: 7.99,
     period: "mo",
     badge: null,
-    description: "Billed monthly, cancel anytime",
+    description: "Pay today · Billed monthly",
+    savings: "Skip the trial and start paid access now",
   },
   {
     id: "season",
     label: "NBA Season",
-    price: 29.99,
+    price: 39.99,
     period: "season",
     badge: "One-time",
     badgeColor: "green",
@@ -941,7 +942,7 @@ export default function PricingPage({ userPlan }) {
             </div>
             {!isTrial && selectedBilling === "trial" && (
               <p className="text-center text-[9px] font-mono text-slate-600 mt-2 leading-relaxed">
-                After 7 days, you&apos;ll be charged €3.99/mo automatically.{" "}
+                After 7 days, you&apos;ll be charged €7.99/mo automatically.{" "}
                 <Link
                   href="/terms"
                   className="text-orange-500/60 hover:text-orange-400"

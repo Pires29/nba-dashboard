@@ -14,8 +14,10 @@ const sections = [
       "**Email address** — collected when you register or sign in with Google. Used to identify your account and send service-related communications.",
       "**Password** — if you register with email/password, your password is stored securely in hashed form. We never store or have access to your plain-text password.",
       "**Google account data** — if you sign in with Google, we receive your name and email address from Google. We do not receive or store your Google password.",
-      "**Subscription and billing data** — your payment is processed by Stripe. We do not store your credit card details. We only receive a subscription status (free or pro) and billing period from Stripe.",
-      "**Plan and usage data** — we store which plan you are subscribed to in order to control access to features.",
+      "**Subscription and billing data** — your payment is processed by Stripe. We do not store your credit card details. We receive the information needed to manage your plan, such as customer ID, subscription ID, checkout status, renewal date, trial status, and whether you purchased a monthly plan or Season Pass.",
+      "**Plan and usage data** — we store which plan you are subscribed to in order to control access to features, including the Free plan player limit and Pro access to every available player.",
+      "**Referral data** — if you use a referral code, we may store the code, the referring partner, whether the discount was applied, and the related checkout session.",
+      "**Product analytics data** — if analytics are enabled, we may collect events such as page views, signups, checkout starts, plan changes, and feature usage to understand and improve the product.",
     ],
   },
   {
@@ -26,6 +28,9 @@ const sections = [
       "To authenticate your identity when you log in",
       "To process payments and manage your subscription via Stripe",
       "To provide access to features based on your plan",
+      "To apply referral discounts and attribute creator partner referrals",
+      "To monitor reliability, diagnose issues, and improve the product experience",
+      "To send important service emails, such as verification, password reset, billing, and account notices",
     ],
   },
   {
@@ -35,6 +40,9 @@ const sections = [
       "**Stripe** — payment processing. Stripe is PCI-DSS Level 1 certified. Your payment data is handled exclusively by Stripe. See Stripe's Privacy Policy at stripe.com/privacy.",
       "**Google OAuth** — optional sign-in via Google. If you use this method, Google's Privacy Policy applies to data shared with Google. See policies.google.com/privacy.",
       "**NextAuth.js** — authentication library used to manage sessions securely.",
+      "**PostHog** — product analytics, if enabled. We use analytics to understand aggregate product usage and improve the service. We do not use it to sell personal data.",
+      "**Email provider** — transactional emails, such as email verification and password reset messages.",
+      "**Hosting and database providers** — infrastructure used to run the service, store account data, and keep the application available.",
     ],
   },
   {
@@ -52,7 +60,7 @@ const sections = [
       "**Right to object** — you can object to how we process your data.",
     ],
     footer:
-      "To exercise any of these rights, contact us at privacy@hoopiq.com. We will respond within 30 days.",
+      "To exercise any of these rights, contact us at privacy@propinsight.com. We will respond within 30 days.",
   },
   {
     title: "7. Data retention",
@@ -60,7 +68,7 @@ const sections = [
   },
   {
     title: "8. Cookies",
-    content: `We use a session cookie to keep you logged in. This cookie is strictly necessary for the service to function and does not track you across other websites. We do not use advertising or analytics cookies.`,
+    content: `We use necessary cookies to keep you logged in and protect your session. If product analytics are enabled, analytics cookies or similar technologies may be used to understand how the service is used. We do not use advertising cookies or sell your personal data.`,
   },
   {
     title: "9. Changes to this policy",
@@ -68,7 +76,7 @@ const sections = [
   },
   {
     title: "10. Contact",
-    content: `For any privacy-related questions or requests, contact us at privacy@hoopiq.com.`,
+    content: `For any privacy-related questions or requests, contact us at privacy@propinsight.com.`,
   },
 ];
 

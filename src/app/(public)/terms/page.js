@@ -24,22 +24,24 @@ const sections = [
   },
   {
     title: "4. Free plan",
-    content: `The free plan provides limited access to the service at no cost. We reserve the right to change the features available on the free plan at any time. Free plan access is subject to daily player limits that rotate automatically.`,
+    content: `The free plan provides access to the core service at no cost, limited to 15 featured players. We reserve the right to change the features or player selection available on the free plan at any time. Free plan access is subject to player limits that may rotate automatically.`,
   },
   {
     title: "5. Pro plan and billing",
     content: null,
     list: [
-      "The Pro plan is a paid subscription billed monthly or once per NBA season, as chosen at checkout.",
+      "The monthly Pro plan costs €7.99 per month and renews automatically until cancelled.",
       "A 7-day free trial of the monthly Pro subscription is available to eligible accounts. A payment method is required at checkout.",
-      "After the trial period, you will be charged automatically unless you cancel before the trial ends.",
+      "After the trial period, you will be charged €7.99 per month automatically unless you cancel before the trial ends.",
+      "The Season Pass costs €39.99 as a one-time payment and provides Pro access until June 30. It does not renew automatically.",
+      "Pro access unlocks every available player and removes the Free plan player limit.",
       "All payments are processed securely by Stripe. We do not store your payment details.",
       "Prices are displayed in EUR and are inclusive of any applicable taxes.",
     ],
   },
   {
     title: "6. Cancellation",
-    content: `You may cancel your subscription at any time from your account settings. Cancellation takes effect at the end of your current billing period. You will retain access to Pro features until that date. We do not offer refunds for partial billing periods.`,
+    content: `You may cancel a monthly subscription or trial at any time from your account settings. Cancellation takes effect at the end of your current billing or trial period, and you will retain access to Pro features until that date. The Season Pass is a one-time purchase and cannot be cancelled for future renewal because it does not renew. We do not offer refunds for partial billing periods or unused Season Pass time unless required by law.`,
   },
   {
     title: "7. Acceptable use",
@@ -54,15 +56,15 @@ const sections = [
   },
   {
     title: "8. Intellectual property",
-    content: `All content, design, and code on HoopiQ is owned by us or our licensors. NBA statistics data is sourced from publicly available information. HoopiQ is not affiliated with or endorsed by the NBA or any NBA team.`,
+    content: `All content, design, and code on PropInsight is owned by us or our licensors. Sports statistics data is sourced from publicly available information. PropInsight is not affiliated with or endorsed by the NBA or any NBA team.`,
   },
   {
     title: "9. Disclaimer",
-    content: `The service is provided "as is" without warranties of any kind. We do not guarantee the accuracy, completeness, or timeliness of any data. We are not responsible for any financial losses resulting from use of our platform. Sports betting involves risk — always gamble responsibly.`,
+    content: `The service is provided "as is" without warranties of any kind. We do not guarantee the accuracy, completeness, or timeliness of any data. PropInsight provides research tools and analytics only; we do not guarantee betting outcomes or profits. We are not responsible for any financial losses resulting from use of our platform. Sports betting involves risk. Always gamble responsibly and only where it is legal for you to do so.`,
   },
   {
     title: "10. Limitation of liability",
-    content: `To the maximum extent permitted by law, HoopiQ shall not be liable for any indirect, incidental, or consequential damages arising from your use of the service. Our total liability to you shall not exceed the amount you paid us in the 12 months preceding the claim.`,
+    content: `To the maximum extent permitted by law, PropInsight shall not be liable for any indirect, incidental, or consequential damages arising from your use of the service. Our total liability to you shall not exceed the amount you paid us in the 12 months preceding the claim.`,
   },
   {
     title: "11. Changes to these terms",
@@ -74,7 +76,7 @@ const sections = [
   },
   {
     title: "13. Contact",
-    content: `For any questions about these terms, contact us at legal@hoopiq.com.`,
+    content: `For any questions about these terms, contact us at legal@propinsight.com.`,
   },
 ];
 
