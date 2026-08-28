@@ -15,7 +15,10 @@ import { moveAuthFormFocus } from "@/lib/authFormKeyboard";
 
 export function SignupForm() {
   const [error, setError] = useState(null);
+  const [existingEmail, setExistingEmail] = useState("");
+  const [notice, setNotice] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = safeInternalPath(searchParams.get("callbackUrl"), "/");
@@ -26,6 +29,9 @@ export function SignupForm() {
     const email = e.target.email.value;
     const password = e.target.password.value;
     const confirm = e.target["confirm-password"].value;
+
+    setExistingEmail("");
+    setNotice(null);
 
     if (password !== confirm) return setError("Passwords do not match");
     if (password.length < 8)
@@ -49,6 +55,12 @@ export function SignupForm() {
       const data = await res.json();
 
       if (!res.ok) {
+        if (res.status === 409) {
+          setExistingEmail(email);
+          setError("An account already exists with this email.");
+          setLoading(false);
+          return;
+        }
         setError(data.error || "Failed to create account");
         setLoading(false);
         return;
@@ -62,6 +74,31 @@ export function SignupForm() {
     } catch {
       setError("Connection error");
       setLoading(false);
+    }
+  };
+
+  const resendVerification = async () => {
+    if (!existingEmail || resending) return;
+    setResending(true);
+    setNotice(null);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: existingEmail }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error || "Could not send verification email.");
+        return;
+      }
+      setNotice(data.message || "If this account needs verification, a verification link has been sent.");
+    } catch {
+      setError("Connection error");
+    } finally {
+      setResending(false);
     }
   };
 
@@ -113,6 +150,37 @@ export function SignupForm() {
           <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20">
             <div className="w-1 h-1 rounded-full bg-red-400" />
             <p className="text-[11px] font-mono text-red-400">{error}</p>
+          </div>
+        )}
+
+        {existingEmail && (
+          <div className="rounded-lg border border-orange-500/20 bg-orange-500/10 px-3 py-3">
+            <p className="text-[11px] font-mono leading-relaxed text-orange-300">
+              Try signing in instead. If you created the account but closed the
+              verification screen, resend the verification email.
+            </p>
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+              <Link
+                href={`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`}
+                className="flex-1 rounded-lg border border-white/10 px-3 py-2 text-center font-mono text-[10px] font-bold uppercase tracking-widest text-slate-200 transition-colors hover:border-white/20"
+              >
+                Sign in
+              </Link>
+              <button
+                type="button"
+                onClick={resendVerification}
+                disabled={resending}
+                className="flex-1 rounded-lg bg-orange-500 px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-widest text-white transition-colors hover:bg-orange-400 disabled:opacity-50"
+              >
+                {resending ? "Sending..." : "Resend email"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {notice && (
+          <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2">
+            <p className="text-[11px] font-mono text-emerald-300">{notice}</p>
           </div>
         )}
 
