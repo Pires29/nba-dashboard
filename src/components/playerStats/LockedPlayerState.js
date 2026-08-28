@@ -23,7 +23,7 @@ const LockedPlayerState = ({ playerName, embedded = false }) => (
         <Link href="/props" className="rounded-lg border border-white/10 px-5 py-3 text-sm font-bold text-slate-200 transition hover:bg-white/5">
           View today&apos;s 15 players
         </Link>
-        <Link href="/pricing" className="rounded-lg bg-orange-500 px-5 py-3 text-sm font-black text-white transition hover:bg-orange-400">
+        <Link href="/#pricing" className="rounded-lg bg-orange-500 px-5 py-3 text-sm font-black text-white transition hover:bg-orange-400">
           Unlock all players
         </Link>
       </div>

@@ -404,7 +404,7 @@ export default function PropsTable({
           )}
           {isFreePlan && (
             <Link
-              href="/pricing"
+              href="/#pricing"
               className="ml-auto hidden items-center gap-1.5 rounded-lg border border-orange-500/30 bg-orange-500/10 px-2.5 py-1.5 transition-all hover:border-orange-500/50 hover:bg-orange-500/20 sm:flex"
             >
               <svg

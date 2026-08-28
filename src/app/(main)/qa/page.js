@@ -65,7 +65,7 @@ export default async function QaPage() {
             <Link href="/props" className="rounded-xl border border-white/[0.08] p-5 text-white hover:border-orange-500/40"><strong>Props table</strong><span className="mt-2 block text-xs text-slate-400">{qa.data.props.length} players · {qa.data.games.length} games</span></Link>
             {firstGame && unlockedPlayer && <Link href={`/playersStats?team1Id=${firstGame.home_team_id}&team2Id=${firstGame.visitor_team_id}&playerId=${unlockedPlayer.PLAYER_ID}`} className="rounded-xl border border-emerald-500/20 p-5 text-white hover:border-emerald-500/50"><strong>Unlocked player</strong><span className="mt-2 block text-xs text-slate-400">Open a player available to this persona</span></Link>}
             {firstGame && lockedPlayer && <Link href={`/playersStats?team1Id=${firstGame.home_team_id}&team2Id=${firstGame.visitor_team_id}&playerId=${lockedPlayer.PLAYER_ID}`} className="rounded-xl border border-orange-500/20 p-5 text-white hover:border-orange-500/50"><strong>Locked player</strong><span className="mt-2 block text-xs text-slate-400">Validate the Free upgrade flow</span></Link>}
-            <Link href="/pricing" className="rounded-xl border border-white/[0.08] p-5 text-white hover:border-orange-500/40"><strong>Pricing</strong><span className="mt-2 block text-xs text-slate-400">Check plan messaging and upgrade paths</span></Link>
+            <Link href="/#pricing" className="rounded-xl border border-white/[0.08] p-5 text-white hover:border-orange-500/40"><strong>Pricing</strong><span className="mt-2 block text-xs text-slate-400">Check plan messaging and upgrade paths</span></Link>
           </section>
         )}
       </div>

@@ -45,7 +45,7 @@ export default function UpgradeOverlay({
           </p>
 
           <Link
-            href="/pricing"
+            href="/#pricing"
             className="block w-full py-2 rounded-lg bg-orange-500 hover:bg-orange-400 text-white text-[11px] font-mono font-bold uppercase tracking-widest transition-all shadow-[0_0_16px_rgba(249,115,22,0.3)] hover:shadow-[0_0_24px_rgba(249,115,22,0.5)]"
           >
             Upgrade →
