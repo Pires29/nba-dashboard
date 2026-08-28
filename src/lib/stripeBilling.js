@@ -46,18 +46,25 @@ export async function reserveCheckoutAttempt(
       if (existing.billing === billing && existing.stripeSessionId) {
         return { ...existing, reused: true };
       }
-      throw new CheckoutInProgressError();
-    }
-    if (existing) {
+      if (existing.stripeSessionId) {
+        await tx.$executeRaw`DELETE FROM "CheckoutAttempt" WHERE "userId" = ${userId}`;
+      } else {
+        throw new CheckoutInProgressError();
+      }
+    } else if (existing) {
       await tx.$executeRaw`DELETE FROM "CheckoutAttempt" WHERE "userId" = ${userId}`;
     }
+    const previousStripeSessionId =
+      existing?.expiresAt > now && existing.stripeSessionId
+        ? existing.stripeSessionId
+        : null;
     const id = randomUUID();
     const expiresAt = new Date(now.getTime() + ttlMs);
     await tx.$executeRaw`
       INSERT INTO "CheckoutAttempt" ("id", "userId", "billing", "expiresAt", "createdAt")
       VALUES (${id}, ${userId}, ${billing}, ${expiresAt}, ${now})
     `;
-    return { id, userId, billing, expiresAt };
+    return { id, userId, billing, expiresAt, previousStripeSessionId };
   });
 }
 

@@ -118,6 +118,24 @@ test("a returning user resumes the existing Stripe checkout", async () => {
   assert.equal(resumed.reused, true);
 });
 
+test("a user can switch plans after abandoning an open Stripe checkout", async () => {
+  const db = checkoutDb();
+  const first = await reserveCheckoutAttempt(db, {
+    userId: "user_1",
+    billing: "trial",
+  });
+  db.current().stripeSessionId = "cs_test_trial";
+
+  const switched = await reserveCheckoutAttempt(db, {
+    userId: "user_1",
+    billing: "monthly",
+  });
+
+  assert.notEqual(switched.id, first.id);
+  assert.equal(switched.billing, "monthly");
+  assert.equal(switched.previousStripeSessionId, "cs_test_trial");
+});
+
 test("abandoned or failed checkout releases its server reservation", async () => {
   const db = checkoutDb();
   await reserveCheckoutAttempt(db, { userId: "user_1", billing: "monthly" });

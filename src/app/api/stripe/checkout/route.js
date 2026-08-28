@@ -86,6 +86,12 @@ export async function POST(req) {
       billing,
     });
 
+    if (checkoutAttempt.previousStripeSessionId) {
+      await stripe.checkout.sessions
+        .expire(checkoutAttempt.previousStripeSessionId)
+        .catch(() => undefined);
+    }
+
     if (checkoutAttempt.reused) {
       const existingSession = await stripe.checkout.sessions.retrieve(
         checkoutAttempt.stripeSessionId,
