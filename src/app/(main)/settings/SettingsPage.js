@@ -288,7 +288,6 @@ export default function SettingsPage({ session }) {
               </div>
             </div>
             <InfoRow label="Email" value={user?.email} />
-            <InfoRow label="ID" value={user?.id} />
             <InfoRow
               label="Login method"
               value={isGoogle ? "Google OAuth" : "Email + Password"}
