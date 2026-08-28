@@ -7,7 +7,7 @@ export default function Footer() {
     <footer className="border-t border-white/[0.06] bg-[#060E1A]">
       <div className="max-w-[900px] mx-auto px-6 py-5 flex items-center justify-between gap-4 flex-wrap">
         <p className="text-[10px] font-mono text-slate-700">
-          © {year} HoopiQ. All rights reserved.
+          © {year} PropInsight. All rights reserved.
         </p>
         <div className="flex items-center gap-5">
           {[

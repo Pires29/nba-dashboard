@@ -68,7 +68,7 @@ export function SignupForm() {
   return (
     <AuthLayout
       title="Create account"
-      subtitle="Join to access NBA stats & player props"
+      subtitle="Join PropInsight to research every prop"
       backHref="/login"
     >
       <form onSubmit={handleSignup} className="flex flex-col gap-3 sm:gap-4">

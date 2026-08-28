@@ -40,16 +40,17 @@ export const AuthLayout = ({ title, subtitle, children, backHref = "/" }) => (
       <div className="mb-5 flex items-center justify-center gap-2.5 sm:mb-8">
         <div className="w-8 h-8 rounded-lg bg-orange-500 flex items-center justify-center shadow-[0_0_16px_rgba(249,115,22,0.5)]">
           <svg width="16" height="16" viewBox="0 0 14 14" fill="none">
-            <circle cx="7" cy="7" r="6" stroke="white" strokeWidth="1.5" />
+            <path d="M2 10.5 5.2 7.3l2 2L12 4.5" stroke="white" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
             <path
-              d="M1 7h12M7 1c-2 2-2 8 0 12M7 1c2 2 2 8 0 12"
+              d="M2 12h10"
               stroke="white"
               strokeWidth="1.2"
+              strokeLinecap="round"
             />
           </svg>
         </div>
         <span className="font-mono font-black text-base tracking-widest text-white uppercase">
-          HOOPIQ
+          PROPINSIGHT
         </span>
       </div>
 

@@ -24,16 +24,17 @@ const Navbar = async () => {
         <Link href="/" className="flex items-center gap-2.5 group">
           <div className="w-7 h-7 rounded-lg bg-orange-500 flex items-center justify-center shadow-[0_0_12px_rgba(249,115,22,0.4)]">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <circle cx="7" cy="7" r="6" stroke="white" strokeWidth="1.5" />
+              <path d="M2 10.5 5.2 7.3l2 2L12 4.5" stroke="white" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
               <path
-                d="M1 7h12M7 1c-2 2-2 8 0 12M7 1c2 2 2 8 0 12"
+                d="M2 12h10"
                 stroke="white"
                 strokeWidth="1.2"
+                strokeLinecap="round"
               />
             </svg>
           </div>
           <span className="font-mono font-black text-sm tracking-widest text-white uppercase group-hover:text-orange-400 transition-colors">
-            HOOPIQ
+            PROPINSIGHT
           </span>
         </Link>
 

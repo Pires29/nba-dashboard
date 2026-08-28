@@ -1,4 +1,4 @@
-# NBA Dashboard
+# PropInsight
 
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
@@ -234,3 +234,6 @@ Precos
 Gerar formas de formar graficos
 
 odds de casas de apostas
+
+Verificar se o produto season pass paga como deve ser
+Criar precos que mudam consoante datas

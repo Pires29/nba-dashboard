@@ -5,11 +5,11 @@ const LAST_UPDATED = "August 2026";
 const sections = [
   {
     title: "1. Acceptance of terms",
-    content: `By creating an account or using HoopiQ, you agree to these Terms of Service. If you do not agree, do not use the service. These terms apply to all users, including free and paid subscribers.`,
+    content: `By creating an account or using PropInsight, you agree to these Terms of Service. If you do not agree, do not use the service. These terms apply to all users, including free and paid subscribers.`,
   },
   {
     title: "2. Description of service",
-    content: `HoopiQ is a sports analytics platform providing NBA player statistics, hit rate tracking, and betting insights. The service is provided for informational and entertainment purposes only. We do not provide financial or gambling advice. Use of our data for betting decisions is entirely at your own risk.`,
+    content: `PropInsight is a sports analytics platform providing player statistics, hit rate tracking, and betting insights. The service is provided for informational and entertainment purposes only. We do not provide financial or gambling advice. Use of our data for betting decisions is entirely at your own risk.`,
   },
   {
     title: "3. Accounts",

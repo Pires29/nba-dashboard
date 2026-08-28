@@ -14,11 +14,11 @@ const geistMono = Geist_Mono({
 
 export const metadata = {
   title: {
-    default: "HoopiQ — NBA Props Research",
-    template: "%s | HoopiQ",
+    default: "PropInsight — Props Research",
+    template: "%s | PropInsight",
   },
   description:
-    "NBA dashboard for player stats, props, injuries, favorites, and matchup analysis.",
+    "Research player props with stats, hit rates, injuries, favorites, and matchup analysis.",
 };
 
 export default function RootLayout({ children }) {

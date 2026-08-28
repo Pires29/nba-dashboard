@@ -5,7 +5,7 @@ const LAST_UPDATED = "August 2026";
 const sections = [
   {
     title: "1. Who we are",
-    content: `HoopiQ ("we", "us", "our") is a sports analytics platform that provides NBA player statistics and betting insights. This Privacy Policy explains how we collect, use, and protect your personal data in accordance with the General Data Protection Regulation (GDPR).`,
+    content: `PropInsight ("we", "us", "our") is a sports analytics platform that provides player statistics and betting insights. This Privacy Policy explains how we collect, use, and protect your personal data in accordance with the General Data Protection Regulation (GDPR).`,
   },
   {
     title: "2. Data we collect",
