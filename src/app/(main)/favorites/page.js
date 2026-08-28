@@ -157,7 +157,7 @@ export default function FavoritesPage() {
         )}
 
         {/* Empty state */}
-        {favorites.length === 0 && (
+        {!error && favorites.length === 0 && (
           <div className="flex-1 flex items-center justify-center">
             <div className="flex flex-col items-center gap-3 text-center">
               <div className="w-12 h-12 rounded-full bg-white/[0.04] border border-white/[0.06] flex items-center justify-center">

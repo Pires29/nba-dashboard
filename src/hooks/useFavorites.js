@@ -16,12 +16,19 @@ export function useFavorites({ enabled = true } = {}) {
 
     try {
       const res = await fetch("/api/favorites");
+      if (res.status === 401) {
+        throw new Error("UNAUTHORIZED");
+      }
       if (!res.ok) throw new Error("Unable to load favorites");
       const data = await res.json();
       setFavorites(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Failed to fetch favorites", error);
-      setError("We couldn't load your favorites.");
+      setError(
+        error.message === "UNAUTHORIZED"
+          ? "Your session expired. Please sign in again."
+          : "We couldn't load your favorites.",
+      );
     } finally {
       setLoading(false);
       setHasLoaded(true);

@@ -10,6 +10,7 @@ import { getNbaData } from "@/lib/nbaDataSource";
 import { getQaContext } from "@/lib/qa/context";
 import { resolveQaPlan } from "@/lib/qa/plan";
 import { getQaFavorites, setQaFavorites } from "@/lib/qa/favorites";
+import { logError } from "@/lib/logger";
 
 const FAVORITE_STATS = new Set([
   "points", "assists", "rebounds", "blocks", "steals", "turnovers",
@@ -21,15 +22,20 @@ export async function GET() {
   if (!session?.user?.id)
     return Response.json({ error: "Unauthorized" }, { status: 401 });
 
-  const qa = await getQaContext();
-  if (qa) return Response.json(await getQaFavorites());
+  try {
+    const qa = await getQaContext();
+    if (qa) return Response.json(await getQaFavorites());
 
-  const favorites = await prisma.favorite.findMany({
-    where: { userId: session.user.id },
-    orderBy: { createdAt: "desc" },
-  });
+    const favorites = await prisma.favorite.findMany({
+      where: { userId: session.user.id },
+      orderBy: { createdAt: "desc" },
+    });
 
-  return Response.json(favorites);
+    return Response.json(favorites);
+  } catch (error) {
+    logError("favorites_fetch_failed", error, { userId: session.user.id });
+    return Response.json({ error: "Unable to load favorites" }, { status: 500 });
+  }
 }
 
 export async function POST(req) {

@@ -4,6 +4,7 @@ import prisma from "../../prisma/prismaClient";
 import { authorizeCredentials } from "@/lib/credentialsAuth";
 import { enrichSessionWithUser } from "@/lib/enrichSessionWithUser";
 import { isValidEmail, normalizeEmail } from "@/lib/security";
+import { logWarning } from "@/lib/logger";
 
 const GoogleProvider = GoogleProviderModule.default ?? GoogleProviderModule;
 const CredentialsProvider =
@@ -58,8 +59,43 @@ export const authOptions = {
       return true;
     },
 
-    async session({ session }) {
-      return enrichSessionWithUser(session);
+    async jwt({ token, user }) {
+      const email = normalizeEmail(user?.email ?? token.email);
+      if (!isValidEmail(email)) return token;
+
+      if (user || !token.userId) {
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { email },
+            select: { id: true },
+          });
+          if (dbUser) {
+            token.userId = dbUser.id;
+          } else if (user?.id) {
+            token.userId = user.id;
+          }
+        } catch (error) {
+          logWarning("auth_jwt_user_lookup_failed", {
+            name: error?.name,
+            code: error?.code,
+          });
+          if (!token.userId && user?.id) token.userId = user.id;
+        }
+      }
+
+      return token;
+    },
+
+    async session({ session, token }) {
+      const enrichedSession = await enrichSessionWithUser(session);
+      if (
+        !enrichedSession.user?.accountDeleted &&
+        !enrichedSession.user?.id &&
+        token?.userId
+      ) {
+        enrichedSession.user.id = token.userId;
+      }
+      return enrichedSession;
     },
   },
 };
