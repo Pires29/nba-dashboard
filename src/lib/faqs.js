@@ -54,7 +54,3 @@ export const ALL_FAQS = [
       "Passwords are stored as secure hashes and payment details are handled by Stripe. PropInsight stores the account and plan information needed to provide the service.",
   },
 ];
-
-export const PRICING_FAQS = ALL_FAQS.filter((f) =>
-  ["free", "trial", "monthly", "season", "cancel", "security"].includes(f.id),
-);
