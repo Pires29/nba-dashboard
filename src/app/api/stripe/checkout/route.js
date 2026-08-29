@@ -96,10 +96,13 @@ export async function POST(req) {
       const existingSession = await stripe.checkout.sessions.retrieve(
         checkoutAttempt.stripeSessionId,
       );
-      if (existingSession.status === "open" && existingSession.url) {
+      if (existingSession.status === "open" && existingSession.url && !referralCodeId) {
         return Response.json({ url: existingSession.url, resumed: true });
       }
 
+      if (existingSession.status === "open") {
+        await stripe.checkout.sessions.expire(existingSession.id).catch(() => undefined);
+      }
       await releaseCheckoutAttempt(prisma, { id: checkoutAttempt.id });
       checkoutAttempt = await reserveCheckoutAttempt(prisma, {
         userId: user.id,
@@ -201,7 +204,12 @@ export async function POST(req) {
     if (error instanceof CheckoutInProgressError) {
       return Response.json({ error: error.message }, { status: 409 });
     }
-    console.error("Stripe checkout failed", { type: error?.type, code: error?.code });
+    console.error("Stripe checkout failed", {
+      name: error?.name,
+      type: error?.type,
+      code: error?.code,
+      message: error?.message,
+    });
     return Response.json(
       { error: "Unable to create checkout session" },
       { status: 500 },

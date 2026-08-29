@@ -7,6 +7,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import PricingLink from "@/components/PricingLink";
+import { captureEvent } from "@/components/PostHogProvider";
 
 const SectionLabel = ({ children }) => (
   <div className="flex items-center gap-3 mb-6">
@@ -178,6 +179,9 @@ export default function SettingsPage({ session }) {
     try {
       const res = await fetch("/api/stripe/cancel", { method: "POST" });
       if (res.ok) {
+        captureEvent("subscription_cancelled", {
+          plan_interval: user?.planInterval ?? null,
+        });
         setCancelled(true);
         setShowCancelModal(false);
         router.refresh();
@@ -203,6 +207,10 @@ export default function SettingsPage({ session }) {
       });
       const data = await res.json().catch(() => ({}));
       if (data.url) {
+        captureEvent("checkout_started", {
+          billing: "season",
+          source: "settings",
+        });
         window.location.href = data.url;
         return;
       }

@@ -12,6 +12,7 @@ import {
 } from "@/components/AuthLayout";
 import { safeInternalPath } from "@/lib/security";
 import { moveAuthFormFocus } from "@/lib/authFormKeyboard";
+import { captureEvent } from "@/components/PostHogProvider";
 
 export function SignupForm() {
   const [error, setError] = useState(null);
@@ -69,6 +70,7 @@ export function SignupForm() {
       const destination = `/verify-request?email=${encodeURIComponent(email)}&flow=${encodeURIComponent(flowId)}${
         callbackUrl === "/" ? "" : `&callbackUrl=${encodeURIComponent(callbackUrl)}`
       }`;
+      captureEvent("signup_created", { method: "credentials" });
       router.push(destination);
       router.refresh();
     } catch {
@@ -95,6 +97,7 @@ export function SignupForm() {
         return;
       }
       setNotice(data.message || "If this account needs verification, a verification link has been sent.");
+      captureEvent("verification_email_resent", { source: "signup" });
     } catch {
       setError("Connection error");
     } finally {

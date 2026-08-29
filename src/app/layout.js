@@ -1,5 +1,6 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import AppToaster from "@/components/AppToaster";
+import PostHogProvider from "@/components/PostHogProvider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -31,8 +32,10 @@ export default function RootLayout({ children }) {
         <link rel="dns-prefetch" href="https://cdn.nba.com" />
       </head>
       <body>
-        {children}
-        <AppToaster />
+        <PostHogProvider>
+          {children}
+          <AppToaster />
+        </PostHogProvider>
       </body>
     </html>
   );

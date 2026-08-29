@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ALL_FAQS } from "@/lib/faqs";
 import PlayerHeadshotImage from "@/components/PlayerHeadshotImage";
+import { captureEvent } from "@/components/PostHogProvider";
 
 const DISCOUNT = 0.2;
 const PLANS = [
@@ -129,7 +130,9 @@ export default function HomeLanding({ user }) {
       const data = await response.json().catch(() => ({}));
       if (response.ok && data.valid) {
         setReferralStatus("valid");
-        setAppliedCode(referralCode.trim().toUpperCase());
+        const normalizedCode = referralCode.trim().toUpperCase();
+        setAppliedCode(normalizedCode);
+        captureEvent("referral_applied", { code: normalizedCode });
       } else {
         setReferralStatus("invalid");
         setAppliedCode(null);
@@ -151,6 +154,10 @@ export default function HomeLanding({ user }) {
         return;
       }
       if (!response.ok || !data.url) throw new Error(data.error || "Unable to start checkout");
+      captureEvent("checkout_started", {
+        billing,
+        has_referral: Boolean(appliedCode),
+      });
       window.location.href = data.url;
     } catch (error) {
       setCheckoutError(error instanceof Error ? error.message : "Unable to start checkout");

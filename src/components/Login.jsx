@@ -12,6 +12,7 @@ import {
 import { useSearchParams } from "next/navigation";
 import { safeInternalPath } from "@/lib/security";
 import { moveAuthFormFocus } from "@/lib/authFormKeyboard";
+import { captureEvent } from "@/components/PostHogProvider";
 
 export function LoginForm() {
   const [error, setError] = useState(null);
@@ -63,6 +64,7 @@ export function LoginForm() {
       }
       setLoading(false);
     } else {
+      captureEvent("login_completed", { method: "credentials" });
       window.location.href = callbackUrl;
     }
   };
@@ -85,6 +87,7 @@ export function LoginForm() {
       }
 
       setNotice(data.message || "If an account needs verification, a verification link has been sent.");
+      captureEvent("verification_email_resent", { source: "login" });
       if (verificationResendKey) sessionStorage.setItem(verificationResendKey, "1");
       setVerificationResendUsed(true);
     } catch {
