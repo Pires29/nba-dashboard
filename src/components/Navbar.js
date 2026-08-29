@@ -23,18 +23,22 @@ const Navbar = async () => {
       <div className="max-w-[1400px] mx-auto px-6 py-3 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-7 h-7 rounded-lg bg-orange-500 flex items-center justify-center shadow-[0_0_12px_rgba(249,115,22,0.4)]">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M2 10.5 5.2 7.3l2 2L12 4.5" stroke="white" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500 shadow-[0_0_12px_rgba(249,115,22,0.4)] sm:h-7 sm:w-7">
+            <svg width="23" height="23" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M6.5 15.5v2.2" stroke="white" strokeWidth="2.2" strokeLinecap="round" />
+              <path d="M11.2 12.5v5.2" stroke="white" strokeWidth="2.2" strokeLinecap="round" />
+              <path d="M15.9 9.2v8.5" stroke="white" strokeWidth="2.2" strokeLinecap="round" />
               <path
-                d="M2 12h10"
+                d="M6.2 12.6 9.8 9.4l3 2.3 5-5.2"
                 stroke="white"
-                strokeWidth="1.2"
+                strokeWidth="2"
                 strokeLinecap="round"
+                strokeLinejoin="round"
               />
+              <circle cx="17.8" cy="6.5" r="1.45" fill="white" />
             </svg>
           </div>
-          <span className="font-mono font-black text-sm tracking-widest text-white uppercase group-hover:text-orange-400 transition-colors">
+          <span className="hidden font-mono text-sm font-black uppercase tracking-widest text-white transition-colors group-hover:text-orange-400 sm:block">
             PROPINSIGHT
           </span>
         </Link>
