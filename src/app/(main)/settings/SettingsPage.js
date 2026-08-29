@@ -6,6 +6,7 @@ import { signOut } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import PricingLink from "@/components/PricingLink";
 
 const SectionLabel = ({ children }) => (
   <div className="flex items-center gap-3 mb-6">
@@ -379,12 +380,11 @@ export default function SettingsPage({ session }) {
                 </p>
               </div>
             ) : !hasSubscription ? (
-              <Link
-                href="/#pricing"
+              <PricingLink
                 className="block w-full py-2.5 rounded-xl text-center bg-orange-500 hover:bg-orange-400 text-white text-[11px] font-mono font-bold uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(249,115,22,0.25)] hover:shadow-[0_0_30px_rgba(249,115,22,0.4)]"
               >
                 Upgrade to Pro →
-              </Link>
+              </PricingLink>
             ) : null}
           </div>
 
