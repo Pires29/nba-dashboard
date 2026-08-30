@@ -7,6 +7,8 @@ import { getQaContext } from "@/lib/qa/context";
 import { resolveQaPlan } from "@/lib/qa/plan";
 import { getNbaData, getNbaPlayerLogs } from "@/lib/nbaDataSource";
 
+export const dynamic = "force-dynamic";
+
 const SERVER_STARTED_AT = Date.now();
 
 export default async function Page({ searchParams }) {

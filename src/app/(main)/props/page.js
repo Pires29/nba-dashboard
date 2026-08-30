@@ -5,6 +5,8 @@ import { getQaContext } from "@/lib/qa/context";
 import { resolveQaPlan } from "@/lib/qa/plan";
 import { getNbaData } from "@/lib/nbaDataSource";
 
+export const dynamic = "force-dynamic";
+
 const SERVER_STARTED_AT = Date.now();
 
 const STATS = new Set([
