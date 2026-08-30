@@ -8,13 +8,15 @@ import getRosters from "./getRosters";
 import getStandings from "./getStandings";
 import getTeamStats from "./getTeamStats";
 
-const storageEnabled = () => process.env.NBA_DATA_SOURCE === "storage";
-const storageManifestPath = () => process.env.NBA_STORAGE_MANIFEST || "current.json";
+const cleanEnv = (value) => value?.trim().replace(/^["']|["']$/g, "");
+
+const storageEnabled = () => cleanEnv(process.env.NBA_DATA_SOURCE) === "storage";
+const storageManifestPath = () => cleanEnv(process.env.NBA_STORAGE_MANIFEST) || "current.json";
 
 const storageConfig = () => {
-  const url = process.env.SUPABASE_URL?.replace(/\/$/, "");
-  const secret = process.env.SUPABASE_SECRET_KEY;
-  const bucket = process.env.SUPABASE_STORAGE_BUCKET;
+  const url = cleanEnv(process.env.SUPABASE_URL)?.replace(/\/$/, "");
+  const secret = cleanEnv(process.env.SUPABASE_SECRET_KEY);
+  const bucket = cleanEnv(process.env.SUPABASE_STORAGE_BUCKET);
   if (!url || !secret || !bucket) throw new Error("NBA Storage is not configured");
   return { url, secret, bucket };
 };
@@ -60,7 +62,12 @@ function buildLocalData() {
 }
 
 const loadNbaData = async () => {
-  if (!storageEnabled()) return buildLocalData();
+  if (!storageEnabled()) {
+    return {
+      ...buildLocalData(),
+      error: `NBA_DATA_SOURCE is ${cleanEnv(process.env.NBA_DATA_SOURCE) || "unset"}`,
+    };
+  }
   try {
     const [manifest, raw] = await Promise.all([getStorageManifest(), getStorageSnapshot()]);
     const source = {
@@ -90,7 +97,10 @@ const loadNbaData = async () => {
     };
   } catch (error) {
     console.error("NBA Storage unavailable; using local fallback", { message: error?.message });
-    return buildLocalData();
+    return {
+      ...buildLocalData(),
+      error: error?.message ?? "Unknown NBA Storage error",
+    };
   }
 };
 

@@ -18,6 +18,7 @@ export async function GET() {
           source: nbaData.source,
           version: nbaData.version ?? null,
           updatedAt: nbaData.updatedAt ?? null,
+          error: nbaData.error ?? null,
         },
       },
       { headers: { "Cache-Control": "no-store" } },
