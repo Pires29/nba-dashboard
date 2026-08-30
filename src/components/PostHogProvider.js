@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import posthog from "posthog-js";
 import { PostHogProvider as Provider } from "posthog-js/react";
@@ -17,10 +17,23 @@ export function captureEvent(eventName, properties) {
   posthog.capture(eventName, properties);
 }
 
-export default function PostHogProvider({ children }) {
+function PostHogPageView() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
+  useEffect(() => {
+    if (!isPostHogEnabled() || !posthog.__loaded || !pathname) return;
+
+    const query = searchParams.toString();
+    posthog.capture("$pageview", {
+      $current_url: `${window.location.origin}${pathname}${query ? `?${query}` : ""}`,
+    });
+  }, [pathname, searchParams]);
+
+  return null;
+}
+
+export default function PostHogProvider({ children }) {
   useEffect(() => {
     if (!isPostHogEnabled() || posthog.__loaded) return;
 
@@ -32,16 +45,14 @@ export default function PostHogProvider({ children }) {
     });
   }, []);
 
-  useEffect(() => {
-    if (!isPostHogEnabled() || !posthog.__loaded || !pathname) return;
-
-    const query = searchParams.toString();
-    posthog.capture("$pageview", {
-      $current_url: `${window.location.origin}${pathname}${query ? `?${query}` : ""}`,
-    });
-  }, [pathname, searchParams]);
-
   if (!isPostHogEnabled()) return children;
 
-  return <Provider client={posthog}>{children}</Provider>;
+  return (
+    <Provider client={posthog}>
+      <Suspense fallback={null}>
+        <PostHogPageView />
+      </Suspense>
+      {children}
+    </Provider>
+  );
 }
