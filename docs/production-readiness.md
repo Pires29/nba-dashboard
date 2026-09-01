@@ -54,7 +54,6 @@ Monitoring:
 - `SENTRY_AUTH_TOKEN` for production sourcemap uploads
 - `SENTRY_ORG`
 - `SENTRY_PROJECT`
-- `SENTRY_TEST_SECRET` for the protected Sentry verification endpoint
 
 Production safety:
 
@@ -135,8 +134,8 @@ After deploy, verify:
 ## Monitoring before launch
 
 - Create a Sentry Next.js project.
-- Set `SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT`, and `SENTRY_TEST_SECRET` on the hosting provider.
-- After deploy, trigger one test error at `/api/sentry-test?secret=YOUR_SECRET` and confirm it appears in Sentry with a readable stack trace.
+- Set `SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, and `SENTRY_PROJECT` on the hosting provider.
+- After deploy, confirm new production errors appear in Sentry with readable stack traces.
 - Configure an uptime monitor for `https://YOUR_DOMAIN/api/health`.
   - Expected status: HTTP 200.
   - Check interval: every 1-5 minutes.
