@@ -1,6 +1,4 @@
 import { Geist, Geist_Mono } from "next/font/google";
-import AppToaster from "@/components/AppToaster";
-import PostHogProvider from "@/components/PostHogProvider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -25,17 +23,8 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://ak-static.cms.nba.com" />
-        <link rel="preconnect" href="https://cdn.nba.com" />
-        <link rel="dns-prefetch" href="https://ak-static.cms.nba.com" />
-        <link rel="dns-prefetch" href="https://cdn.nba.com" />
-      </head>
       <body>
-        <PostHogProvider>
-          {children}
-          <AppToaster />
-        </PostHogProvider>
+        {children}
       </body>
     </html>
   );

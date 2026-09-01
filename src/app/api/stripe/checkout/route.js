@@ -40,7 +40,7 @@ export async function POST(req) {
     });
     if (!rateLimit.allowed) return rateLimitResponse(rateLimit);
 
-    const { billing, referralCode } = await readJson(req, { maxBytes: 2_048 });
+    const { billing, referralCode, returnPath } = await readJson(req, { maxBytes: 2_048 });
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
     });
@@ -138,6 +138,12 @@ export async function POST(req) {
     }
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const safeReturnPath =
+      typeof returnPath === "string" &&
+      returnPath.startsWith("/") &&
+      !returnPath.startsWith("//")
+        ? returnPath
+        : "/#pricing";
     checkoutSession = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ["card"],
@@ -153,7 +159,7 @@ export async function POST(req) {
           : { metadata: { userId: user.id } },
       }),
       success_url: `${appUrl}/settings?upgraded=true`,
-      cancel_url: `${appUrl}/#pricing`,
+      cancel_url: `${appUrl}${safeReturnPath}`,
       metadata: {
         userId: user.id,
         billing,

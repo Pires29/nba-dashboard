@@ -10,6 +10,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useFavorites } from "@/hooks/useFavorites";
 import Image from "next/image";
 import Link from "next/link";
+import PricingLink from "@/components/PricingLink";
 import PropsFilterDropdown from "./PropsFilterDropdown";
 import PropsResultsTable from "./PropsResultsTable";
 import {
@@ -403,8 +404,7 @@ export default function PropsTable({
             </span>
           )}
           {isFreePlan && (
-            <Link
-              href="/#pricing"
+            <PricingLink
               className="ml-auto hidden items-center gap-1.5 rounded-lg border border-orange-500/30 bg-orange-500/10 px-2.5 py-1.5 transition-all hover:border-orange-500/50 hover:bg-orange-500/20 sm:flex"
             >
               <svg
@@ -425,12 +425,12 @@ export default function PropsTable({
               <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-orange-400">
                 Upgrade
               </span>
-            </Link>
+            </PricingLink>
           )}
         </div>
 
         {isFreePlan && (
-          <div
+          <PricingLink
             className="flex items-center gap-2 rounded-lg border border-orange-500/25 bg-orange-500/10 px-3 py-2.5 sm:hidden"
           >
             <svg
@@ -450,7 +450,7 @@ export default function PropsTable({
             <span className="min-w-0 text-[11px] font-mono font-medium text-slate-300">
               Upgrade to see every player
             </span>
-          </div>
+          </PricingLink>
         )}
 
         {/* Filters */}

@@ -13,7 +13,14 @@ export default function PricingLink({ children, onClick, ...props }) {
 
     event.preventDefault();
     if (pathname !== "/") {
-      router.push("/#pricing");
+      const upgradeEvent = new CustomEvent("upgrade-modal:open", {
+        cancelable: true,
+      });
+
+      const handled = !window.dispatchEvent(upgradeEvent);
+      if (!handled) {
+        router.push("/#pricing");
+      }
       return;
     }
 
@@ -26,8 +33,12 @@ export default function PricingLink({ children, onClick, ...props }) {
       ?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
+  const className = props.className
+    ? `${props.className} cursor-pointer`
+    : "cursor-pointer";
+
   return (
-    <Link href="/#pricing" {...props} onClick={handleClick}>
+    <Link href="/#pricing" {...props} className={className} onClick={handleClick}>
       {children}
     </Link>
   );

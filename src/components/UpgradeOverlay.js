@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import PricingLink from "./PricingLink";
 
 export default function UpgradeOverlay({
   children,
@@ -44,12 +44,11 @@ export default function UpgradeOverlay({
             {message}
           </p>
 
-          <Link
-            href="/#pricing"
+          <PricingLink
             className="block w-full py-2 rounded-lg bg-orange-500 hover:bg-orange-400 text-white text-[11px] font-mono font-bold uppercase tracking-widest transition-all shadow-[0_0_16px_rgba(249,115,22,0.3)] hover:shadow-[0_0_24px_rgba(249,115,22,0.5)]"
           >
             Upgrade →
-          </Link>
+          </PricingLink>
         </div>
       </div>
     </div>

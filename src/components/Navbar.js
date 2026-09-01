@@ -22,7 +22,7 @@ const Navbar = async () => {
 
       <div className="max-w-[1400px] mx-auto px-6 py-3 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5 group">
+        <Link href="/props" aria-label="Open PropInsight props table" className="flex items-center gap-2.5 group">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500 shadow-[0_0_12px_rgba(249,115,22,0.4)] sm:h-7 sm:w-7">
             <svg width="23" height="23" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M6.5 15.5v2.2" stroke="white" strokeWidth="2.2" strokeLinecap="round" />

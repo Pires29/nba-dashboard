@@ -1,8 +1,30 @@
 "use client";
 
-import { Toaster } from "sonner";
+import { useEffect, useState } from "react";
+
+function requestIdle(callback) {
+  if (typeof window.requestIdleCallback === "function") {
+    const id = window.requestIdleCallback(callback, { timeout: 3000 });
+    return () => window.cancelIdleCallback(id);
+  }
+
+  const id = window.setTimeout(callback, 2000);
+  return () => window.clearTimeout(id);
+}
 
 export default function AppToaster() {
+  const [Toaster, setToaster] = useState(null);
+
+  useEffect(() => {
+    return requestIdle(() => {
+      import("sonner").then((module) => {
+        setToaster(() => module.Toaster);
+      });
+    });
+  }, []);
+
+  if (!Toaster) return null;
+
   return (
     <Toaster
       theme="dark"
