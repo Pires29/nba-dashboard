@@ -51,39 +51,72 @@ export function useFavorites({ enabled = true } = {}) {
     [favoriteKeys],
   );
 
+  const favoriteKey = useCallback((playerId, stat) => `${playerId}:${stat}`, []);
+
   const addFavorite = useCallback(
     async ({ playerId, playerName, team, stat, avg, gameDate }) => {
+      const optimisticId = `optimistic:${playerId}:${stat}`;
+      const optimisticFavorite = {
+        id: optimisticId,
+        playerId,
+        playerName,
+        team,
+        stat,
+        avg,
+        gameDate: gameDate ?? null,
+        createdAt: new Date().toISOString(),
+        optimistic: true,
+      };
+
       setMutating(true);
       setError(null);
-      try {
-      const res = await fetch("/api/favorites", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          playerId,
-          playerName,
-          team,
-          stat,
-          avg,
-          gameDate,
-        }),
+      setFavorites((prev) => {
+        const key = favoriteKey(playerId, stat);
+        if (prev.some((favorite) => favoriteKey(favorite.playerId, favorite.stat) === key)) {
+          return prev;
+        }
+        return [optimisticFavorite, ...prev];
       });
-      if (res.ok) {
-        const newFav = await res.json();
-        setFavorites((prev) => [newFav, ...prev]);
-        toast.success(`${playerName} added to favorites`, {
-          description: `${stat.toUpperCase()} · ${avg?.toFixed(1) ?? "—"}`,
+
+      try {
+        const res = await fetch("/api/favorites", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            playerId,
+            playerName,
+            team,
+            stat,
+            avg,
+            gameDate,
+          }),
         });
-      } else throw new Error("Unable to add favorite");
+        if (res.ok) {
+          const newFav = await res.json();
+          setFavorites((prev) => {
+            const key = favoriteKey(playerId, stat);
+            return [
+              newFav,
+              ...prev.filter((favorite) =>
+                favorite.id !== optimisticId &&
+                favoriteKey(favorite.playerId, favorite.stat) !== key
+              ),
+            ];
+          });
+          toast.success(`${playerName} added to favorites`, {
+            description: `${stat.toUpperCase()} · ${avg?.toFixed(1) ?? "—"}`,
+          });
+        } else throw new Error("Unable to add favorite");
       } catch (mutationError) {
         console.error("Failed to add favorite", mutationError);
+        setFavorites((prev) => prev.filter((favorite) => favorite.id !== optimisticId));
         setError("The favorite wasn't saved. Please try again.");
         toast.error("Failed to add favorite");
       } finally {
         setMutating(false);
       }
     },
-    [],
+    [favoriteKey],
   );
 
   const removeFavorite = useCallback(
@@ -94,20 +127,21 @@ export function useFavorites({ enabled = true } = {}) {
       if (!fav) return;
       setMutating(true);
       setError(null);
+      setFavorites((prev) =>
+        prev.filter((f) => !(f.playerId === playerId && f.stat === stat)),
+      );
       try {
-      const res = await fetch(`/api/favorites/${fav.id}`, {
-        method: "DELETE",
-      });
-      if (res.ok) {
-        setFavorites((prev) =>
-          prev.filter((f) => !(f.playerId === playerId && f.stat === stat)),
-        );
-        toast(`${fav.playerName} removed from favorites`, {
-          description: `${stat.toUpperCase()}`,
+        const res = await fetch(`/api/favorites/${fav.id}`, {
+          method: "DELETE",
         });
-      } else throw new Error("Unable to remove favorite");
+        if (res.ok) {
+          toast(`${fav.playerName} removed from favorites`, {
+            description: `${stat.toUpperCase()}`,
+          });
+        } else throw new Error("Unable to remove favorite");
       } catch (mutationError) {
         console.error("Failed to remove favorite", mutationError);
+        setFavorites((prev) => [fav, ...prev]);
         setError("The favorite wasn't removed. Please try again.");
         toast.error("Failed to remove favorite");
       } finally {

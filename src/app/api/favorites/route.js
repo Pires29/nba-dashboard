@@ -17,6 +17,10 @@ const FAVORITE_STATS = new Set([
   "fg3m", "pra", "pa", "pr", "ra",
 ]);
 
+function hasFullFavoriteAccess(plan) {
+  return plan === "pro" || plan === "trial";
+}
+
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id)
@@ -52,14 +56,14 @@ export async function POST(req) {
     const stat = typeof body.stat === "string" ? body.stat : "";
     const avg = Number(body.avg);
     const gameDate = body.gameDate;
-    const allowedPlayers = getAvailablePlayers(
-      resolveQaPlan(qa?.persona, session.user.plan),
-      qa?.data ?? (await getNbaData()),
-    );
+    const plan = resolveQaPlan(qa?.persona, session.user.plan);
+    const allowedPlayers = hasFullFavoriteAccess(plan)
+      ? null
+      : getAvailablePlayers(plan, qa?.data ?? (await getNbaData()));
 
     if (
       !Number.isSafeInteger(playerId) ||
-      !allowedPlayers.has(playerId) ||
+      (allowedPlayers && !allowedPlayers.has(playerId)) ||
       !playerName || playerName.length > 100 ||
       !/^[A-Z]{2,4}$/.test(team) ||
       !FAVORITE_STATS.has(stat) ||
