@@ -14,11 +14,25 @@ const geistMono = Geist_Mono({
 export const metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
   title: {
-    default: "PropInsight — Props Research",
+    default: "PropInsight — NBA Player Props Research",
     template: "%s | PropInsight",
   },
   description:
-    "Research player props with stats, hit rates, injuries, favorites, and matchup analysis.",
+    "Research NBA player props with hit rates, player trends, injuries, matchup stats, favorites, and slate analysis.",
+  openGraph: {
+    type: "website",
+    siteName: "PropInsight",
+    title: "PropInsight — NBA Player Props Research",
+    description:
+      "Research NBA player props with hit rates, player trends, injuries, matchup stats, and slate analysis.",
+    url: "/",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "PropInsight — NBA Player Props Research",
+    description:
+      "Research NBA player props with hit rates, player trends, injuries, matchup stats, and slate analysis.",
+  },
 };
 
 export default function RootLayout({ children }) {

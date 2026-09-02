@@ -2,11 +2,22 @@ import HomeLanding from "@/components/home/HomeLanding";
 import PublicNavbar from "@/components/PublicNavbar";
 
 export const metadata = {
-  title: "PropInsight — Props Research, Made Clear",
+  title: "NBA Player Props Research & Stats Dashboard",
   description:
-    "Research NBA player props with hit rates, matchup context, injuries, and advanced filters in one fast dashboard.",
+    "Use PropInsight to research NBA player props with hit rates, matchup stats, injury context, player trends, and advanced slate filters.",
   alternates: {
     canonical: "/",
+  },
+  openGraph: {
+    title: "PropInsight — NBA Player Props Research & Stats Dashboard",
+    description:
+      "Research NBA player props with hit rates, matchup stats, injury context, player trends, and advanced slate filters.",
+    url: "/",
+  },
+  twitter: {
+    title: "PropInsight — NBA Player Props Research & Stats Dashboard",
+    description:
+      "Research NBA player props with hit rates, matchup stats, injury context, player trends, and advanced slate filters.",
   },
 };
 
