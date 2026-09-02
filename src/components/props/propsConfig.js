@@ -36,7 +36,7 @@ export const PERIOD_LABELS = {
   h2h: "H2H",
 };
 
-export const INITIAL_VISIBLE_ROWS = 50;
+export const INITIAL_VISIBLE_ROWS = 30;
 
 export const INJURY_STYLES = {
   Out: "bg-red-500/15 text-red-400 border-red-500/30",

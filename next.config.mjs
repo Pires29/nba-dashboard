@@ -1,6 +1,6 @@
 // next.config.js
 import bundleAnalyzer from '@next/bundle-analyzer';
-import { withSentryConfig } from "@sentry/nextjs";
+import { withSentryConfig } from "@sentry/nextjs/config";
 
 const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',

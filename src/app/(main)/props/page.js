@@ -4,6 +4,8 @@ import PropsTableWrapper from "./PropsTableWrapper";
 import { getQaContext } from "@/lib/qa/context";
 import { resolveQaPlan } from "@/lib/qa/plan";
 import { getNbaData } from "@/lib/nbaDataSource";
+import PropsResultsTable from "@/components/props/PropsResultsTable";
+import { INITIAL_VISIBLE_ROWS } from "@/components/props/propsConfig";
 
 export const dynamic = "force-dynamic";
 
@@ -57,6 +59,25 @@ const getListParam = (value) => {
 };
 
 const getListParamFromKeys = (params, keys) => getListParam(getFirstParam(params, keys));
+
+const getRowsParam = (value, total) => {
+  const rows = Number(getSingleParam(value));
+  if (!Number.isFinite(rows)) return Math.min(INITIAL_VISIBLE_ROWS, total);
+  return Math.min(Math.max(INITIAL_VISIBLE_ROWS, Math.floor(rows)), total);
+};
+
+const searchParamsToQueryString = (params) => {
+  const query = new URLSearchParams();
+  Object.entries(params ?? {}).forEach(([key, value]) => {
+    if (Array.isArray(value)) {
+      value.forEach((item) => query.append(key, item));
+      return;
+    }
+
+    if (value != null) query.set(key, value);
+  });
+  return query.toString();
+};
 
 const clampHitRateParam = (value) => {
   if (value === "") return "";
@@ -305,13 +326,6 @@ export default async function PropsPage({ searchParams }) {
     }),
   );
 
-  const slimInjuries = safeInjuries.flatMap((team) =>
-    (team?.injuries ?? []).map((i) => ({
-      name: i.athlete.displayName,
-      status: i.status,
-    })),
-  );
-
   const scheduleMap = new Map();
 
   for (const g of safeSchedule) {
@@ -346,15 +360,16 @@ export default async function PropsPage({ searchParams }) {
       matchupLabel: MATCHUP_RANK(rank),
     };
   });
+  const visibleRows = getRowsParam(resolvedSearchParams?.rows, enrichedProps.length);
+  const visibleProps = enrichedProps.slice(0, visibleRows);
+  const queryString = searchParamsToQueryString(resolvedSearchParams);
 
   return (
     <PropsTableWrapper
       basePath="/props"
-      enrichedProps={enrichedProps}
       standings={teamNameMap}
       schedule={slimSchedule}
-      injuries={slimInjuries}
-      totalPropsCount={safeProps.length}
+      propsCount={enrichedProps.length}
       isFreePlan={plan === "free"}
       dataStatus={{
         source: qa ? "qa" : nbaData.source,
@@ -374,6 +389,19 @@ export default async function PropsPage({ searchParams }) {
         filterInjury,
         search,
       }}
-    />
+    >
+      <PropsResultsTable
+        basePath="/props"
+        enrichedProps={visibleProps}
+        injuryMap={injuryMap}
+        searchParams={queryString}
+        selectedStat={selectedStat}
+        sortDirection={sortDirection}
+        sortPeriod={sortPeriod}
+        totalResults={enrichedProps.length}
+        totalPropsCount={safeProps.length}
+        visibleRows={visibleRows}
+      />
+    </PropsTableWrapper>
   );
 }

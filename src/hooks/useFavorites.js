@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 
 export function useFavorites({ enabled = true } = {}) {
@@ -41,10 +41,14 @@ export function useFavorites({ enabled = true } = {}) {
     fetchFavorites();
   }, [enabled, fetchFavorites, hasLoaded]);
 
-  const isFavorite = useCallback(
-    (playerId, stat) =>
-      favorites.some((f) => f.playerId === playerId && f.stat === stat),
+  const favoriteKeys = useMemo(
+    () => new Set(favorites.map((favorite) => `${favorite.playerId}:${favorite.stat}`)),
     [favorites],
+  );
+
+  const isFavorite = useCallback(
+    (playerId, stat) => favoriteKeys.has(`${playerId}:${stat}`),
+    [favoriteKeys],
   );
 
   const addFavorite = useCallback(

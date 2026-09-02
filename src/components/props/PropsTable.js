@@ -7,14 +7,11 @@ import {
   useTransition,
 } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useFavorites } from "@/hooks/useFavorites";
 import Image from "next/image";
 import Link from "next/link";
-import PricingLink from "@/components/PricingLink";
 import PropsFilterDropdown from "./PropsFilterDropdown";
-import PropsResultsTable from "./PropsResultsTable";
+import PropsUpgradeButton from "./PropsUpgradeButton";
 import {
-  INITIAL_VISIBLE_ROWS,
   INJURY_DOT,
   INJURY_STYLES,
   PERIOD_LABELS,
@@ -76,6 +73,7 @@ const MANAGED_QUERY_KEYS = [
   "injury",
   "q",
   "search",
+  "rows",
 ];
 
 const MATCHUP_VALUE_TO_CODE = {
@@ -96,17 +94,14 @@ const serializeWithMap = (items, map) =>
 
 export default function PropsTable({
   basePath = "/props",
-  enrichedProps,
+  children,
   standings,
   schedule,
-  injuries,
-  totalPropsCount,
+  propsCount,
   isFreePlan = false,
   dataStatus,
   initialFilters,
 }) {
-  const { hasLoaded: favoritesLoaded, isFavorite, toggleFavorite } = useFavorites();
-
   const [selectedStat, setSelectedStat] = useState(initialFilters.selectedStat);
   const [sortPeriod, setSortPeriod] = useState(initialFilters.sortPeriod);
   const [sortDirection, setSortDirection] = useState(
@@ -133,7 +128,6 @@ export default function PropsTable({
     initialFilters.filterInjury,
   );
   const [search, setSearch] = useState(initialFilters.search);
-  const [visibleRows, setVisibleRows] = useState(INITIAL_VISIBLE_ROWS);
   const [isUpdating, startTransition] = useTransition();
 
   const router = useRouter();
@@ -210,14 +204,6 @@ export default function PropsTable({
   );
 
   const teamNameMap = useMemo(() => standings, [standings]);
-
-  const injuryMap = useMemo(() => {
-    const map = {};
-    injuries.forEach(({ name, status }) => {
-      if (name) map[name] = status;
-    });
-    return map;
-  }, [injuries]);
 
   const activeHitRateFilters = useMemo(
     () => filterHitRates.filter(isHitRateFilterActive),
@@ -390,7 +376,7 @@ export default function PropsTable({
             Props
           </h1>
           <span className="rounded border border-white/[0.06] px-2.5 py-1 text-[11px] font-mono text-slate-500">
-            {enrichedProps.length} props
+            {propsCount} props
           </span>
           <span
             aria-live="polite"
@@ -404,7 +390,7 @@ export default function PropsTable({
             </span>
           )}
           {isFreePlan && (
-            <PricingLink
+            <PropsUpgradeButton
               className="ml-auto hidden items-center gap-1.5 rounded-lg border border-orange-500/30 bg-orange-500/10 px-2.5 py-1.5 transition-all hover:border-orange-500/50 hover:bg-orange-500/20 sm:flex"
             >
               <svg
@@ -425,12 +411,12 @@ export default function PropsTable({
               <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-orange-400">
                 Upgrade
               </span>
-            </PricingLink>
+            </PropsUpgradeButton>
           )}
         </div>
 
         {isFreePlan && (
-          <PricingLink
+          <PropsUpgradeButton
             className="flex items-center gap-2 rounded-lg border border-orange-500/25 bg-orange-500/10 px-3 py-2.5 sm:hidden"
           >
             <svg
@@ -450,7 +436,7 @@ export default function PropsTable({
             <span className="min-w-0 text-[11px] font-mono font-medium text-slate-300">
               Upgrade to see every player
             </span>
-          </PricingLink>
+          </PropsUpgradeButton>
         )}
 
         {/* Filters */}
@@ -952,41 +938,9 @@ export default function PropsTable({
           )}
         </div>
 
-        <PropsResultsTable
-          enrichedProps={enrichedProps}
-          favoritesLoaded={favoritesLoaded}
-          injuryMap={injuryMap}
-          isFavorite={isFavorite}
-          isUpdating={isUpdating}
-          onClearFilters={clearAllFilters}
-          onLoadMore={setVisibleRows}
-          onOpenPlayer={(player) => {
-            const game = player.game;
-            const team1Id = game ? game.home_team_id : player.team_id;
-            const team2Id = game ? game.visitor_team_id : player.opponent_id;
-            router.push(
-              `/playersStats?team1Id=${team1Id}&team2Id=${team2Id}&playerId=${player.player_id}&stat=${selectedStat}`,
-            );
-          }}
-          onSortPeriod={(period) => {
-            const nextDirection =
-              period === sortPeriod && sortDirection === "desc"
-                ? "asc"
-                : "desc";
-            setSortPeriod(period);
-            setSortDirection(nextDirection);
-            updateUrl({
-              sort: period,
-              dir: nextDirection,
-            });
-          }}
-          onToggleFavorite={toggleFavorite}
-          selectedStat={selectedStat}
-          sortPeriod={sortPeriod}
-          sortDirection={sortDirection}
-          totalPropsCount={totalPropsCount}
-          visibleRows={visibleRows}
-        />
+        <div className={`min-h-0 flex flex-1 flex-col ${isUpdating ? "pointer-events-none opacity-75 transition-opacity" : ""}`}>
+          {children}
+        </div>
       </div>
     </div>
   );

@@ -3,27 +3,26 @@ import PropsTable from "@/components/props/PropsTable";
 
 export default function PropsTableWrapper({
   basePath,
-  enrichedProps,
   standings,
   schedule,
-  injuries,
-  totalPropsCount,
+  propsCount,
   isFreePlan,
   dataStatus,
   initialFilters,
+  children,
 }) {
   return (
     <PropsTable
       key={JSON.stringify(initialFilters)}
       basePath={basePath}
-      enrichedProps={enrichedProps}
       standings={standings}
       schedule={schedule}
-      injuries={injuries}
-      totalPropsCount={totalPropsCount}
+      propsCount={propsCount}
       isFreePlan={isFreePlan}
       dataStatus={dataStatus}
       initialFilters={initialFilters}
-    />
+    >
+      {children}
+    </PropsTable>
   );
 }
