@@ -1,5 +1,14 @@
 import Footer from "@/components/Footer";
 
+export const metadata = {
+  title: "Terms of Service",
+  description:
+    "Read the PropInsight terms for accounts, subscriptions, acceptable use, billing, and service access.",
+  alternates: {
+    canonical: "/terms",
+  },
+};
+
 const LAST_UPDATED = "August 2026";
 
 const sections = [

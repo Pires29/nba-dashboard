@@ -5,6 +5,9 @@ export const metadata = {
   title: "PropInsight — Props Research, Made Clear",
   description:
     "Research NBA player props with hit rates, matchup context, injuries, and advanced filters in one fast dashboard.",
+  alternates: {
+    canonical: "/",
+  },
 };
 
 export default function Home() {

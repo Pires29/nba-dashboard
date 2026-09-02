@@ -5,6 +5,13 @@ import Navbar from "@/components/Navbar";
 import PostHogProvider from "@/components/PostHogProvider";
 import UpgradeModalProvider from "@/components/UpgradeModalProvider";
 
+export const metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
+
 export default function MainLayout({ children }) {
   return (
     <PostHogProvider>

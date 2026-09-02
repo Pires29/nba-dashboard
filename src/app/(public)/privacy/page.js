@@ -1,5 +1,14 @@
 import Footer from "@/components/Footer";
 
+export const metadata = {
+  title: "Privacy Policy",
+  description:
+    "Read how PropInsight collects, uses, and protects account, billing, analytics, and service data.",
+  alternates: {
+    canonical: "/privacy",
+  },
+};
+
 const LAST_UPDATED = "August 2026";
 
 const sections = [
