@@ -6,8 +6,6 @@ export function normalizeReferralCode(value) {
   return /^[A-Z0-9_-]{3,32}$/.test(code) ? code : "";
 }
 
-const PENDING_REFERRAL_TTL_MS = 30 * 60 * 1000;
-
 export async function validateReferralForUser({ code, userId }, db = prisma) {
   const normalizedCode = normalizeReferralCode(code);
   if (!normalizedCode) return { valid: false, reason: "INVALID_CODE" };
@@ -27,11 +25,7 @@ export async function validateReferralForUser({ code, userId }, db = prisma) {
   });
 
   if (alreadyUsed) {
-    const isExpiredPendingUse =
-      !alreadyUsed.discountApplied &&
-      alreadyUsed.createdAt.getTime() < Date.now() - PENDING_REFERRAL_TTL_MS;
-
-    if (!isExpiredPendingUse) {
+    if (alreadyUsed.discountApplied) {
       return { valid: false, reason: "ALREADY_USED" };
     }
 

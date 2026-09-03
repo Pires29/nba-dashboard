@@ -24,7 +24,6 @@ const PRICE_MAP = {
 const REFERRAL_COUPON_ID = process.env.STRIPE_REFERRAL_COUPON_ID;
 
 export async function POST(req) {
-  let referralReservedForUserId = null;
   let checkoutAttempt = null;
   let checkoutSession = null;
 
@@ -68,17 +67,6 @@ export async function POST(req) {
         return Response.json({ error: "Invalid or unavailable referral code" }, { status: 400 });
       }
       referralCodeId = referralResult.referral.id;
-
-      // Reserve the one-time referral before contacting Stripe. The unique
-      // referredUserId constraint prevents concurrent discounted checkouts.
-      await prisma.referralUse.create({
-        data: {
-          referralCodeId,
-          referredUserId: user.id,
-          discountApplied: false,
-        },
-      });
-      referralReservedForUserId = user.id;
     }
 
     checkoutAttempt = await reserveCheckoutAttempt(prisma, {
@@ -178,13 +166,6 @@ export async function POST(req) {
       WHERE "id" = ${checkoutAttempt.id}
     `;
 
-    if (referralReservedForUserId) {
-      await prisma.referralUse.update({
-        where: { referredUserId: referralReservedForUserId },
-        data: { stripeSessionId: checkoutSession.id },
-      });
-    }
-
     return Response.json({ url: checkoutSession.url });
   } catch (error) {
     if (checkoutSession?.id) {
@@ -192,14 +173,6 @@ export async function POST(req) {
     }
     if (checkoutAttempt) {
       await releaseCheckoutAttempt(prisma, { id: checkoutAttempt.id }).catch(() => undefined);
-    }
-    if (referralReservedForUserId) {
-      await prisma.referralUse.deleteMany({
-        where: {
-          referredUserId: referralReservedForUserId,
-          discountApplied: false,
-        },
-      }).catch(() => undefined);
     }
     if (error instanceof RequestError) {
       return Response.json({ error: error.message }, { status: error.status });

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { captureEvent } from "@/components/PostHogProvider";
-import { PRICING_PLANS } from "@/lib/pricingPlans";
+import { PAID_PLAN_PRICES, PRICING_PLANS, REFERRAL_DISCOUNT } from "@/lib/pricingPlans";
 
 function CheckIcon() {
   return (
@@ -13,12 +13,23 @@ function CheckIcon() {
   );
 }
 
+function getDisplayPrice(plan, hasPromo) {
+  if (!hasPromo || !Object.hasOwn(PAID_PLAN_PRICES, plan.id)) {
+    return plan.price;
+  }
+
+  return plan.price * (1 - REFERRAL_DISCOUNT);
+}
+
 export default function UpgradeModalProvider() {
   const router = useRouter();
   const plans = useMemo(() => PRICING_PLANS, []);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedBilling, setSelectedBilling] = useState("trial");
   const [loading, setLoading] = useState(false);
+  const [promoCode, setPromoCode] = useState("");
+  const [appliedPromoCode, setAppliedPromoCode] = useState(null);
+  const [promoStatus, setPromoStatus] = useState(null);
   const [error, setError] = useState("");
 
   const selectedPlan = plans.find((plan) => plan.id === selectedBilling) ?? plans[0];
@@ -50,6 +61,40 @@ export default function UpgradeModalProvider() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [isOpen]);
 
+  async function applyPromoCode() {
+    const code = promoCode.trim().toUpperCase();
+    if (!code) return;
+
+    setPromoStatus("loading");
+    setError("");
+    try {
+      const response = await fetch("/api/referral/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+      const data = await response.json().catch(() => ({}));
+
+      if (response.status === 401) {
+        router.push("/login?callbackUrl=%2Fprops");
+        return;
+      }
+
+      if (!response.ok || !data.valid) {
+        setAppliedPromoCode(null);
+        setPromoStatus("invalid");
+        return;
+      }
+
+      setAppliedPromoCode(code);
+      setPromoStatus("valid");
+      captureEvent("referral_applied", { code, source: "upgrade_modal" });
+    } catch {
+      setAppliedPromoCode(null);
+      setPromoStatus("error");
+    }
+  }
+
   async function startCheckout() {
     if (!selectedPlan) return;
 
@@ -59,7 +104,11 @@ export default function UpgradeModalProvider() {
       const response = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ billing: selectedPlan.id, returnPath: "/props" }),
+        body: JSON.stringify({
+          billing: selectedPlan.id,
+          referralCode: appliedPromoCode,
+          returnPath: "/props",
+        }),
       });
       const data = await response.json().catch(() => ({}));
 
@@ -75,6 +124,7 @@ export default function UpgradeModalProvider() {
       captureEvent("checkout_started", {
         billing: selectedPlan.id,
         source: "upgrade_modal",
+        has_referral: Boolean(appliedPromoCode),
       });
       window.location.href = data.url;
     } catch (checkoutError) {
@@ -142,6 +192,8 @@ export default function UpgradeModalProvider() {
           <div className="mt-7 space-y-3">
             {plans.map((plan) => {
               const selected = selectedBilling === plan.id;
+              const hasPromo = Boolean(appliedPromoCode);
+              const displayPrice = getDisplayPrice(plan, hasPromo);
               return (
                 <button
                   key={plan.id}
@@ -162,8 +214,13 @@ export default function UpgradeModalProvider() {
                     <span className="mt-1 block font-mono text-[10px] text-slate-500">{plan.note}</span>
                   </span>
                   <span className="text-right">
+                    {hasPromo && Object.hasOwn(PAID_PLAN_PRICES, plan.id) && (
+                      <span className="block font-mono text-[10px] text-slate-500 line-through">
+                        €{plan.price.toFixed(2)}
+                      </span>
+                    )}
                     <span className="block font-mono text-sm font-black text-white">
-                      {plan.price === 0 ? "Free" : `€${plan.price.toFixed(2)}`}
+                      {displayPrice === 0 ? "Free" : `€${displayPrice.toFixed(2)}`}
                     </span>
                     <span className="block font-mono text-[10px] text-slate-500">/{plan.suffix}</span>
                   </span>
@@ -183,6 +240,42 @@ export default function UpgradeModalProvider() {
               </li>
             ))}
           </ul>
+
+          <div className="mt-6">
+            <label htmlFor="upgrade-promo-code" className="font-mono text-[9px] font-bold uppercase tracking-widest text-slate-500">
+              Promo code
+            </label>
+            <div className="mt-2 flex gap-2">
+              <input
+                id="upgrade-promo-code"
+                value={promoCode}
+                onChange={(event) => {
+                  setPromoCode(event.target.value.toUpperCase());
+                  setAppliedPromoCode(null);
+                  setPromoStatus(null);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    applyPromoCode();
+                  }
+                }}
+                placeholder="EX: BETA100"
+                className="min-w-0 flex-1 rounded-lg border border-white/10 bg-black/10 px-3 py-2.5 font-mono text-[10px] text-white placeholder:text-slate-500 focus:border-orange-500/40 focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={applyPromoCode}
+                disabled={!promoCode.trim() || promoStatus === "loading"}
+                className="shrink-0 rounded-lg border border-white/10 px-4 font-mono text-[9px] font-bold uppercase tracking-widest text-slate-300 transition hover:border-orange-500/35 hover:text-orange-300 disabled:cursor-not-allowed disabled:opacity-45"
+              >
+                {promoStatus === "loading" ? "..." : "Apply"}
+              </button>
+            </div>
+            {promoStatus === "valid" && <p className="mt-2 font-mono text-[9px] text-emerald-400">Code applied to checkout.</p>}
+            {promoStatus === "invalid" && <p role="alert" className="mt-2 font-mono text-[9px] text-red-400">Invalid or unavailable code.</p>}
+            {promoStatus === "error" && <p role="alert" className="mt-2 font-mono text-[9px] text-red-400">Could not validate the code. Try again.</p>}
+          </div>
 
           {error && <p role="alert" className="mt-4 rounded-lg border border-red-500/25 bg-red-500/10 p-3 text-center font-mono text-[10px] text-red-300">{error}</p>}
         </div>

@@ -72,7 +72,7 @@ export default function ReferralBox() {
           {referralStatus === "loading" ? "..." : "Apply"}
         </button>
       </div>
-      {referralStatus === "valid" && <p className="mt-2 font-mono text-[9px] text-emerald-400">Code applied · 20% off your first paid payment only</p>}
+      {referralStatus === "valid" && <p className="mt-2 font-mono text-[9px] text-emerald-400">Code applied to checkout.</p>}
       {referralStatus === "invalid" && <p role="alert" className="mt-2 font-mono text-[9px] text-red-400">Invalid or unavailable code.</p>}
       {referralStatus === "error" && <p role="alert" className="mt-2 font-mono text-[9px] text-red-400">Could not validate the code. Try again.</p>}
     </div>

@@ -1,4 +1,4 @@
-export const REFERRAL_DISCOUNT = 0.2;
+export const REFERRAL_DISCOUNT = 1;
 
 export const PRICING_PLANS = [
   {

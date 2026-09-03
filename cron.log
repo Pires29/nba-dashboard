@@ -589,3 +589,167 @@ To github.com:Pires29/nba-dashboard.git
 ✅ Done in 124.5s (2.1 min)
    Active data source: Supabase Storage
 ℹ️ Favorites cleanup skipped: no deployed app URL configured
+🚀 NBA data pipeline — 2026-09-02 10:00:02
+   Season: 2025-26 | Prev: 2024-25
+   QA snapshot date: 2026-03-11
+   Storage manifest: qa-current.json
+   Local JSON fallback updates: disabled
+   Storage preflight: ok
+
+📊 Fetching player stats (totals)...
+
+🏀 Fetching team stats (offense + defense)...
+
+👥 Fetching rosters (one request per team)...
+  [1/30] ATL: 18 players
+  [2/30] BOS: 16 players
+  [3/30] CLE: 18 players
+  [4/30] NOP: 18 players
+  [5/30] CHI: 18 players
+  [6/30] DAL: 18 players
+  [7/30] DEN: 18 players
+  [8/30] GSW: 18 players
+  [9/30] HOU: 17 players
+  [10/30] LAC: 18 players
+  [11/30] LAL: 17 players
+  [12/30] MIA: 17 players
+  [13/30] MIL: 17 players
+  [14/30] MIN: 18 players
+  [15/30] BKN: 18 players
+  [16/30] NYK: 18 players
+  [17/30] ORL: 17 players
+  [18/30] IND: 18 players
+  [19/30] PHI: 17 players
+  [20/30] PHX: 18 players
+  [21/30] POR: 18 players
+  [22/30] SAC: 18 players
+  [23/30] SAS: 18 players
+  [24/30] OKC: 18 players
+  [25/30] TOR: 17 players
+  [26/30] UTA: 18 players
+  [27/30] MEM: 18 players
+  [28/30] WAS: 18 players
+  [29/30] DET: 17 players
+  [30/30] CHA: 18 players
+
+📅 Fetching QA schedule (2026-03-11)...
+  03/11/2026: 6 games
+
+🏆 Fetching standings for 2025-26...
+
+🏥 Fetching injuries (ESPN)...
+
+🎮 Fetching regular season game logs (2025-26) in 1 request...
+  📦 26651 total game log rows
+
+🎮 Fetching regular season game logs (2024-25) in 1 request...
+  📦 26306 total game log rows
+
+🎮 Fetching playoffs game logs (2025-26) in 1 request...
+  📦 1921 total game log rows
+
+💾 Building output files...
+
+☁️  Uploading 688 player files to Storage...
+  [50/688] players uploaded
+  [100/688] players uploaded
+  [150/688] players uploaded
+  [200/688] players uploaded
+  [250/688] players uploaded
+  [300/688] players uploaded
+  [350/688] players uploaded
+  [400/688] players uploaded
+  [450/688] players uploaded
+  [500/688] players uploaded
+  [550/688] players uploaded
+  [600/688] players uploaded
+  [650/688] players uploaded
+  [688/688] players uploaded
+✅ Storage version published: qa-2026-03-11 (qa-current.json)
+ℹ️ Storage retention skipped for non-production manifest
+
+✅ Done in 130.9s (2.2 min)
+   Active data source: Supabase Storage
+ℹ️ Favorites cleanup skipped: no deployed app URL configured
+🚀 NBA data pipeline — 2026-09-03 10:00:02
+   Season: 2025-26 | Prev: 2024-25
+   QA snapshot date: 2026-03-11
+   Storage manifest: qa-current.json
+   Local JSON fallback updates: disabled
+   Storage preflight: ok
+
+📊 Fetching player stats (totals)...
+
+🏀 Fetching team stats (offense + defense)...
+
+👥 Fetching rosters (one request per team)...
+  [1/30] ATL: 18 players
+  [2/30] BOS: 16 players
+  [3/30] CLE: 18 players
+  [4/30] NOP: 18 players
+  [5/30] CHI: 18 players
+  [6/30] DAL: 18 players
+  [7/30] DEN: 18 players
+  [8/30] GSW: 18 players
+  [9/30] HOU: 17 players
+  [10/30] LAC: 18 players
+  [11/30] LAL: 17 players
+  [12/30] MIA: 17 players
+  [13/30] MIL: 17 players
+  [14/30] MIN: 18 players
+  [15/30] BKN: 18 players
+  [16/30] NYK: 18 players
+  [17/30] ORL: 17 players
+  [18/30] IND: 18 players
+  [19/30] PHI: 17 players
+  [20/30] PHX: 18 players
+  [21/30] POR: 18 players
+  [22/30] SAC: 18 players
+  [23/30] SAS: 18 players
+  [24/30] OKC: 18 players
+  [25/30] TOR: 17 players
+  [26/30] UTA: 18 players
+  [27/30] MEM: 18 players
+  [28/30] WAS: 18 players
+  [29/30] DET: 17 players
+  [30/30] CHA: 18 players
+
+📅 Fetching QA schedule (2026-03-11)...
+  03/11/2026: 6 games
+
+🏆 Fetching standings for 2025-26...
+
+🏥 Fetching injuries (ESPN)...
+
+🎮 Fetching regular season game logs (2025-26) in 1 request...
+  📦 26651 total game log rows
+
+🎮 Fetching regular season game logs (2024-25) in 1 request...
+  📦 26306 total game log rows
+
+🎮 Fetching playoffs game logs (2025-26) in 1 request...
+  📦 1921 total game log rows
+
+💾 Building output files...
+
+☁️  Uploading 688 player files to Storage...
+  [50/688] players uploaded
+  [100/688] players uploaded
+  [150/688] players uploaded
+  [200/688] players uploaded
+  [250/688] players uploaded
+  [300/688] players uploaded
+  [350/688] players uploaded
+  [400/688] players uploaded
+  [450/688] players uploaded
+  [500/688] players uploaded
+  [550/688] players uploaded
+  [600/688] players uploaded
+  [650/688] players uploaded
+  [688/688] players uploaded
+✅ Storage version published: qa-2026-03-11 (qa-current.json)
+ℹ️ Storage retention skipped for non-production manifest
+
+✅ Done in 123.8s (2.1 min)
+   Active data source: Supabase Storage
+ℹ️ Favorites cleanup skipped: no deployed app URL configured

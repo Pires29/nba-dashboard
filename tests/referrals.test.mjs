@@ -35,12 +35,12 @@ test("rejects self-referrals and completed redemptions", async () => {
   );
 });
 
-test("releases abandoned pending referral reservations after 30 minutes", async () => {
+test("releases abandoned pending referral reservations immediately", async () => {
   const db = referralDb({
     use: {
       id: "use_stale",
       discountApplied: false,
-      createdAt: new Date(Date.now() - 31 * 60 * 1000),
+      createdAt: new Date(),
     },
   });
 
