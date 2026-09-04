@@ -17,6 +17,7 @@ export async function buildPlayerStatsPageData({
   playerLogsPrev,
   playerLogsPlayoffs,
   teammateLogBundles = [],
+  teammateRoster = [],
 }) {
   const formatTeamStats = (teamStatsEntry) => {
     if (!teamStatsEntry) return null;
@@ -247,15 +248,24 @@ export async function buildPlayerStatsPageData({
   const average = (games, modernKey, legacyKey) => games.length
     ? Math.round((games.reduce((sum, game) => sum + Number(game?.[modernKey] ?? game?.[legacyKey] ?? 0), 0) / games.length) * 10) / 10
     : null;
-  const teammateImpact = teammateLogBundles.map(({ player: teammate, logs = [], logsPrev = [], logsPlayoffs = [] }) => ({
-    playerId: Number(teammate.PLAYER_ID),
-    playerName: teammate.PLAYER,
-    position: teammate.POSITION ?? "—",
-    avgMinutes: average(logs, "min", "MIN"),
-    avgPoints: average(logs, "pts", "PTS"),
-    currentGameIds: [...logs, ...logsPlayoffs].map(gameId).filter(Boolean),
-    previousGameIds: logsPrev.map(gameId).filter(Boolean),
-  }));
+  const teammateImpact = teammateRoster.map((teammate) => {
+    const bundle = teammateLogBundles.find(
+      (candidate) => Number(candidate.player?.PLAYER_ID) === Number(teammate.PLAYER_ID),
+    );
+    const logs = bundle?.logs ?? [];
+    const logsPrev = bundle?.logsPrev ?? [];
+    const logsPlayoffs = bundle?.logsPlayoffs ?? [];
+
+    return {
+      playerId: Number(teammate.PLAYER_ID),
+      playerName: teammate.PLAYER,
+      position: teammate.POSITION ?? "—",
+      avgMinutes: average(logs, "min", "MIN"),
+      avgPoints: average(logs, "pts", "PTS"),
+      currentGameIds: [...logs, ...logsPlayoffs].map(gameId).filter(Boolean),
+      previousGameIds: logsPrev.map(gameId).filter(Boolean),
+    };
+  });
   const availabilityGames = {
     current: currentPlayerLogs,
     previous: previousPlayerLogs,

@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Card from "@/components/ui/playerStats/Card";
 import DeferredRender from "@/components/ui/DeferredRender";
 import Injuries from "../Injuries";
@@ -71,6 +71,7 @@ const ResponsiveLayout = ({
   const [rangeMaxMinutes, setRangeMaxMinutes] = useState(minuteSliderMax);
   const [selectedTeammateIds, setSelectedTeammateIds] = useState([]);
   const [teammateModes, setTeammateModes] = useState({});
+  const [loadedTeammateData, setLoadedTeammateData] = useState({});
   const hasMinuteFilter =
     rangeMinMinutes !== 0 || rangeMaxMinutes !== minuteSliderMax;
   const hasTeammateFilter = Object.keys(teammateModes).length > 0;
@@ -80,11 +81,45 @@ const ResponsiveLayout = ({
     setRangeMinMinutes(0);
     setRangeMaxMinutes(minuteSliderMax);
   };
-  const selectedTeammates = teammateImpact.filter((entry) =>
+  const visibleTeammateImpact = teammateImpact.map((entry) => ({
+    ...entry,
+    ...loadedTeammateData[String(entry.playerId)],
+  }));
+  const selectedTeammates = visibleTeammateImpact.filter((entry) =>
     selectedTeammateIds.includes(String(entry.playerId)),
   );
+  const loadTeammateLogs = useCallback(async (playerId) => {
+    const key = String(playerId);
+    if (loadedTeammateData[key]) return;
+
+    try {
+      const response = await fetch(`/api/player-logs?playerId=${encodeURIComponent(key)}`);
+      if (!response.ok) return;
+      const bundle = await response.json();
+      const logs = Array.isArray(bundle.logs) ? bundle.logs : [];
+      const logsPrev = Array.isArray(bundle.logsPrev) ? bundle.logsPrev : [];
+      const logsPlayoffs = Array.isArray(bundle.logsPlayoffs) ? bundle.logsPlayoffs : [];
+      const average = (games, modernKey, legacyKey) => games.length
+        ? Math.round((games.reduce((sum, game) => sum + Number(game?.[modernKey] ?? game?.[legacyKey] ?? 0), 0) / games.length) * 10) / 10
+        : null;
+      const gameId = (game) => String(game?.gid ?? game?.GAME_ID ?? "");
+
+      setLoadedTeammateData((current) => ({
+        ...current,
+        [key]: {
+          avgMinutes: average(logs, "min", "MIN"),
+          avgPoints: average(logs, "pts", "PTS"),
+          currentGameIds: [...logs, ...logsPlayoffs].map(gameId).filter(Boolean),
+          previousGameIds: logsPrev.map(gameId).filter(Boolean),
+        },
+      }));
+    } catch {
+      // Keep the teammate available in the selector if its optional logs fail.
+    }
+  }, [loadedTeammateData]);
   const handleTeammateChange = (playerId) => {
     if (!playerId || selectedTeammateIds.length >= maxTeammates) return;
+    void loadTeammateLogs(playerId);
     setSelectedTeammateIds((ids) =>
       ids.includes(playerId) ? ids : [...ids, playerId],
     );
@@ -141,7 +176,7 @@ const ResponsiveLayout = ({
               hasMinuteFilter={hasMinuteFilter}
               activeMobileFilterCount={activeMobileFilterCount}
               resetMinuteFilter={resetMinuteFilter}
-              teammateImpact={teammateImpact}
+              teammateImpact={visibleTeammateImpact}
               maxTeammates={maxTeammates}
               selectedTeammates={selectedTeammates}
               selectedTeammateIds={selectedTeammateIds}
@@ -165,7 +200,7 @@ const ResponsiveLayout = ({
                 currentGame={currentGame}
                 opponentAbbr={opponentAbbr}
                 statGraphData={statGraphData}
-                teammateImpact={teammateImpact}
+                teammateImpact={visibleTeammateImpact}
                 availabilityGames={availabilityGames}
                 initialStat={initialStat}
                 logsAvailable={dataStatus?.logsAvailable}

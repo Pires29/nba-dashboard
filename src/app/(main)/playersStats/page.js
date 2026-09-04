@@ -3,8 +3,6 @@ import { buildPlayerStatsPageData } from "@/lib/buildPlayerStatsPageData";
 import { getAvailablePlayers } from "@/lib/getAvailablePlayers";
 import { getCurrentSession } from "@/lib/getCurrentSession";
 import LockedPlayerState from "@/components/playerStats/LockedPlayerState";
-import { getQaContext } from "@/lib/qa/context";
-import { resolveQaPlan } from "@/lib/qa/plan";
 import { getNbaData, getNbaPlayerLogs } from "@/lib/nbaDataSource";
 
 export const dynamic = "force-dynamic";
@@ -19,9 +17,8 @@ export default async function Page({ searchParams }) {
   const requestedPlayerId = Number(resolvedSearchParams.playerId);
   const stat = resolvedSearchParams.stat ?? "points";
   const session = await getCurrentSession();
-  const qa = await getQaContext();
-  const nbaData = qa?.data ?? (await getNbaData());
-  const plan = resolveQaPlan(qa?.persona, session?.user?.plan);
+  const nbaData = await getNbaData();
+  const plan = session?.user?.plan ?? "free";
   const allowedPlayerIds = getAvailablePlayers(plan, nbaData);
 
   const rawRosterData = nbaData.rosters;
@@ -63,16 +60,7 @@ export default async function Page({ searchParams }) {
 
   const playerLogBundle = isPlayerLocked
     ? { logs: [], logsPrev: [], logsPlayoffs: [] }
-    : qa
-      ? {
-          logs: qa.data.logsByPlayer[String(playerId)] ?? [],
-          logsPrev: qa.data.previousLogsByPlayer[String(playerId)] ?? [],
-          logsPlayoffs: [],
-          source: Object.hasOwn(qa.data.logsByPlayer, String(playerId))
-            ? "qa"
-            : "unavailable",
-        }
-      : await getNbaPlayerLogs(playerId);
+    : await getNbaPlayerLogs(playerId);
   const rawGamesSchedule = nbaData.games;
   const rawInjuries = isPlayerLocked ? [] : nbaData.injuries;
   const rawTeamStats = isPlayerLocked ? [] : nbaData.teamStats;
@@ -87,22 +75,6 @@ export default async function Page({ searchParams }) {
           Number(rosterPlayer.TEAM_ID) === selectedTeamId &&
           Number(rosterPlayer.PLAYER_ID) !== playerId,
       );
-  const teammateLogBundles = await Promise.all(
-    teammates.map(async (teammate) => {
-      const bundle = qa
-        ? {
-            logs: qa.data.logsByPlayer[String(teammate.PLAYER_ID)] ?? [],
-            logsPrev: qa.data.previousLogsByPlayer[String(teammate.PLAYER_ID)] ?? [],
-            logsPlayoffs: [],
-            source: Object.hasOwn(qa.data.logsByPlayer, String(teammate.PLAYER_ID))
-              ? "qa"
-              : "unavailable",
-          }
-        : await getNbaPlayerLogs(Number(teammate.PLAYER_ID));
-      return { player: teammate, ...bundle };
-    }),
-  );
-
   const data = await buildPlayerStatsPageData({
     playerId,
     team1Id,
@@ -115,9 +87,7 @@ export default async function Page({ searchParams }) {
     playerLogs: logs,
     playerLogsPrev: logsPrev,
     playerLogsPlayoffs: logsPlayoffs,
-    teammateLogBundles: teammateLogBundles.filter(
-      (bundle) => bundle.source !== "unavailable",
-    ),
+    teammateRoster: teammates,
   });
 
   return (
@@ -128,7 +98,7 @@ export default async function Page({ searchParams }) {
       stat={stat}
       data={data}
       dataStatus={{
-        source: qa ? playerLogBundle.source : nbaData.source,
+        source: nbaData.source,
         updatedAt: nbaData.updatedAt ?? null,
         isStale: nbaData.updatedAt
           ? SERVER_STARTED_AT - new Date(nbaData.updatedAt).getTime() > 24 * 60 * 60 * 1000
