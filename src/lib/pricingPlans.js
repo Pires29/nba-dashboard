@@ -1,6 +1,8 @@
+import { getLaunchConfig } from "@/config/launch";
+
 export const REFERRAL_DISCOUNT = 1;
 
-export const PRICING_PLANS = [
+const BASE_PRICING_PLANS = [
   {
     id: "trial",
     name: "7-Day Trial",
@@ -20,6 +22,7 @@ export const PRICING_PLANS = [
     id: "monthly",
     name: "Monthly",
     price: 7.99,
+    earlyAccessPrice: 5.99,
     suffix: "month",
     note: "Automatic monthly renewal",
     description: "Maximum flexibility with no long-term commitment.",
@@ -35,6 +38,7 @@ export const PRICING_PLANS = [
     id: "season",
     name: "NBA Season",
     price: 39.99,
+    earlyAccessPrice: 29.99,
     suffix: "season",
     note: "Access until June 30",
     description: "One payment covers the rest of the NBA season.",
@@ -48,6 +52,55 @@ export const PRICING_PLANS = [
     featured: true,
   },
 ];
+
+function getPlanForLaunchPhase(plan) {
+  const { pricing } = getLaunchConfig();
+  const earlyAccessPrice = plan.earlyAccessPrice;
+  const useEarlyAccessPrice =
+    pricing.showEarlyAccessPricing && typeof earlyAccessPrice === "number";
+
+  if (!useEarlyAccessPrice) return plan;
+
+  if (plan.id === "monthly") {
+    return {
+      ...plan,
+      name: "Early Access Monthly",
+      price: earlyAccessPrice,
+      regularPrice: plan.price,
+      note: "Limited early access price",
+      description: "Lower monthly pricing before the public launch.",
+      details: [
+        "Early access price of €5.99/month",
+        "Regular price will be €7.99/month",
+        "Cancel whenever you want",
+        "Pro access while subscribed",
+      ],
+      checkoutLabel: "Choose Early Access",
+    };
+  }
+
+  if (plan.id === "season") {
+    return {
+      ...plan,
+      name: "Early Access Season Pass",
+      price: earlyAccessPrice,
+      regularPrice: plan.price,
+      note: "Limited early access price",
+      description: "One payment covers the rest of the NBA season at the early price.",
+      details: [
+        "Early access price of €29.99",
+        "Regular season price will be €39.99",
+        "No automatic renewal",
+        "Access until June 30",
+      ],
+      checkoutLabel: "Get Early Access Pass",
+    };
+  }
+
+  return plan;
+}
+
+export const PRICING_PLANS = BASE_PRICING_PLANS.map(getPlanForLaunchPhase);
 
 export const PREMIUM_BENEFITS = [
   "Unlock every NBA player",

@@ -236,4 +236,19 @@ Gerar formas de formar graficos
 odds de casas de apostas
 
 Verificar se o produto season pass paga como deve ser
-Criar precos que mudam consoante datas
+Criar pre
+cos que mudam consoante datas
+
+Homepage:
+
+Colocar disabled 7 day trial botao landing
+Colocar algum aviso a dizer que beta testers podem ter depois vantagens no pricing da app early acess pricing (na modal de beta testers e na modal dos precos)
+Alargar a largura geral da página para dar match à largura da seccao dos mockups
+Remover seccao de cima da tabela mockup
+smooth scroll quando se clica em view plan na hero cta em cima da homepage
+
+Playerstats
+Skeleton horrivel
+loading da pagina de playerstats esta muito lenta
+
+Verificar que dados sao carregados para cada pagina e se ha dados desnecessarios
