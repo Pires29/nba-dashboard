@@ -11,6 +11,8 @@ export const isQaPlayerId = (playerId) => {
   return Number.isInteger(id) && id >= QA_PLAYER_ID_MIN && id <= QA_PLAYER_ID_MAX;
 };
 
+const loadedPlayerHeadshots = new Set();
+
 function Placeholder({ className = "" }) {
   return (
     <svg
@@ -27,6 +29,8 @@ function Placeholder({ className = "" }) {
 
 export default function PlayerHeadshotImage({ playerId, alt = "", ...imageProps }) {
   const [failed, setFailed] = useState(false);
+  const cacheKey = String(playerId);
+  const [hasLoaded, setHasLoaded] = useState(() => loadedPlayerHeadshots.has(cacheKey));
 
   // QA fixtures use synthetic 900xxx IDs, which have no matching NBA CDN asset.
   // Avoid sending requests that the CDN will reject with 403.
@@ -39,7 +43,17 @@ export default function PlayerHeadshotImage({ playerId, alt = "", ...imageProps 
       {...imageProps}
       src={`https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/${playerId}.png`}
       alt={alt}
+      loading={imageProps.priority ? "eager" : imageProps.loading}
       onError={() => setFailed(true)}
+      onLoad={(event) => {
+        loadedPlayerHeadshots.add(cacheKey);
+        setHasLoaded(true);
+        imageProps.onLoad?.(event);
+      }}
+      style={{
+        ...(imageProps.style || {}),
+        visibility: hasLoaded ? "visible" : "hidden",
+      }}
     />
   );
 }

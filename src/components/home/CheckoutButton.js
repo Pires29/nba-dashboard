@@ -16,6 +16,7 @@ const buttonLabel = (billing, loading, trialUnavailable, monthlyAlreadyScheduled
 export default function CheckoutButton({
   billing,
   disabled = false,
+  labelOverride = null,
   trialUnavailable = false,
   monthlyAlreadyScheduled = false,
   featured = false,
@@ -68,7 +69,9 @@ export default function CheckoutButton({
         disabled={loading || disabled}
         className={`w-full rounded-xl py-3.5 font-mono text-[10px] font-black uppercase tracking-widest transition disabled:cursor-not-allowed disabled:opacity-45 ${featured ? "bg-orange-500 text-white shadow-[0_0_25px_rgba(249,115,22,.25)] hover:bg-orange-400" : "border border-white/15 bg-white/[0.03] text-slate-200 hover:border-orange-500/40 hover:text-orange-300"}`}
       >
-        {buttonLabel(billing, loading, trialUnavailable, monthlyAlreadyScheduled)}
+        {loading
+          ? buttonLabel(billing, loading, trialUnavailable, monthlyAlreadyScheduled)
+          : labelOverride || buttonLabel(billing, loading, trialUnavailable, monthlyAlreadyScheduled)}
       </button>
       {error && <p role="alert" className="mt-3 rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-center font-mono text-[10px] text-red-300">{error}</p>}
     </>

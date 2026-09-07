@@ -86,73 +86,80 @@ const PlayerGraphChart = ({
   })();
 
   return (
-    <div className="h-full w-full [&_*:focus]:!outline-none [&_*:focus-visible]:!outline-none [&_.recharts-wrapper]:!outline-none [&_.recharts-surface]:!outline-none [&_.recharts-surface_*]:!outline-none">
-    <ResponsiveContainer width="100%" height="100%" debounce={50}>
-      <BarChart
-        accessibilityLayer
-        data={points}
-        margin={{ top: 20, right: 8, left: -20, bottom: 28 }}
+    <div className="h-full min-h-0 w-full min-w-0 [&_*:focus]:!outline-none [&_*:focus-visible]:!outline-none [&_.recharts-wrapper]:!outline-none [&_.recharts-surface]:!outline-none [&_.recharts-surface_*]:!outline-none">
+      <ResponsiveContainer
+        width="100%"
+        height="100%"
+        minWidth={0}
+        minHeight={0}
+        initialDimension={{ width: 1, height: 1 }}
+        debounce={50}
       >
-        <XAxis
-          dataKey="label"
-          tick={<CustomXAxisTick />}
-          tickLine={false}
-          axisLine={false}
-        />
-        <YAxis
-          yAxisId="stats"
-          tick={{ fontSize: 9, fill: "#94a3b8", fontFamily: "monospace" }}
-          tickLine={false}
-          axisLine={false}
-          allowDecimals={false}
-          ticks={displayYTicks}
-          domain={[0, displayYTicks[displayYTicks.length - 1] || "auto"]}
-        />
-        <Tooltip
-          content={<CustomTooltip selectedStat={selectedStat} />}
-          cursor={{ fill: "rgba(255,255,255,0.03)" }}
-        />
-        {betLine != null && (
-          <ReferenceLine
-            y={betLine}
-            stroke="rgba(249,115,22,0.5)"
-            strokeDasharray="4 4"
-            strokeWidth={1.5}
-          />
-        )}
-        <Bar
-          yAxisId="stats"
-          dataKey={selectedStat}
-          radius={[3, 3, 0, 0]}
-          maxBarSize={90}
-          isAnimationActive={false}
+        <BarChart
+          accessibilityLayer
+          data={points}
+          margin={{ top: 20, right: 8, left: -20, bottom: 28 }}
         >
-          {points.map((entry, index) => (
-            <Cell
-              key={`cell-${index}`}
-              fill={
-                betLine != null && entry[selectedStat] >= betLine
-                  ? "#22c55e"
-                  : "#ef4444"
-              }
-            />
-          ))}
-        </Bar>
-        {showMinutesLine && (
-          <Line
-            yAxisId="stats"
-            type="monotone"
-            dataKey="minutes"
-            stroke="#38bdf8"
-            strokeWidth={2}
-            dot={{ r: 2.5, fill: "#0D1828", stroke: "#38bdf8", strokeWidth: 1.5 }}
-            activeDot={{ r: 4, fill: "#38bdf8", stroke: "#0D1828", strokeWidth: 2 }}
-            connectNulls
-            isAnimationActive={false}
+          <XAxis
+            dataKey="label"
+            tick={<CustomXAxisTick />}
+            tickLine={false}
+            axisLine={false}
           />
-        )}
-      </BarChart>
-    </ResponsiveContainer>
+          <YAxis
+            yAxisId="stats"
+            tick={{ fontSize: 9, fill: "#94a3b8", fontFamily: "monospace" }}
+            tickLine={false}
+            axisLine={false}
+            allowDecimals={false}
+            ticks={displayYTicks}
+            domain={[0, displayYTicks[displayYTicks.length - 1] || "auto"]}
+          />
+          <Tooltip
+            content={<CustomTooltip selectedStat={selectedStat} />}
+            cursor={{ fill: "rgba(255,255,255,0.03)" }}
+          />
+          {betLine != null && (
+            <ReferenceLine
+              y={betLine}
+              stroke="rgba(249,115,22,0.5)"
+              strokeDasharray="4 4"
+              strokeWidth={1.5}
+            />
+          )}
+          <Bar
+            yAxisId="stats"
+            dataKey={selectedStat}
+            radius={[3, 3, 0, 0]}
+            maxBarSize={90}
+            isAnimationActive={false}
+          >
+            {points.map((entry, index) => (
+              <Cell
+                key={`cell-${index}`}
+                fill={
+                  betLine != null && entry[selectedStat] >= betLine
+                    ? "#22c55e"
+                    : "#ef4444"
+                }
+              />
+            ))}
+          </Bar>
+          {showMinutesLine && (
+            <Line
+              yAxisId="stats"
+              type="monotone"
+              dataKey="minutes"
+              stroke="#38bdf8"
+              strokeWidth={2}
+              dot={{ r: 2.5, fill: "#0D1828", stroke: "#38bdf8", strokeWidth: 1.5 }}
+              activeDot={{ r: 4, fill: "#38bdf8", stroke: "#0D1828", strokeWidth: 2 }}
+              connectNulls
+              isAnimationActive={false}
+            />
+          )}
+        </BarChart>
+      </ResponsiveContainer>
     </div>
   );
 };

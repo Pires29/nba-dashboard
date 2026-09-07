@@ -1,4 +1,23 @@
 import Link from "next/link";
+import { launchConfig } from "@/config/launch";
+import PricingLink from "@/components/PricingLink";
+import BetaAccessModal from "./home/BetaAccessModal";
+
+function AccessButton({ className }) {
+  if (launchConfig.access.showBetaAccess) {
+    return (
+      <BetaAccessModal aria-label="Open beta access" className={className}>
+        {launchConfig.cta.navPrimary}
+      </BetaAccessModal>
+    );
+  }
+
+  return (
+    <Link href="/props" aria-label="Open props table" className={className}>
+      {launchConfig.cta.navPrimary}
+    </Link>
+  );
+}
 
 export default function PublicNavbar() {
   return (
@@ -30,8 +49,7 @@ export default function PublicNavbar() {
 
         {/* Right side */}
         <div className="flex items-center gap-3">
-          <a
-            href="#pricing"
+          <PricingLink
             aria-label="Upgrade: view pricing plans"
             className="inline-flex min-h-8 items-center justify-center gap-1.5 rounded-lg border border-orange-500/30 bg-orange-500/10 px-3 py-1.5 transition-all duration-150 hover:border-orange-500/50 hover:bg-orange-500/20 md:min-h-9 md:px-4 md:py-2 group"
           >
@@ -50,14 +68,8 @@ export default function PublicNavbar() {
             <span className="font-mono text-[10px] font-bold uppercase leading-none tracking-widest text-orange-400 transition-colors group-hover:text-orange-300 md:text-[11px]">
               Upgrade
             </span>
-          </a>
-          <a
-            href="/props"
-            aria-label="Open props table"
-            className="inline-flex min-h-8 items-center justify-center rounded-lg border border-white/[0.08] bg-[#0D1828] px-3 py-1.5 font-mono text-[10px] font-bold uppercase leading-none tracking-widest text-slate-300 transition-all duration-150 hover:border-white/20 hover:text-white md:min-h-9 md:px-4 md:py-2 md:text-[11px]"
-          >
-            Open Props
-          </a>
+          </PricingLink>
+          <AccessButton className="inline-flex min-h-8 items-center justify-center rounded-lg border border-white/[0.08] bg-[#0D1828] px-3 py-1.5 font-mono text-[10px] font-bold uppercase leading-none tracking-widest text-slate-300 transition-all duration-150 hover:border-white/20 hover:text-white md:min-h-9 md:px-4 md:py-2 md:text-[11px]" />
         </div>
       </div>
     </nav>

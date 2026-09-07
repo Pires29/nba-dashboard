@@ -121,6 +121,7 @@
   html {
     background: #060E1A;
     overflow-x: hidden;
+    scroll-behavior: smooth;
   }
   body {
     @apply bg-background text-foreground;

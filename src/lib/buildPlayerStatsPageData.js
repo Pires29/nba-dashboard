@@ -4,12 +4,39 @@ import {
   buildPlayerGraphViews,
 } from "@/lib/buildPlayerGraphData";
 
+const compactPlayer = (player) => {
+  if (!player) return null;
+
+  return {
+    PLAYER_ID: player.PLAYER_ID,
+    PLAYER: player.PLAYER,
+    POSITION: player.POSITION,
+    TEAM_ABBREVIATION: player.TEAM_ABBREVIATION,
+  };
+};
+
+const compactGameLog = (game) => ({
+  gid: game?.gid ?? game?.GAME_ID,
+  date: game?.date ?? game?.GAME_DATE ?? null,
+  opp: game?.opp ?? game?.opponent ?? "",
+  isHome: game?.isHome ?? null,
+  min: game?.min ?? game?.MIN ?? 0,
+  pts: game?.pts ?? game?.PTS ?? 0,
+  ast: game?.ast ?? game?.AST ?? 0,
+  reb: game?.reb ?? game?.REB ?? 0,
+  blk: game?.blk ?? game?.BLK ?? 0,
+  tov: game?.tov ?? game?.TOV ?? 0,
+  stl: game?.stl ?? game?.STL ?? 0,
+  fg3m: game?.fg3m ?? game?.FG3M ?? 0,
+});
+
 export async function buildPlayerStatsPageData({
   playerId,
   team1Id,
   team2Id,
   stat,
   rawRosterData,
+  rawTeams,
   rawGamesSchedule,
   rawInjuries,
   rawTeamStats,
@@ -130,6 +157,7 @@ export async function buildPlayerStatsPageData({
     }));
   const injuries = Array.isArray(rawInjuries) ? rawInjuries : [];
   const teamStats = Array.isArray(rawTeamStats) ? rawTeamStats : [];
+  const teams = rawTeams ?? {};
 
   const homeRoster = rosterData.filter((p) => Number(p.TEAM_ID) === team1Id);
 
@@ -144,12 +172,17 @@ export async function buildPlayerStatsPageData({
       (g) => g.home_team_id === team1Id && g.visitor_team_id === team2Id,
     ) ?? null;
 
-  const teamNameMap = rosterData.reduce((acc, p) => {
+  const teamNameMap = Object.entries(teams).reduce((acc, [teamId, team]) => {
+    if (team?.name) {
+      acc[Number(teamId)] = team.name;
+    }
+    return acc;
+  }, rosterData.reduce((acc, p) => {
     if (p.TEAM_ID && p.TEAM_NAME) {
       acc[Number(p.TEAM_ID)] = p.TEAM_NAME;
     }
     return acc;
-  }, {});
+  }, {}));
 
   const injuriesTeam1 =
     injuries.find((team) => team.injuries?.[0]?.TeamID === team1Id) ?? null;
@@ -282,7 +315,7 @@ export async function buildPlayerStatsPageData({
   }));
 
   return {
-    player,
+    player: compactPlayer(player),
     playerStats,
     contextGames,
     hasCurrentGames: currentSeasonPlayerLogs.length > 0,
@@ -303,6 +336,10 @@ export async function buildPlayerStatsPageData({
     initialActiveTeam,
     statGraphData,
     teammateImpact,
-    availabilityGames,
+    availabilityGames: {
+      current: currentPlayerLogs.map(compactGameLog),
+      previous: previousPlayerLogs.map(compactGameLog),
+      playoffs: playoffPlayerLogs.map(compactGameLog),
+    },
   };
 }

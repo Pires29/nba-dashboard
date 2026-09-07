@@ -47,7 +47,13 @@ const CustomTooltip = ({ active, payload, statMeta }) => {
 
 const PlayerContextGraphChart = ({ dataFiltered, selectedStat, statMeta, yTicks }) => {
   return (
-    <ResponsiveContainer width="100%" height="100%">
+    <ResponsiveContainer
+      width="100%"
+      height="100%"
+      minWidth={0}
+      minHeight={0}
+      initialDimension={{ width: 1, height: 1 }}
+    >
       <BarChart data={dataFiltered} margin={{ top: 16, right: 4, left: -20, bottom: 24 }}>
         <XAxis dataKey="label" tick={<CustomXAxisTick />} tickLine={false} axisLine={false} interval={0} />
         <YAxis

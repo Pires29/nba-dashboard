@@ -34,7 +34,7 @@ const PlayerRow = ({
       }
     `}
   >
-    <div className="flex items-center gap-3">
+    <div className="flex min-w-0 flex-1 items-center gap-3">
       <span
         className={`
         font-mono text-[10px] w-6 h-6 flex items-center justify-center
@@ -45,9 +45,9 @@ const PlayerRow = ({
       >
         {player.NUM || "—"}
       </span>
-      <div>
+      <div className="min-w-0">
         <p
-          className={`text-[13px] font-semibold leading-tight tracking-tight text-slate-300 group-hover:text-white`}
+          className={`truncate text-[13px] font-semibold leading-tight tracking-tight text-slate-300 group-hover:text-white`}
         >
           {player.PLAYER}
         </p>
@@ -56,7 +56,7 @@ const PlayerRow = ({
         </p>
       </div>
     </div>
-    <div className="flex items-center gap-2">
+    <div className="flex shrink-0 items-center gap-2">
       {injuryStatus && (
         <span
           className={`px-1.5 py-0.5 rounded border text-[9px] font-mono font-bold uppercase tracking-widest ${INJURY_STYLES[injuryStatus] || "bg-slate-500/15 text-slate-400 border-slate-500/30"}`}
@@ -90,7 +90,7 @@ const TeamRoster = ({
   }, [teamRoster]);
 
   return (
-    <div>
+    <div className="min-w-0">
       {sortedRoster.map((player) => (
         <PlayerRow
           key={player.PLAYER_ID}

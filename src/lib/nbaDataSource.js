@@ -7,6 +7,7 @@ import getProps from "./getProps";
 import getRosters from "./getRosters";
 import getStandings from "./getStandings";
 import getTeamStats from "./getTeamStats";
+import teams from "@/app/data/teams.json";
 
 const cleanEnv = (value) => value?.trim().replace(/^["']|["']$/g, "");
 
@@ -51,6 +52,7 @@ async function getStorageSnapshot() {
 function buildLocalData() {
   return {
     rosters: getRosters(),
+    teams,
     props: getProps(),
     games: getGamesSchedule(),
     standings: getStandings(),
@@ -78,6 +80,7 @@ const loadNbaData = async () => {
     const rosters = getRosters(source);
     return {
       rosters,
+      teams: raw.teams,
       props: getProps({
         ...source,
         rostersData: rosters,

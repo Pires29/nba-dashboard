@@ -1,7 +1,11 @@
+'use client';
+
 import Image from "next/image";
+import { useState } from "react";
 
 const QA_PLAYER_ID_MIN = 900001;
 const QA_PLAYER_ID_MAX = 900318;
+const loadedPlayerHeadshots = new Set();
 
 const isQaPlayerId = (playerId) => {
   const id = Number(playerId);
@@ -23,6 +27,9 @@ function Placeholder({ className = "" }) {
 }
 
 export default function PropsPlayerHeadshot({ playerId, alt = "", ...imageProps }) {
+  const cacheKey = String(playerId);
+  const [hasLoaded, setHasLoaded] = useState(() => loadedPlayerHeadshots.has(cacheKey));
+
   if (isQaPlayerId(playerId)) {
     return <Placeholder className={imageProps.className} />;
   }
@@ -32,6 +39,16 @@ export default function PropsPlayerHeadshot({ playerId, alt = "", ...imageProps 
       {...imageProps}
       src={`https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/${playerId}.png`}
       alt={alt}
+      loading={imageProps.priority ? "eager" : imageProps.loading}
+      onLoad={(event) => {
+        loadedPlayerHeadshots.add(cacheKey);
+        setHasLoaded(true);
+        imageProps.onLoad?.(event);
+      }}
+      style={{
+        ...(imageProps.style || {}),
+        visibility: hasLoaded ? "visible" : "hidden",
+      }}
     />
   );
 }

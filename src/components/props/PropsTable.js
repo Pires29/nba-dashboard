@@ -9,6 +9,7 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import BetaSeasonDataBanner from "@/components/BetaSeasonDataBanner";
 import PropsFilterDropdown from "./PropsFilterDropdown";
 import PropsUpgradeButton from "./PropsUpgradeButton";
 import {
@@ -355,8 +356,6 @@ export default function PropsTable({
   ]);
   const hasActiveFilters =
     activeFilterChips.length > 0 || search !== "" || sortPeriod !== "L5";
-  const isStale = dataStatus?.isStale ?? false;
-
   return (
     <div className="flex flex-col h-full bg-gradient-to-b from-[#0D1B2E] to-[#060E1A] font-sans overflow-hidden min-h-0">
       <div
@@ -378,17 +377,6 @@ export default function PropsTable({
           <span className="rounded border border-white/[0.06] px-2.5 py-1 text-[11px] font-mono text-slate-500">
             {propsCount} props
           </span>
-          <span
-            aria-live="polite"
-            className={`text-[10px] font-mono text-orange-300 transition-opacity ${isUpdating ? "opacity-100" : "opacity-0"}`}
-          >
-            Updating…
-          </span>
-          {(isStale || dataStatus?.source === "local" || dataStatus?.source === "qa") && (
-            <span className={`text-[10px] font-mono ${isStale || dataStatus?.source === "local" ? "text-amber-300" : "text-slate-400"}`}>
-              {dataStatus?.source === "qa" ? "QA data" : dataStatus?.source === "local" ? "Local fallback" : "Stale data"}
-            </span>
-          )}
           {isFreePlan && (
             <PropsUpgradeButton
               className="ml-auto hidden items-center gap-1.5 rounded-lg border border-orange-500/30 bg-orange-500/10 px-2.5 py-1.5 transition-all hover:border-orange-500/50 hover:bg-orange-500/20 sm:flex"
@@ -438,6 +426,8 @@ export default function PropsTable({
             </span>
           </PropsUpgradeButton>
         )}
+
+        <BetaSeasonDataBanner updatedAt={dataStatus?.updatedAt} />
 
         {/* Filters */}
         <div className="flex flex-col gap-4 flex-shrink-0">

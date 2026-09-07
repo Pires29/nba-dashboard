@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Card from "@/components/ui/playerStats/Card";
 import GameSelector from "./selectors/GameSelector";
@@ -14,6 +14,24 @@ const TeamRoster = dynamic(() => import("./TeamRoster"), {
 const MobileSheet = dynamic(() => import("./layout/MobileSheet"), {
   ssr: false,
 });
+
+const RosterLoadingPlaceholder = () => (
+  <div aria-hidden="true" className="min-h-[520px]">
+    {Array.from({ length: 10 }, (_, index) => (
+      <div
+        key={index}
+        className="flex items-center gap-3 border-b border-white/[0.04] px-4 py-2.5"
+      >
+        <div className="h-6 w-6 shrink-0 animate-pulse rounded border border-white/[0.06] bg-white/[0.04]" />
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className={`h-2.5 animate-pulse rounded bg-white/[0.05] ${index % 3 === 0 ? "w-3/5" : "w-4/5"}`} />
+          <div className="h-2 w-10 animate-pulse rounded bg-white/[0.04]" />
+        </div>
+        <div className="h-4 w-8 animate-pulse rounded border border-orange-500/10 bg-orange-500/[0.05]" />
+      </div>
+    ))}
+  </div>
+);
 
 const PlayerSelectionControls = ({
   plan,
@@ -53,7 +71,10 @@ const PlayerSelectionControls = ({
   const [draftSelectedTeammateIds, setDraftSelectedTeammateIds] = useState(selectedTeammateIds);
   const [draftTeammateModes, setDraftTeammateModes] = useState(teammateModes);
   const desktopCardRef = useRef(null);
+  const desktopAnchorRef = useRef(null);
   const [desktopCardHeight, setDesktopCardHeight] = useState(null);
+  const [isDesktopCardStuck, setIsDesktopCardStuck] = useState(false);
+  const desktopRosterListRef = useRef(null);
 
   const openMobileSheet = () => {
     setDraftRangeMinMinutes(rangeMinMinutes);
@@ -102,28 +123,6 @@ const PlayerSelectionControls = ({
     setDraftTeammateModes({});
   };
 
-  useEffect(() => {
-    let frameId;
-    const updateAvailableHeight = () => {
-      window.cancelAnimationFrame(frameId);
-      frameId = window.requestAnimationFrame(() => {
-        const card = desktopCardRef.current;
-        if (!card || window.innerWidth < 1024) return;
-        const top = Math.max(card.getBoundingClientRect().top, 72);
-        setDesktopCardHeight(Math.max(320, Math.floor(window.innerHeight - top - 16)));
-      });
-    };
-
-    updateAvailableHeight();
-    window.addEventListener("resize", updateAvailableHeight);
-    window.addEventListener("scroll", updateAvailableHeight, { passive: true });
-    return () => {
-      window.cancelAnimationFrame(frameId);
-      window.removeEventListener("resize", updateAvailableHeight);
-      window.removeEventListener("scroll", updateAvailableHeight);
-    };
-  }, []);
-
   const safeHomeRoster = useMemo(() => homeRoster ?? [], [homeRoster]);
   const safeAwayRoster = useMemo(() => awayRoster ?? [], [awayRoster]);
 
@@ -162,14 +161,68 @@ const PlayerSelectionControls = ({
 
   const desktopRoster = activeTeam === 0 ? safeHomeRoster : safeAwayRoster;
 
+  useEffect(() => {
+    const anchor = desktopAnchorRef.current;
+    const card = desktopCardRef.current;
+    const scrollContainer = card?.closest("main");
+    if (!anchor || !scrollContainer) return;
+
+    const sentinel = anchor.firstElementChild;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        const rootTop = entry.rootBounds?.top ?? scrollContainer.getBoundingClientRect().top;
+        setIsDesktopCardStuck(entry.boundingClientRect.top < rootTop);
+      },
+      { root: scrollContainer, threshold: 0, rootMargin: "-17px 0px 0px 0px" },
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, []);
+
+  useLayoutEffect(() => {
+    const updateAvailableHeight = () => {
+      const card = desktopCardRef.current;
+      if (!card || window.innerWidth < 1024) return;
+
+      const scrollContainer = card.closest("main");
+      if (!scrollContainer) return;
+
+      const anchor = desktopAnchorRef.current ?? card;
+      const anchorTop =
+        anchor.getBoundingClientRect().top -
+        scrollContainer.getBoundingClientRect().top +
+        scrollContainer.scrollTop;
+      const available = isDesktopCardStuck
+        ? scrollContainer.clientHeight - 32
+        : scrollContainer.clientHeight - anchorTop - 16;
+
+      setDesktopCardHeight(
+        Math.max(320, Math.floor(available)),
+      );
+    };
+
+    updateAvailableHeight();
+    window.addEventListener("resize", updateAvailableHeight);
+    return () => window.removeEventListener("resize", updateAvailableHeight);
+  }, [isDesktopCardStuck]);
+
+  useEffect(() => {
+    desktopRosterListRef.current?.scrollTo({ top: 0, behavior: "auto" });
+  }, [activeTeam, desktopRoster.length, currentGame?.home_team_id, currentGame?.visitor_team_id]);
+
   return (
     <>
-      <Card
-        accent="orange"
-        className="hidden lg:sticky lg:top-[72px] lg:flex lg:min-h-0 lg:flex-col"
-        elementRef={desktopCardRef}
-        style={desktopCardHeight ? { maxHeight: `${desktopCardHeight}px` } : undefined}
-      >
+      <div ref={desktopAnchorRef} className="relative hidden min-h-0 lg:block lg:h-full lg:self-start">
+        <div aria-hidden="true" className="pointer-events-none absolute left-0 top-0 h-px w-px" />
+        <Card
+          accent="orange"
+          className="h-full min-h-0 lg:sticky lg:top-4 lg:flex lg:min-h-0 lg:flex-col"
+          elementRef={desktopCardRef}
+          style={desktopCardHeight ? { height: `${desktopCardHeight}px` } : undefined}
+        >
         <div className="p-4 pb-3">
           <div className="mb-2 flex items-center justify-between">
             <p className="text-[10px] font-mono font-bold uppercase tracking-[0.16em] text-slate-400">Game</p>
@@ -215,15 +268,20 @@ const PlayerSelectionControls = ({
           </div>
         )}
 
-        <div aria-busy={isPending} className={`min-h-0 flex-1 overflow-y-auto overscroll-contain border-t border-white/[0.05] scrollbar-thin ${isPending ? "pointer-events-none opacity-60" : ""}`}>
-          <TeamRoster
-            teamRoster={desktopRoster}
-            setSelectedName={handleSelectPlayer}
-            injuryMap={injuryStatusMap}
-            selectedName={selectedName}
-          />
+        <div ref={desktopRosterListRef} aria-busy={isPending} className={`min-h-0 flex-1 overflow-y-auto overscroll-contain border-t border-white/[0.05] scrollbar-thin ${isPending ? "pointer-events-none opacity-60" : ""}`}>
+          {desktopRoster.length > 0 ? (
+            <TeamRoster
+              teamRoster={desktopRoster}
+              setSelectedName={handleSelectPlayer}
+              injuryMap={injuryStatusMap}
+              selectedName={selectedName}
+            />
+          ) : (
+            <RosterLoadingPlaceholder />
+          )}
         </div>
-      </Card>
+        </Card>
+      </div>
 
       <button
         aria-label="Open filters"

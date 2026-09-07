@@ -22,6 +22,7 @@ export default async function Page({ searchParams }) {
   const allowedPlayerIds = getAvailablePlayers(plan, nbaData);
 
   const rawRosterData = nbaData.rosters;
+  const rawTeams = nbaData.teams;
   const matchupRoster = rawRosterData.filter((player) => {
     const teamId = Number(player.TEAM_ID);
     return teamId === team1Id || teamId === team2Id;
@@ -81,6 +82,7 @@ export default async function Page({ searchParams }) {
     team2Id,
     stat,
     rawRosterData: matchupRoster,
+    rawTeams,
     rawGamesSchedule,
     rawInjuries,
     rawTeamStats,

@@ -15,9 +15,9 @@ export const metadata = {
 export default function MainLayout({ children }) {
   return (
     <PostHogProvider>
-      <div className="flex min-h-screen flex-col bg-[#060E1A]">
+      <div className="flex h-screen flex-col overflow-hidden bg-[#060E1A]">
         <Navbar />
-        <main className="flex min-h-0 flex-1 flex-col">
+        <main className="flex min-h-0 flex-1 flex-col overflow-y-auto">
           {children}
         </main>
         <UpgradeModalProvider />

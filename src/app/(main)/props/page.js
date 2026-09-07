@@ -9,8 +9,6 @@ import { INITIAL_VISIBLE_ROWS } from "@/components/props/propsConfig";
 
 export const dynamic = "force-dynamic";
 
-const SERVER_STARTED_AT = Date.now();
-
 const STATS = new Set([
   "points",
   "assists",
@@ -372,11 +370,7 @@ export default async function PropsPage({ searchParams }) {
       propsCount={enrichedProps.length}
       isFreePlan={plan === "free"}
       dataStatus={{
-        source: qa ? "qa" : nbaData.source,
         updatedAt: nbaData.updatedAt ?? null,
-        isStale: nbaData.updatedAt
-          ? SERVER_STARTED_AT - new Date(nbaData.updatedAt).getTime() > 24 * 60 * 60 * 1000
-          : false,
       }}
       initialFilters={{
         selectedStat,

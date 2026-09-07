@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useCallback, useState } from "react";
+import BetaSeasonDataBanner from "@/components/BetaSeasonDataBanner";
 import Card from "@/components/ui/playerStats/Card";
 import DeferredRender from "@/components/ui/DeferredRender";
 import Injuries from "../Injuries";
@@ -137,25 +138,22 @@ const ResponsiveLayout = ({
     setTeammateModes({});
   };
 
-  const showDataWarning =
-    dataStatus?.isStale ||
-    dataStatus?.source === "qa" ||
-    dataStatus?.source === "unavailable" ||
-    dataStatus?.source === "local";
-
   return (
-    <div className="relative z-10 mx-auto flex w-full max-w-[1440px] flex-1 flex-col px-4 sm:px-5 lg:px-6">
-      <div className="flex flex-1 flex-col gap-4 py-4 lg:gap-6 lg:py-6">
-        {showDataWarning && (
+    <div className="relative z-10 mx-auto flex min-h-full w-full max-w-[1440px] flex-1 flex-col px-4 sm:px-5 lg:px-6">
+      <div className="flex min-h-0 flex-1 flex-col gap-4 py-4 lg:gap-6 lg:py-6">
+        <BetaSeasonDataBanner updatedAt={dataStatus?.updatedAt} />
+
+        {(dataStatus?.source === "qa" ||
+          dataStatus?.source === "unavailable" ||
+          dataStatus?.source === "local") && (
           <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-white/[0.07] bg-white/[0.02] px-3 py-2 font-mono text-[9px] uppercase tracking-wider text-slate-400">
-            {dataStatus?.isStale && <span className="text-amber-300">Data may be out of date</span>}
             {dataStatus?.source === "qa" && <span>Controlled QA data</span>}
             {dataStatus?.source === "unavailable" && <span className="text-amber-300">Player logs unavailable</span>}
             {dataStatus?.source === "local" && <span className="text-amber-300">Local fallback data</span>}
           </div>
         )}
-        <div className="flex min-w-0 flex-col gap-4 lg:gap-6">
-          <div className="grid min-w-0 items-start gap-4 lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-6">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 lg:gap-6">
+          <div className="grid min-h-0 min-w-0 flex-1 items-stretch gap-4 lg:h-max lg:flex-none lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-6">
             <PlayerSelectionControls
               plan={plan}
               currentGame={currentGame}
@@ -185,7 +183,7 @@ const ResponsiveLayout = ({
               setTeammateModes={setTeammateModes}
             />
 
-            <div className="flex min-w-0 flex-col gap-4 lg:gap-6">
+            <div className="flex min-w-0 flex-col gap-4 pb-4 lg:gap-6 lg:pb-4">
             {isPlayerLocked ? (
               <LockedPlayerState playerName={lockedPlayerName} embedded />
             ) : (

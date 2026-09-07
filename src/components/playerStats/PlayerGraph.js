@@ -1,17 +1,13 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import PlayerGraphChart from "./PlayerGraphChart";
 import {
   buildFilteredPlayerGraphData,
   buildTeammateImpactData,
   PLAYER_GRAPH_STATS,
 } from "@/lib/buildPlayerGraphData";
-
-const PlayerGraphChart = dynamic(() => import("./PlayerGraphChart"), {
-  ssr: false,
-});
 
 const statOptions = PLAYER_GRAPH_STATS;
 const PlayerGraph = ({
