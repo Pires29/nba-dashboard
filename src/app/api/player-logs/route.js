@@ -3,9 +3,20 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { NextResponse } from "next/server";
 import { getNbaData, getNbaPlayerLogs } from "@/lib/nbaDataSource";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
+import { getRequestIp } from "@/lib/security";
 
 export async function GET(req) {
   const session = await getServerSession(authOptions);
+  const rateLimitKey = session?.user?.id
+    ? `player-logs:user:${session.user.id}`
+    : `player-logs:ip:${getRequestIp(req)}`;
+  const rateLimit = await checkRateLimit(rateLimitKey, {
+    limit: session?.user?.id ? 120 : 30,
+    windowMs: 15 * 60 * 1000,
+  });
+  if (!rateLimit.allowed) return rateLimitResponse(rateLimit);
+
   const nbaData = await getNbaData();
   const plan = session?.user?.plan ?? "free";
   const allowedPlayerIds = getAvailablePlayers(plan, nbaData);
@@ -22,5 +33,9 @@ export async function GET(req) {
 
   const { logs, logsPlayoffs, logsPrev } = await getNbaPlayerLogs(playerId);
 
-  return NextResponse.json({ logs, logsPlayoffs, logsPrev });
+  return NextResponse.json({
+    logs: logs.slice(0, 120),
+    logsPlayoffs: logsPlayoffs.slice(0, 120),
+    logsPrev: logsPrev.slice(0, 120),
+  });
 }

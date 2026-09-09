@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { getRequestIp, readJson, RequestError } from "@/lib/security";
 import { requestPasswordReset, PASSWORD_RESET_RESPONSE } from "@/lib/passwordReset";
+import { verifyBotToken } from "@/lib/botProtection";
 
 export async function POST(req) {
   try {
@@ -14,6 +15,7 @@ export async function POST(req) {
     if (!rateLimit.allowed) return rateLimitResponse(rateLimit);
 
     const body = await readJson(req);
+    await verifyBotToken(req, body.turnstileToken);
     const flowId = typeof body.flowId === "string" ? body.flowId : "";
     await requestPasswordReset(body.email, req, { flowId });
 

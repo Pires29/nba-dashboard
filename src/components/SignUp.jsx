@@ -13,6 +13,7 @@ import {
 import { safeInternalPath } from "@/lib/security";
 import { moveAuthFormFocus } from "@/lib/authFormKeyboard";
 import { captureEvent } from "@/components/PostHogProvider";
+import TurnstileWidget, { isTurnstileEnabled } from "@/components/TurnstileWidget";
 
 export function SignupForm() {
   const [error, setError] = useState(null);
@@ -20,6 +21,7 @@ export function SignupForm() {
   const [notice, setNotice] = useState(null);
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState("");
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = safeInternalPath(searchParams.get("callbackUrl"), "/");
@@ -41,6 +43,8 @@ export function SignupForm() {
     const emailRegex = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(email))
       return setError("Please enter a valid email address");
+    if (isTurnstileEnabled() && !turnstileToken)
+      return setError("Please complete the verification challenge");
 
     setLoading(true);
     setError(null);
@@ -50,7 +54,7 @@ export function SignupForm() {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password, flowId }),
+        body: JSON.stringify({ name, email, password, flowId, turnstileToken }),
       });
 
       const data = await res.json();
@@ -147,6 +151,11 @@ export function SignupForm() {
           required
           data-auth-field
           onKeyDown={moveAuthFormFocus}
+        />
+
+        <TurnstileWidget
+          onVerify={setTurnstileToken}
+          onExpire={() => setTurnstileToken("")}
         />
 
         {error && (

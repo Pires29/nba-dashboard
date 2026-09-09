@@ -47,6 +47,11 @@ NBA data and maintenance:
 - `NBA_STORAGE_MANIFEST=current.json`
 - `CLEANUP_SECRET`
 
+Bot protection:
+
+- `NEXT_PUBLIC_TURNSTILE_SITE_KEY`
+- `TURNSTILE_SECRET_KEY`
+
 Monitoring:
 
 - `SENTRY_DSN`
@@ -59,6 +64,10 @@ Production safety:
 
 - `QA_MODE=false`
 - `QA_ALLOW_PRODUCTION_LOCAL=false`
+
+GitHub Actions secrets:
+
+- `BACKUP_DATABASE_URL` with the production direct/session PostgreSQL connection string.
 
 ## Production database migration
 
@@ -142,6 +151,15 @@ After deploy, verify:
   - Alert destinations: email plus whichever channel you actually read.
 - Configure the hosting provider to retain and alert on structured logs with `level: "error"`.
 - Monitor the daily data pipeline and alert when `updatedAt` becomes older than 36 hours.
+
+## Automated database backups
+
+The `Backup database` GitHub Actions workflow runs daily at 03:17 UTC and can
+also be started manually. It requires the `BACKUP_DATABASE_URL` repository
+secret and stores a compressed `pg_dump` artifact for 14 days.
+
+Use a direct/session PostgreSQL connection string for `BACKUP_DATABASE_URL`,
+not a pooled PgBouncer transaction URL.
 
 ## Release gate
 

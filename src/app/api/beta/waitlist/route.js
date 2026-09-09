@@ -8,6 +8,7 @@ import {
   readJson,
   RequestError,
 } from "@/lib/security";
+import { verifyBotToken } from "@/lib/botProtection";
 
 export async function POST(req) {
   try {
@@ -18,6 +19,7 @@ export async function POST(req) {
     if (!rateLimit.allowed) return rateLimitResponse(rateLimit);
 
     const body = await readJson(req, { maxBytes: 1_024 });
+    await verifyBotToken(req, body.turnstileToken);
     const email = normalizeEmail(body.email);
 
     if (!isValidEmail(email)) {

@@ -13,6 +13,7 @@ import {
   validatePassword,
 } from "@/lib/security";
 import { sendVerificationForUser } from "@/lib/emailVerification";
+import { verifyBotToken } from "@/lib/botProtection";
 
 export async function POST(req) {
   try {
@@ -27,6 +28,7 @@ export async function POST(req) {
     const email = normalizeEmail(body.email);
     const password = typeof body.password === "string" ? body.password : "";
     const flowId = typeof body.flowId === "string" ? body.flowId : "";
+    await verifyBotToken(req, body.turnstileToken);
 
     if (!name || !email || !password)
       return NextResponse.json({ error: "Campos em falta" }, { status: 400 });

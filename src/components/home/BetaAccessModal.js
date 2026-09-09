@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { launchConfig } from "@/config/launch";
+import TurnstileWidget, { isTurnstileEnabled } from "@/components/TurnstileWidget";
 
 const INITIAL_STATUS = { type: "idle", message: "" };
 
@@ -19,6 +20,7 @@ export default function BetaAccessModal({
   const [status, setStatus] = useState(INITIAL_STATUS);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [redirectTo, setRedirectTo] = useState("/props");
+  const [turnstileToken, setTurnstileToken] = useState("");
 
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
@@ -58,11 +60,17 @@ export default function BetaAccessModal({
     setStatus(INITIAL_STATUS);
     setIsSubmitting(true);
 
+    if (isTurnstileEnabled() && !turnstileToken) {
+      setStatus({ type: "error", message: "Please complete the verification challenge" });
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       const response = await fetch("/api/beta/waitlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, turnstileToken }),
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Unable to join the waitlist");
@@ -145,6 +153,7 @@ export default function BetaAccessModal({
                   onClick={() => {
                     setMode("code");
                     setStatus(INITIAL_STATUS);
+                    setTurnstileToken("");
                   }}
                 >
                   I have a beta code
@@ -155,6 +164,7 @@ export default function BetaAccessModal({
                   onClick={() => {
                     setMode("waitlist");
                     setStatus(INITIAL_STATUS);
+                    setTurnstileToken("");
                   }}
                 >
                   Join the waitlist
@@ -198,6 +208,10 @@ export default function BetaAccessModal({
                       autoComplete="email"
                     />
                   </label>
+                  <TurnstileWidget
+                    onVerify={setTurnstileToken}
+                    onExpire={() => setTurnstileToken("")}
+                  />
                   <button
                     type="submit"
                     disabled={isSubmitting}

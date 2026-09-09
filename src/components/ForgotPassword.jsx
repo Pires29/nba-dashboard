@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AuthInput, AuthLayout } from "@/components/AuthLayout";
+import TurnstileWidget, { isTurnstileEnabled } from "@/components/TurnstileWidget";
 
 export function ForgotPasswordForm() {
   const router = useRouter();
@@ -13,6 +14,7 @@ export function ForgotPasswordForm() {
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState("");
 
   useEffect(() => {
     const channel = new BroadcastChannel("hoopiq:auth");
@@ -47,11 +49,17 @@ export function ForgotPasswordForm() {
     setError(null);
     setMessage(null);
 
+    if (isTurnstileEnabled() && !turnstileToken) {
+      setError("Please complete the verification challenge");
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await fetch("/api/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: e.target.email.value, flowId }),
+        body: JSON.stringify({ email: e.target.email.value, flowId, turnstileToken }),
       });
       const data = await res.json();
 
@@ -89,6 +97,11 @@ export function ForgotPasswordForm() {
           required
           value={emailValue}
           onChange={(event) => setEmailValue(event.target.value)}
+        />
+
+        <TurnstileWidget
+          onVerify={setTurnstileToken}
+          onExpire={() => setTurnstileToken("")}
         />
 
         {message && (
