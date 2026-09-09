@@ -6,6 +6,7 @@ import { getNbaData } from "@/lib/nbaDataSource";
 import { logError } from "@/lib/logger";
 
 const isProduction = process.env.NODE_ENV === "production";
+const allowsLocalNbaData = process.env.RUN_INTEGRATION_TESTS === "true";
 
 function publicError(message) {
   return isProduction ? "Unavailable" : message;
@@ -36,14 +37,15 @@ export async function GET() {
 
   try {
     const nbaData = await getNbaData();
+    const nbaDataHealthy = nbaData.source === "storage" || allowsLocalNbaData;
     health.nbaData = {
-      status: nbaData.source === "storage" ? "ok" : "degraded",
+      status: nbaDataHealthy ? "ok" : "degraded",
       source: nbaData.source,
       version: nbaData.version ?? null,
       updatedAt: nbaData.updatedAt ?? null,
       error: nbaData.error ? publicError(nbaData.error) : null,
     };
-    if (nbaData.source !== "storage") health.status = "degraded";
+    if (!nbaDataHealthy) health.status = "degraded";
   } catch (error) {
     health.status = "degraded";
     health.nbaData.status = "error";

@@ -54,7 +54,8 @@ test("health endpoint verifies the database and NBA data source", async () => {
   assert.equal(response.status, 200, body);
   const health = JSON.parse(body);
   assert.equal(health.status, "ok");
-  assert.equal(health.database, "ok");
+  assert.equal(health.database.status, "ok");
+  assert.equal(health.nbaData.status, "ok");
 });
 
 test("signup writes to the migrated database and rejects duplicates", async () => {

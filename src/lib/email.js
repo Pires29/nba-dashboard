@@ -64,7 +64,11 @@ async function sendEmail(message) {
     return;
   }
 
-  if (!provider && process.env.NODE_ENV !== "production") {
+  if (
+    !provider &&
+    (process.env.NODE_ENV !== "production" ||
+      process.env.RUN_INTEGRATION_TESTS === "true")
+  ) {
     console.info(`${message.subject} email prepared`, {
       to: message.to,
       text: message.text,
