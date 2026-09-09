@@ -1,4 +1,5 @@
 import { getCurrentSession } from "@/lib/getCurrentSession";
+import Image from "next/image";
 import Link from "next/link";
 import PricingLink from "./PricingLink";
 import ProfileMenuClient from "./ProfileMenuClient";
@@ -23,21 +24,14 @@ const Navbar = async () => {
       <div className="max-w-[1400px] mx-auto px-6 py-3 flex items-center justify-between">
         {/* Logo */}
         <Link href="/props" aria-label="Open PropInsight props table" className="flex items-center gap-2.5 group">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500 shadow-[0_0_12px_rgba(249,115,22,0.4)] sm:h-7 sm:w-7">
-            <svg width="23" height="23" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M6.5 15.5v2.2" stroke="white" strokeWidth="2.2" strokeLinecap="round" />
-              <path d="M11.2 12.5v5.2" stroke="white" strokeWidth="2.2" strokeLinecap="round" />
-              <path d="M15.9 9.2v8.5" stroke="white" strokeWidth="2.2" strokeLinecap="round" />
-              <path
-                d="M6.2 12.6 9.8 9.4l3 2.3 5-5.2"
-                stroke="white"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <circle cx="17.8" cy="6.5" r="1.45" fill="white" />
-            </svg>
-          </div>
+          <Image
+            src="/icon.svg"
+            alt=""
+            width={32}
+            height={32}
+            aria-hidden="true"
+            className="h-8 w-8 rounded-lg shadow-[0_0_12px_rgba(249,115,22,0.4)] sm:h-7 sm:w-7"
+          />
           <span className="hidden font-mono text-sm font-black uppercase tracking-widest text-white transition-colors group-hover:text-orange-400 sm:block">
             PROPINSIGHT
           </span>
