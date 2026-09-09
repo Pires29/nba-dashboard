@@ -16,6 +16,8 @@ jobs:
   backup:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      PG_DUMP: /usr/lib/postgresql/17/bin/pg_dump
 
     steps:
       - name: Install PostgreSQL client
@@ -27,7 +29,7 @@ jobs:
           echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo "$VERSION_CODENAME")-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
           sudo apt-get update
           sudo apt-get install --yes postgresql-client-17
-          pg_dump --version
+          "$PG_DUMP" --version
 
       - name: Dump production database
         env:
@@ -40,7 +42,7 @@ jobs:
 
           mkdir -p backups
           timestamp="$(date -u +%Y%m%dT%H%M%SZ)"
-          pg_dump "$BACKUP_DATABASE_URL" --format=custom --no-owner --no-acl --file="backups/nba-dashboard-${timestamp}.dump"
+          "$PG_DUMP" "$BACKUP_DATABASE_URL" --format=custom --no-owner --no-acl --file="backups/nba-dashboard-${timestamp}.dump"
           gzip "backups/nba-dashboard-${timestamp}.dump"
 
       - name: Upload backup artifact
