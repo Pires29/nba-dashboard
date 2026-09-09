@@ -11,6 +11,7 @@ import { getQaContext } from "@/lib/qa/context";
 import { resolveQaPlan } from "@/lib/qa/plan";
 import { getQaFavorites, setQaFavorites } from "@/lib/qa/favorites";
 import { logError } from "@/lib/logger";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 
 const FAVORITE_STATS = new Set([
   "points", "assists", "rebounds", "blocks", "steals", "turnovers",
@@ -21,12 +22,25 @@ function hasFullFavoriteAccess(plan) {
   return plan === "pro" || plan === "trial";
 }
 
+async function enforceFavoritesRateLimit(userId, action) {
+  const limits = {
+    read: { limit: 120, windowMs: 15 * 60 * 1000 },
+    write: { limit: 60, windowMs: 15 * 60 * 1000 },
+    bulkDelete: { limit: 20, windowMs: 15 * 60 * 1000 },
+  };
+  const result = await checkRateLimit(`favorites:${action}:${userId}`, limits[action]);
+  return result.allowed ? null : rateLimitResponse(result);
+}
+
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id)
     return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
+    const limited = await enforceFavoritesRateLimit(session.user.id, "read");
+    if (limited) return limited;
+
     const qa = await getQaContext();
     if (qa) return Response.json(await getQaFavorites());
 
@@ -48,6 +62,9 @@ export async function POST(req) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
+    const limited = await enforceFavoritesRateLimit(session.user.id, "write");
+    if (limited) return limited;
+
     const qa = await getQaContext();
     const body = await readJson(req);
     const playerId = Number(body.playerId);
@@ -133,6 +150,9 @@ export async function DELETE(req) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id)
     return Response.json({ error: "Unauthorized" }, { status: 401 });
+
+  const limited = await enforceFavoritesRateLimit(session.user.id, "bulkDelete");
+  if (limited) return limited;
 
   let ids;
   try {

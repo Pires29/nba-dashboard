@@ -6,11 +6,18 @@ import { authOptions } from "@/lib/authOptions";
 import prisma from "../../../../../prisma/prismaClient";
 import { getQaContext } from "@/lib/qa/context";
 import { getQaFavorites, setQaFavorites } from "@/lib/qa/favorites";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 
 export async function DELETE(req, { params }) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id)
     return Response.json({ error: "Unauthorized" }, { status: 401 });
+
+  const rateLimit = await checkRateLimit(`favorites:delete:${session.user.id}`, {
+    limit: 60,
+    windowMs: 15 * 60 * 1000,
+  });
+  if (!rateLimit.allowed) return rateLimitResponse(rateLimit);
 
   const { id } = await params;
 
