@@ -7,8 +7,12 @@ import prisma from "../../../../../prisma/prismaClient";
 import { getQaContext } from "@/lib/qa/context";
 import { getQaFavorites, setQaFavorites } from "@/lib/qa/favorites";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
+import { requireBetaApiAccess } from "@/lib/betaGate";
 
 export async function DELETE(req, { params }) {
+  const betaBlocked = await requireBetaApiAccess();
+  if (betaBlocked) return betaBlocked;
+
   const session = await getServerSession(authOptions);
   if (!session?.user?.id)
     return Response.json({ error: "Unauthorized" }, { status: 401 });

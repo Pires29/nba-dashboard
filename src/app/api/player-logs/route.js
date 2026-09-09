@@ -5,8 +5,12 @@ import { NextResponse } from "next/server";
 import { getNbaData, getNbaPlayerLogs } from "@/lib/nbaDataSource";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { getRequestIp } from "@/lib/security";
+import { requireBetaApiAccess } from "@/lib/betaGate";
 
 export async function GET(req) {
+  const betaBlocked = await requireBetaApiAccess();
+  if (betaBlocked) return betaBlocked;
+
   const session = await getServerSession(authOptions);
   const rateLimitKey = session?.user?.id
     ? `player-logs:user:${session.user.id}`

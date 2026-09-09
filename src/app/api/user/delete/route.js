@@ -7,11 +7,15 @@ import prisma from "../../../../../prisma/prismaClient";
 import Stripe from "stripe";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { removeStripeCustomerAndSubscriptions } from "@/lib/stripeBilling";
+import { requireBetaApiAccess } from "@/lib/betaGate";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function DELETE(req) {
   try {
+    const betaBlocked = await requireBetaApiAccess();
+    if (betaBlocked) return betaBlocked;
+
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.id) {

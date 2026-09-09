@@ -3,9 +3,13 @@ import { authOptions } from "@/lib/authOptions";
 import { validateReferralForUser } from "@/lib/referrals";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { readJson, RequestError } from "@/lib/security";
+import { requireBetaApiAccess } from "@/lib/betaGate";
 
 export async function POST(req) {
   try {
+    const betaBlocked = await requireBetaApiAccess();
+    if (betaBlocked) return betaBlocked;
+
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return Response.json(

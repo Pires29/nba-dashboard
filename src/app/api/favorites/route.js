@@ -12,6 +12,7 @@ import { resolveQaPlan } from "@/lib/qa/plan";
 import { getQaFavorites, setQaFavorites } from "@/lib/qa/favorites";
 import { logError } from "@/lib/logger";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
+import { requireBetaApiAccess } from "@/lib/betaGate";
 
 const FAVORITE_STATS = new Set([
   "points", "assists", "rebounds", "blocks", "steals", "turnovers",
@@ -33,6 +34,9 @@ async function enforceFavoritesRateLimit(userId, action) {
 }
 
 export async function GET() {
+  const betaBlocked = await requireBetaApiAccess();
+  if (betaBlocked) return betaBlocked;
+
   const session = await getServerSession(authOptions);
   if (!session?.user?.id)
     return Response.json({ error: "Unauthorized" }, { status: 401 });
@@ -57,6 +61,9 @@ export async function GET() {
 }
 
 export async function POST(req) {
+  const betaBlocked = await requireBetaApiAccess();
+  if (betaBlocked) return betaBlocked;
+
   const session = await getServerSession(authOptions);
   if (!session?.user?.id)
     return Response.json({ error: "Unauthorized" }, { status: 401 });
@@ -147,6 +154,9 @@ export async function POST(req) {
 }
 
 export async function DELETE(req) {
+  const betaBlocked = await requireBetaApiAccess();
+  if (betaBlocked) return betaBlocked;
+
   const session = await getServerSession(authOptions);
   if (!session?.user?.id)
     return Response.json({ error: "Unauthorized" }, { status: 401 });

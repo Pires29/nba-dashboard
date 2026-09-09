@@ -8,6 +8,8 @@ import { validateReferralForUser } from "@/lib/referrals";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { readJson, RequestError } from "@/lib/security";
 import { validateCheckoutPlan } from "@/lib/stripePlans";
+import { getLaunchConfig } from "@/config/launch";
+import { requireBetaApiAccess } from "@/lib/betaGate";
 import {
   CheckoutInProgressError,
   releaseCheckoutAttempt,
@@ -28,6 +30,17 @@ export async function POST(req) {
   let checkoutSession = null;
 
   try {
+    const launchConfig = getLaunchConfig();
+    if (!launchConfig.pricing.checkoutEnabled) {
+      return Response.json(
+        { error: "Checkout is disabled during closed beta" },
+        { status: 403 },
+      );
+    }
+
+    const betaBlocked = await requireBetaApiAccess();
+    if (betaBlocked) return betaBlocked;
+
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });

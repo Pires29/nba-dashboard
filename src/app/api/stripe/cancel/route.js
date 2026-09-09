@@ -5,11 +5,15 @@ import { authOptions } from "@/lib/authOptions";
 import Stripe from "stripe";
 import prisma from "../../../../../prisma/prismaClient";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
+import { requireBetaApiAccess } from "@/lib/betaGate";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function POST() {
   try {
+    const betaBlocked = await requireBetaApiAccess();
+    if (betaBlocked) return betaBlocked;
+
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
