@@ -252,3 +252,5 @@ Skeleton horrivel
 loading da pagina de playerstats esta muito lenta
 
 Verificar que dados sao carregados para cada pagina e se ha dados desnecessarios
+
+Skeleton esta a aparecer da homepage quando nao deve
