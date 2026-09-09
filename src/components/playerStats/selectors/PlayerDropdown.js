@@ -21,7 +21,7 @@ const PlayerDropdown = ({
     "";
 
   return (
-    <label className="block">
+    <label className="relative block">
       <span className="sr-only">Select player</span>
       <select
         aria-label="Select player"
@@ -33,7 +33,7 @@ const PlayerDropdown = ({
           if (!player) return;
           onSelect?.(player);
         }}
-        className="w-full rounded-lg border border-white/[0.08] bg-[#060E1A] px-3 py-3 text-[12px] font-semibold text-slate-300 outline-none transition-colors hover:border-orange-500/30 focus:border-orange-500/40"
+        className="w-full appearance-none rounded-lg border border-white/[0.08] bg-[#060E1A] py-3 pl-3 pr-10 text-[12px] font-semibold text-slate-300 outline-none transition-colors hover:border-orange-500/30 focus:border-orange-500/40"
       >
         <option value="" disabled>
           Select player
@@ -53,6 +53,14 @@ const PlayerDropdown = ({
           </optgroup>
         ))}
       </select>
+      <svg
+        aria-hidden="true"
+        className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+        viewBox="0 0 24 24"
+        fill="none"
+      >
+        <path d="m6 9 6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
     </label>
   );
 };

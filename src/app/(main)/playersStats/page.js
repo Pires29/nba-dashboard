@@ -86,6 +86,8 @@ export default async function Page({ searchParams }) {
     rawGamesSchedule,
     rawInjuries,
     rawTeamStats,
+    rawAnalytics: nbaData.analytics,
+    playerTrends: playerLogBundle.trends,
     playerLogs: logs,
     playerLogsPrev: logsPrev,
     playerLogsPlayoffs: logsPlayoffs,

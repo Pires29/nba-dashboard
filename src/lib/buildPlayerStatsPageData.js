@@ -1,3 +1,4 @@
+import { getPositionMatchup } from "./matchup.js";
 import {
   buildPlayerGraphData,
   buildPlayerGraphStatDataMap,
@@ -30,6 +31,125 @@ const compactGameLog = (game) => ({
   fg3m: game?.fg3m ?? game?.FG3M ?? 0,
 });
 
+const trendNumber = (game, modernKey, legacyKey = modernKey) => {
+  const value = game?.[modernKey] ?? game?.[legacyKey];
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+};
+
+const buildFallbackPlayerTrends = (currentLogs, playoffLogs) => {
+  const games = [...currentLogs, ...playoffLogs]
+    .map((game, index) => ({ game, index }))
+    .sort((a, b) => {
+      const aDate = new Date(a.game?.date ?? a.game?.GAME_DATE ?? 0).getTime();
+      const bDate = new Date(b.game?.date ?? b.game?.GAME_DATE ?? 0).getTime();
+      const aTimestamp = Number.isNaN(aDate) ? 0 : aDate;
+      const bTimestamp = Number.isNaN(bDate) ? 0 : bDate;
+
+      return bTimestamp - aTimestamp || a.index - b.index;
+    })
+    .map(({ game }) => game);
+  const recent = games.slice(0, 10);
+
+  const average = (sample, modernKey, legacyKey) => {
+    const values = sample
+      .map((game) => trendNumber(game, modernKey, legacyKey))
+      .filter((value) => value != null);
+    return {
+      value: values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null,
+      count: values.length,
+    };
+  };
+
+  const percentage = (sample, madeKey, madeLegacyKey, attemptedKey, attemptedLegacyKey) => {
+    const pairs = sample
+      .map((game) => [
+        trendNumber(game, madeKey, madeLegacyKey),
+        trendNumber(game, attemptedKey, attemptedLegacyKey),
+      ])
+      .filter(([made, attempted]) => (
+        made != null && attempted != null && made >= 0 && made <= attempted
+      ));
+    const attempts = pairs.reduce((sum, [, attempted]) => sum + attempted, 0);
+    return {
+      value: attempts ? pairs.reduce((sum, [made]) => sum + made, 0) / attempts : null,
+      count: pairs.length,
+    };
+  };
+
+  const statSpecs = {
+    minutes: { type: "average", keys: ["min", "MIN"] },
+    fouls: { type: "average", keys: ["pf", "PF"] },
+    fg_pct: { type: "percentage", keys: ["fgm", "FGM", "fga", "FGA"] },
+    fg3_pct: { type: "percentage", keys: ["fg3m", "FG3M", "fg3a", "FG3A"] },
+    ft_pct: { type: "percentage", keys: ["ftm", "FTM", "fta", "FTA"] },
+  };
+
+  const stats = Object.fromEntries(Object.entries(statSpecs).map(([key, spec]) => {
+    const aggregate = spec.type === "percentage" ? percentage : average;
+    const last10 = aggregate(recent, ...spec.keys);
+    const season = aggregate(games, ...spec.keys);
+    const difference = last10.value != null && season.value != null
+      ? (last10.value - season.value) * (spec.type === "percentage" ? 100 : 1)
+      : null;
+
+    return [key, {
+      last10: last10.value,
+      season: season.value,
+      difference,
+      sampleGames: last10.count,
+    }];
+  }));
+
+  return {
+    recentGames: recent.length,
+    seasonGames: games.length,
+    includesPlayoffs: playoffLogs.length > 0,
+    stats,
+  };
+};
+
+const buildMatchupContext = ({ playerId, player, teamId, opponentId, analytics }) => {
+  const source = analytics ?? {};
+  const playerAnalytics = source.players?.[String(playerId)] ?? {};
+  const team = source.teams?.[String(teamId)] ?? {};
+  const opponent = source.teams?.[String(opponentId)] ?? {};
+  const { position, matchup } = getPositionMatchup(source, playerId, player?.POSITION, opponentId);
+  const teamPace = team.pace ?? null;
+  const opponentPace = opponent.pace ?? null;
+  const leaguePace = source.leaguePace ?? null;
+  const matchupPace = teamPace != null && opponentPace != null
+    ? Math.round(((teamPace + opponentPace) / 2) * 10) / 10
+    : null;
+  const paceDifference = matchupPace != null && leaguePace
+    ? Math.round(((matchupPace - leaguePace) / leaguePace) * 1000) / 10
+    : null;
+
+  const insights = [];
+  if (playerAnalytics.usageRate != null) {
+    insights.push(`Usage rate do jogador: ${playerAnalytics.usageRate.toFixed(1)}%.`);
+  }
+  if (paceDifference != null) {
+    insights.push(`Este matchup tem pace ${Math.abs(paceDifference).toFixed(1)}% ${paceDifference >= 0 ? "acima" : "abaixo"} da média da liga.`);
+  }
+  if (matchup?.assists != null && matchup.leagueAverage?.assists) {
+    const difference = ((matchup.assists - matchup.leagueAverage.assists) / matchup.leagueAverage.assists) * 100;
+    insights.push(`O adversário permite ${difference >= 0 ? "+" : ""}${difference.toFixed(1)}% assistências a ${position}.`);
+  }
+
+  return {
+    position,
+    usageRate: playerAnalytics.usageRate ?? null,
+    playerPace: playerAnalytics.pace ?? null,
+    teamPace,
+    opponentPace,
+    matchupPace,
+    leaguePace,
+    paceDifference,
+    opponentVsPosition: matchup,
+    insights,
+  };
+};
+
 export async function buildPlayerStatsPageData({
   playerId,
   team1Id,
@@ -40,6 +160,8 @@ export async function buildPlayerStatsPageData({
   rawGamesSchedule,
   rawInjuries,
   rawTeamStats,
+  rawAnalytics,
+  playerTrends = null,
   playerLogs,
   playerLogsPrev,
   playerLogsPlayoffs,
@@ -209,6 +331,16 @@ export async function buildPlayerStatsPageData({
     ? awayRoster[0]?.TEAM_ABBREVIATION
     : homeRoster[0]?.TEAM_ABBREVIATION;
 
+  const selectedTeamId = player?.TEAM_ID ?? (homeRoster.some((p) => p.PLAYER_ID === playerId) ? team1Id : team2Id);
+  const opponentId = Number(selectedTeamId) === team1Id ? team2Id : team1Id;
+  const matchupContext = buildMatchupContext({
+    playerId,
+    player,
+    teamId: selectedTeamId,
+    opponentId,
+    analytics: rawAnalytics,
+  });
+
   const playerStats = player
     ? {
         playerId: player.PLAYER_ID,
@@ -239,6 +371,7 @@ export async function buildPlayerStatsPageData({
       return bTimestamp - aTimestamp || a.index - b.index;
     })
     .map(({ game }) => game);
+  const resolvedPlayerTrends = playerTrends ?? buildFallbackPlayerTrends(currentPlayerLogs, playoffPlayerLogs);
 
   const initialSelectedName = (() => {
     if (playerId) {
@@ -274,6 +407,7 @@ export async function buildPlayerStatsPageData({
     playoffGames: playoffPlayerLogs,
     player: playerStats,
     opponentAbbr,
+    matchupContext,
   });
   const graphViews = buildPlayerGraphViews(graphData);
   const statGraphData = buildPlayerGraphStatDataMap(graphViews);
@@ -309,15 +443,23 @@ export async function buildPlayerStatsPageData({
     opponent: game.opp ?? game.opponent ?? "",
     minutes: game.min ?? game.MIN ?? null,
     fg_pct: game.fg_pct ?? game.FG_PCT ?? null,
+    fgm: game.fgm ?? game.FGM ?? null,
+    fga: game.fga ?? game.FGA ?? null,
     fg3_pct: game.fg3_pct ?? game.FG3_PCT ?? null,
+    fg3m: game.fg3m ?? game.FG3M ?? null,
+    fg3a: game.fg3a ?? game.FG3A ?? null,
     ft_pct: game.ft_pct ?? game.FT_PCT ?? null,
+    ftm: game.ftm ?? game.FTM ?? null,
+    fta: game.fta ?? game.FTA ?? null,
     fouls: game.pf ?? game.PF ?? null,
   }));
 
   return {
     player: compactPlayer(player),
     playerStats,
+    matchupContext,
     contextGames,
+    playerTrends: resolvedPlayerTrends,
     hasCurrentGames: currentSeasonPlayerLogs.length > 0,
     hasPreviousGames: previousPlayerLogs.length > 0,
     hasPlayoffGames: playoffPlayerLogs.length > 0,

@@ -4,6 +4,7 @@ import Link from "next/link";
 import PlayerHeadshotImage from "@/components/PlayerHeadshotImage";
 import { useState } from "react";
 import FavoritePropButton from "./FavoritePropButton";
+import DataUpdatedAt from "@/components/DataUpdatedAt";
 
 const INJURY_STYLES = {
   Out: "bg-red-500/15 text-red-400 border-red-500/30",
@@ -69,6 +70,7 @@ const PlayerHeadshot = ({ player }) => {
 };
 
 const PlayerInfo = ({
+  updatedAt,
   playerData,
   playerStats,
   injuryStatus,
@@ -142,22 +144,24 @@ const PlayerInfo = ({
           </div>
         </div>
 
-        <div className="order-last flex min-w-0 basis-full flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-white/[0.06] bg-white/[0.02] px-2.5 py-2.5 md:gap-x-4 md:gap-y-3 md:rounded-xl md:px-4 md:py-3">
+        <DataUpdatedAt updatedAt={updatedAt} className="basis-full text-left md:ml-auto md:basis-auto md:text-right" />
+
+        <div className="order-last grid min-w-0 basis-full grid-cols-[repeat(3,minmax(0,1fr))_auto] items-center gap-x-2 rounded-lg border border-white/[0.06] bg-white/[0.02] px-2.5 py-2.5 md:flex md:flex-wrap md:gap-x-4 md:gap-y-3 md:rounded-xl md:px-4 md:py-3">
           {summaryItems.map(({ key, value, className }, index) => (
             <div key={key} className="contents">
-              {index > 0 && <div className="h-5 w-px bg-white/6 md:h-6" />}
-              <div className="flex items-baseline gap-1 md:gap-1.5">
+              {index > 0 && <div className="hidden h-6 w-px bg-white/6 md:block" />}
+              <div className={`flex min-w-0 flex-col items-center gap-1 text-center md:flex-row md:items-baseline md:gap-1.5 md:text-left ${index > 0 ? "border-l border-white/6 pl-2 md:border-l-0 md:pl-0" : ""}`}>
                 <span className={`font-mono text-base font-black md:text-2xl ${className || "text-white"}`}>
                   {value}
                 </span>
-                <span className="text-[8px] uppercase tracking-widest text-slate-400 md:text-[10px]">
+                <span className="max-w-full text-[8px] uppercase tracking-wide text-slate-400 [overflow-wrap:anywhere] md:text-[10px] md:tracking-widest">
                   {key}
                 </span>
               </div>
             </div>
           ))}
 
-          <div className="ml-auto w-auto [&_button]:px-[9px] [&_button]:py-2 [&_button]:text-[9px] md:[&_button]:px-[11px] md:[&_button]:text-[10px]">
+          <div className="ml-auto w-auto [&_button]:px-[9px] [&_button]:py-2 [&_button]:text-[9px] max-md:[&_button_span]:hidden md:[&_button]:px-[11px] md:[&_button]:text-[10px]">
             <FavoritePropButton
               playerStats={playerStats}
               selectedStat={selectedStat}

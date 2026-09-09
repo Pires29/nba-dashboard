@@ -10,6 +10,7 @@ import PlayerGraphSection from "../PlayerGraphSection";
 import PlayerSelectionControls from "../PlayerSelectionControls";
 import SectionLabel from "@/components/ui/playerStats/SectionLabel";
 import LockedPlayerState from "../LockedPlayerState";
+import MatchupContext from "../MatchupContext";
 
 const LockedSection = ({ title }) => (
   <Card accent="orange" className="h-full">
@@ -41,6 +42,7 @@ const ResponsiveLayout = ({
   player,
   playerStats,
   contextGames,
+  playerTrends,
   hasCurrentGames,
   hasPreviousGames,
   hasPlayoffGames,
@@ -53,6 +55,7 @@ const ResponsiveLayout = ({
   awayRoster,
   team1Formatted,
   team2Formatted,
+  matchupContext,
   injuriesTeam1,
   injuriesTeam2,
   initialSelectedName,
@@ -73,6 +76,7 @@ const ResponsiveLayout = ({
   const [selectedTeammateIds, setSelectedTeammateIds] = useState([]);
   const [teammateModes, setTeammateModes] = useState({});
   const [loadedTeammateData, setLoadedTeammateData] = useState({});
+  const [selectedStat, setSelectedStat] = useState(initialStat || "points");
   const hasMinuteFilter =
     rangeMinMinutes !== 0 || rangeMaxMinutes !== minuteSliderMax;
   const hasTeammateFilter = Object.keys(teammateModes).length > 0;
@@ -188,10 +192,12 @@ const ResponsiveLayout = ({
               <LockedPlayerState playerName={lockedPlayerName} embedded />
             ) : (
               <PlayerGraphSection
+                updatedAt={dataStatus?.updatedAt}
                 player={player}
                 injuryStatus={injuryMap?.[player?.PLAYER]}
                 playerStats={playerStats}
                 contextGames={contextGames}
+                playerTrends={playerTrends}
                 hasCurrentGames={hasCurrentGames}
                 hasPreviousGames={hasPreviousGames}
                 hasPlayoffGames={hasPlayoffGames}
@@ -200,7 +206,8 @@ const ResponsiveLayout = ({
                 statGraphData={statGraphData}
                 teammateImpact={visibleTeammateImpact}
                 availabilityGames={availabilityGames}
-                initialStat={initialStat}
+                selectedStat={selectedStat}
+                onStatChange={setSelectedStat}
                 logsAvailable={dataStatus?.logsAvailable}
                 minuteSliderMax={minuteSliderMax}
                 rangeMinMinutes={rangeMinMinutes}
@@ -217,6 +224,8 @@ const ResponsiveLayout = ({
                 onClearTeammates={clearTeammates}
               />
             )}
+
+            {!isPlayerLocked && <MatchupContext context={matchupContext} playerTrends={playerTrends} stat={selectedStat} />}
 
           <aside className="grid min-w-0 items-stretch gap-4 lg:grid-cols-2 lg:gap-6">
             {isPlayerLocked ? (

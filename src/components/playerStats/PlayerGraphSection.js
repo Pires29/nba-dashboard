@@ -18,10 +18,12 @@ const PlayerContextGraph = dynamic(() => import("./PlayerContextGraph"), {
 });
 
 const PlayerGraphSection = ({
+  updatedAt,
   player,
   injuryStatus,
   playerStats,
   contextGames,
+  playerTrends,
   hasCurrentGames,
   hasPreviousGames,
   hasPlayoffGames,
@@ -29,6 +31,8 @@ const PlayerGraphSection = ({
   opponentAbbr,
   statGraphData,
   initialStat = "points",
+  selectedStat: controlledSelectedStat,
+  onStatChange,
   logsAvailable = true,
   teammateImpact = [],
   availabilityGames,
@@ -46,7 +50,9 @@ const PlayerGraphSection = ({
   onRemoveTeammate,
   onClearTeammates,
 }) => {
-  const [selectedStat, setSelectedStat] = useState(initialStat || "points");
+  const [uncontrolledSelectedStat, setUncontrolledSelectedStat] = useState(initialStat || "points");
+  const selectedStat = controlledSelectedStat ?? uncontrolledSelectedStat;
+  const handleStatChange = onStatChange ?? setUncontrolledSelectedStat;
   const [selectedNumber, setSelectedNumber] = useState(5);
   const [activeFilter, setActiveFilter] = useState(null);
   const [teammateFilter, setTeammateFilter] = useState(null);
@@ -83,6 +89,7 @@ const PlayerGraphSection = ({
     >
       <div className="flex-shrink-0 border-b border-white/[0.07] bg-white/[0.015]">
         <PlayerInfo
+          updatedAt={updatedAt}
           playerData={player}
           playerStats={playerStats}
           injuryStatus={injuryStatus}
@@ -97,7 +104,7 @@ const PlayerGraphSection = ({
           <PlayerGraph
             playerStats={playerStats}
             selectedStat={selectedStat}
-            onStatChange={setSelectedStat}
+            onStatChange={handleStatChange}
             selectedNumber={selectedNumber}
             onNumberChange={setSelectedNumber}
             activeFilter={activeFilter}
@@ -144,7 +151,7 @@ const PlayerGraphSection = ({
         fallback={<PlayerContextGraphSkeleton />}
       >
         <Suspense fallback={<PlayerContextGraphSkeleton />}>
-          <PlayerContextGraph games={contextGames} />
+          <PlayerContextGraph games={contextGames} trends={playerTrends} />
         </Suspense>
       </DeferredRender>
     </Card>

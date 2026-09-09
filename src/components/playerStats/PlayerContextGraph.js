@@ -15,17 +15,17 @@ const PlayerContextGraphChart = dynamic(
 );
 
 const STAT_OPTIONS = [
-  { key: "fg_pct", label: "FG%", isPercent: true },
-  { key: "fg3_pct", label: "3P%", isPercent: true },
-  { key: "ft_pct", label: "FT%", isPercent: true },
-  { key: "minutes", label: "MIN", isPercent: false },
+  { key: "fg_pct", label: "FG%", isPercent: true, madeKey: "fgm", attemptedKey: "fga" },
+  { key: "fg3_pct", label: "3P%", isPercent: true, madeKey: "fg3m", attemptedKey: "fg3a" },
+  { key: "ft_pct", label: "FT%", isPercent: true, madeKey: "ftm", attemptedKey: "fta" },
+  { key: "minutes", label: "MIN", textLabel: "minutes", isPercent: false },
   { key: "fouls", label: "PF", isPercent: false },
 ];
 
 const formatValue = (value, isPercent) => {
   if (value == null) return "—";
   if (isPercent) return (value * 100).toFixed(1) + "%";
-  return typeof value === "number" ? value.toFixed(0) : value;
+  return typeof value === "number" ? value.toFixed(1) : value;
 };
 
 const formatDate = (dateStr) => {
@@ -37,7 +37,15 @@ const formatDate = (dateStr) => {
   return `${day}/${month}`;
 };
 
-const PlayerContextGraph = ({ games = [] }) => {
+const formatDifferenceText = (difference, statMeta) => {
+  if (difference == null) return null;
+  const absolute = Math.abs(difference).toFixed(1);
+  const direction = difference >= 0 ? "above" : "below";
+  const unit = statMeta?.isPercent ? " percentage points" : ` ${statMeta?.textLabel ?? statMeta?.label}`;
+  return `${absolute}${unit} ${direction}`;
+};
+
+const PlayerContextGraph = ({ games = [], trends }) => {
   const [selectedStat, setSelectedStat] = useState("minutes");
 
   const hasData = games.length > 0;
@@ -55,6 +63,12 @@ const PlayerContextGraph = ({ games = [] }) => {
         label: `${opponent || ""}\n${formatDate(date)}`,
         opponent,
         minutes,
+        fgm: game.fgm ?? null,
+        fga: game.fga ?? null,
+        fg3m: game.fg3m ?? null,
+        fg3a: game.fg3a ?? null,
+        ftm: game.ftm ?? null,
+        fta: game.fta ?? null,
         fg_pct: game.fg_pct ?? null,
         fg3_pct: game.fg3_pct ?? null,
         ft_pct: game.ft_pct ?? null,
@@ -65,11 +79,14 @@ const PlayerContextGraph = ({ games = [] }) => {
 
   const chartData = useMemo(() => [...data].reverse(), [data]);
 
-  const avg = useMemo(() => {
-    const valid = data.filter((d) => d[selectedStat] != null);
-    if (!valid.length) return null;
-    return valid.reduce((sum, d) => sum + d[selectedStat], 0) / valid.length;
-  }, [data, selectedStat]);
+  const summary = trends?.stats?.[selectedStat];
+  const avg = summary?.last10 ?? null;
+  const difference = summary?.difference;
+  const roundedDifference = difference == null ? null : Number(difference.toFixed(1));
+  const differenceText = formatDifferenceText(roundedDifference, statMeta);
+  const statTextLabel = statMeta?.textLabel ?? statMeta?.label;
+  const trendVerb = selectedStat === "minutes" ? "are" : "is";
+  const recentWindowLabel = `L${trends?.recentGames ?? games.length}`;
   const hasSelectedData = data.some((game) => game[selectedStat] != null);
 
   const yTicks = useMemo(() => {
@@ -92,13 +109,13 @@ const PlayerContextGraph = ({ games = [] }) => {
         <div className="flex items-center gap-2">
           <div className="w-1 h-4 rounded-sm bg-slate-600" />
           <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest">
-            Context
+            Player Trends
           </span>
         </div>
 
         <div className="lg:hidden relative flex items-center">
           <select
-            aria-label="Select context stat"
+            aria-label="Select player trends stat"
             value={selectedStat}
             onChange={(e) => setSelectedStat(e.target.value)}
             className="text-[10px] font-mono font-bold uppercase bg-transparent border border-white/[0.06] text-white rounded px-2 py-1 pr-6 outline-none appearance-none cursor-pointer"
@@ -146,9 +163,27 @@ const PlayerContextGraph = ({ games = [] }) => {
           {avg != null ? formatValue(avg, statMeta?.isPercent) : "—"}
         </span>
         <span className="text-[10px] text-slate-400 uppercase tracking-widest">
-          avg L10
+          avg {recentWindowLabel}
         </span>
       </div>
+
+      <p className="max-w-[520px] font-mono text-[11px] leading-5 text-slate-400">
+        {summary?.season != null && differenceText ? (
+          <>
+            His {recentWindowLabel} average {statTextLabel} {trendVerb}{" "}
+            <span className={roundedDifference >= 0 ? "text-emerald-300" : "text-rose-300"}>
+              {differenceText}
+            </span>{" "}
+            his season average of{" "}
+            <span className="text-slate-200">
+              {formatValue(summary.season, statMeta?.isPercent)}
+            </span>
+            .
+          </>
+        ) : (
+          "Season comparison is unavailable for this trend."
+        )}
+      </p>
 
       <div className="w-full h-[160px]">
         {hasSelectedData ? (
