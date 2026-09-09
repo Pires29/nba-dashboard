@@ -118,7 +118,7 @@ function MobilePropRow({ index, injuryStatus, player, prop, selectedStat }) {
       <Link href={href} prefetch={false} aria-label={`Open ${player.player_name} details`} className="mt-2 grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-md text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/50">
         <span>
           <span className={`block text-[11px] font-mono font-bold ${player.matchupLabel.color}`}>{player.matchupLabel.label}</span>
-          {player.matchupRank != null && <span className="block text-[9px] font-mono text-slate-500">#{player.matchupRank} allowed</span>}
+          {player.matchupDetail && <span className="block text-[9px] font-mono text-slate-500">{player.matchupDetail}</span>}
         </span>
         <span aria-hidden="true" className="flex h-7 w-7 items-center justify-center rounded-md border border-white/[0.08] text-slate-400">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
@@ -162,7 +162,7 @@ function DesktopPropRow({ index, injuryStatus, player, prop, selectedStat }) {
       <td className="px-4 py-3 text-right text-[13px] font-black font-mono text-white">{prop?.avg != null ? roundToBettingLine(prop.avg).toFixed(1) : "—"}</td>
       <td className="px-4 py-3 text-right">
         <span className={`block text-[11px] font-mono font-bold ${player.matchupLabel.color}`}>{player.matchupLabel.label}</span>
-        {player.matchupRank != null && <span className="block text-[9px] font-mono text-slate-400">#{player.matchupRank} allowed</span>}
+        {player.matchupDetail && <span className="block text-[9px] font-mono text-slate-400">{player.matchupDetail}</span>}
       </td>
       {PERIODS.map((period) => {
         const hitRate = prop?.[period]?.hit_rate;

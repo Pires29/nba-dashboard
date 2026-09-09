@@ -1,3 +1,4 @@
+import { classifyMatchup, getPositionMatchup } from "@/lib/matchup";
 import { getAvailablePlayers } from "@/lib/getAvailablePlayers";
 import { getCurrentSession } from "@/lib/getCurrentSession";
 import PropsTableWrapper from "./PropsTableWrapper";
@@ -121,52 +122,15 @@ const INJURY_CODE_TO_VALUE = {
 const normalizeMatchupFilter = (value) => MATCHUP_CODE_TO_VALUE[value] ?? value;
 const normalizeInjuryFilter = (value) => INJURY_CODE_TO_VALUE[value] ?? value;
 
-const MATCHUP_RANK = (rank) => {
-  if (rank == null) return { label: "—", color: "text-slate-500" };
-  if (rank >= 20)
-    return { label: "Favorable", color: "text-emerald-400" };
-  if (rank >= 10) return { label: "Neutral", color: "text-yellow-400" };
-  return { label: "Unfavorable", color: "text-red-400" };
-};
-
-const STAT_MATCHUP_RANK = (stat, matchup) => {
-  const pts = matchup?.opp_pts_allowed_rank;
-  const ast = matchup?.opp_ast_allowed_rank;
-  const reb = matchup?.opp_reb_allowed_rank;
-  const fg3 = matchup?.opp_fg3_pct_allowed_rank;
-  const stl = matchup?.opp_stl_allowed_rank;
-  const blk = matchup?.opp_blk_allowed_rank;
-  const tov = matchup?.opp_tov_allowed_rank;
-
-  const avg = (...vals) => {
-    const valid = vals.filter((item) => item != null);
-    return valid.length
-      ? Math.round(valid.reduce((acc, item) => acc + item, 0) / valid.length)
-      : null;
-  };
-
-  const rankMap = {
-    points: pts,
-    assists: ast,
-    rebounds: reb,
-    fg3m: fg3,
-    steals: stl,
-    blocks: blk,
-    turnovers: tov,
-    pra: avg(pts, reb, ast),
-    pa: avg(pts, ast),
-    pr: avg(pts, reb),
-    ra: avg(reb, ast),
-  };
-
-  return rankMap[stat] ?? null;
-};
-
 export default async function PropsPage({ searchParams }) {
   const resolvedSearchParams = await searchParams;
   const session = await getCurrentSession();
   const qa = await getQaContext();
   const nbaData = qa?.data ?? (await getNbaData());
+  const matchupFor = (player) => {
+    const { position, matchup } = getPositionMatchup(nbaData.analytics, player.player_id, player.position, player.opponent_id);
+    return { ...classifyMatchup(selectedStat, matchup), position };
+  };
   const plan = resolveQaPlan(qa?.persona, session?.user?.plan);
   const allowedPlayerIds = getAvailablePlayers(plan, nbaData);
   const selectedStatParam = getSingleParam(resolvedSearchParams?.stat);
@@ -264,8 +228,7 @@ export default async function PropsPage({ searchParams }) {
       }
 
       if (filterMatchup.length > 0) {
-        const rank = STAT_MATCHUP_RANK(selectedStat, p.matchup);
-        const matchupInfo = MATCHUP_RANK(rank);
+        const matchupInfo = matchupFor(p);
         if (!filterMatchup.includes(matchupInfo.label.toLowerCase())) {
           return false;
         }
@@ -336,7 +299,7 @@ export default async function PropsPage({ searchParams }) {
 
   const enrichedProps = filteredProps.map((p) => {
     const game = scheduleMap.get(`${p.team_id}-${p.opponent_id}`);
-    const rank = STAT_MATCHUP_RANK(selectedStat, p.matchup);
+    const matchupInfo = matchupFor(p);
 
     return {
       player_id: p.player_id,
@@ -354,8 +317,9 @@ export default async function PropsPage({ searchParams }) {
             date: game.date ?? null,
           }
         : null,
-      matchupRank: rank,
-      matchupLabel: MATCHUP_RANK(rank),
+      matchupRank: matchupInfo.rank,
+      matchupLabel: matchupInfo,
+      matchupDetail: matchupInfo.difference == null ? "Position data unavailable" : `${matchupInfo.difference > 0 ? "+" : ""}${matchupInfo.difference.toFixed(1)}% vs. league · ${matchupInfo.position}`,
     };
   });
   const visibleRows = getRowsParam(resolvedSearchParams?.rows, enrichedProps.length);

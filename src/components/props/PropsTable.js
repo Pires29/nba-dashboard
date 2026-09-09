@@ -10,6 +10,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import BetaSeasonDataBanner from "@/components/BetaSeasonDataBanner";
+import DataUpdatedAt from "@/components/DataUpdatedAt";
 import PropsFilterDropdown from "./PropsFilterDropdown";
 import PropsUpgradeButton from "./PropsUpgradeButton";
 import {
@@ -369,7 +370,7 @@ export default function PropsTable({
 
       <div className="relative z-10 flex flex-col min-h-0 flex-1 max-w-[1400px] mx-auto w-full px-3 py-4 sm:px-6 sm:py-5 gap-4">
         {/* Header */}
-        <div className="flex items-center gap-3 flex-shrink-0">
+        <div className="flex flex-wrap items-center gap-3 flex-shrink-0">
           <div className="w-1 h-5 rounded-sm bg-orange-500" />
           <h1 className="font-mono text-base font-black uppercase tracking-widest text-white">
             Props
@@ -401,6 +402,7 @@ export default function PropsTable({
               </span>
             </PropsUpgradeButton>
           )}
+          <DataUpdatedAt updatedAt={dataStatus?.updatedAt} className="basis-full text-left md:ml-auto md:basis-auto md:text-right" />
         </div>
 
         {isFreePlan && (
