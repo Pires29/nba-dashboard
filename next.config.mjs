@@ -7,6 +7,16 @@ const withBundleAnalyzer = bundleAnalyzer({
 });
 
 const isProduction = process.env.NODE_ENV === "production";
+const isDevelopment = process.env.NODE_ENV === "development";
+const scriptSrc = [
+  "'self'",
+  "'unsafe-inline'",
+  ...(isDevelopment ? ["'unsafe-eval'"] : []),
+  "https://js.stripe.com",
+  "https://challenges.cloudflare.com",
+  "https://*.posthog.com",
+  "https://*.posthog.io",
+].join(" ");
 
 const contentSecurityPolicy = [
   "default-src 'self'",
@@ -14,7 +24,7 @@ const contentSecurityPolicy = [
   "frame-ancestors 'none'",
   "object-src 'none'",
   "form-action 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://challenges.cloudflare.com https://*.posthog.com https://*.posthog.io",
+  `script-src ${scriptSrc}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://ak-static.cms.nba.com https://cdn.nba.com https://lh3.googleusercontent.com",
   "font-src 'self' data:",
