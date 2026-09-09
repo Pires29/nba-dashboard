@@ -69,10 +69,14 @@ export async function checkRateLimit(key, options) {
   try {
     return await checkDatabaseRateLimit(key, options);
   } catch (error) {
-    console.error("Distributed rate limit unavailable; using local fallback", {
+    console.error("Distributed rate limit unavailable; blocking request", {
       code: error?.code,
     });
-    return checkMemoryRateLimit(key, options);
+    return {
+      allowed: false,
+      remaining: 0,
+      retryAfter: Math.max(1, Math.ceil(options.windowMs / 1000)),
+    };
   }
 }
 

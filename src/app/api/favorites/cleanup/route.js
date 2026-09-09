@@ -6,7 +6,8 @@ import { getFavoriteCleanupCutoff } from "@/lib/favoriteCleanup";
 export async function DELETE(req) {
   // Verify the secret so this cannot be called by anyone
   const authHeader = req.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CLEANUP_SECRET}`) {
+  const cleanupSecret = process.env.CLEANUP_SECRET;
+  if (!cleanupSecret || authHeader !== `Bearer ${cleanupSecret}`) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
