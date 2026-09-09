@@ -1,7 +1,9 @@
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 const appEnv = process.env.NEXT_PUBLIC_APP_ENV;
+const appPhase = process.env.APP_PHASE || process.env.NEXT_PUBLIC_APP_PHASE;
 const vercelEnv = process.env.VERCEL_ENV;
 const shouldBlockAll =
+  appPhase === "beta" ||
   appEnv === "preview" ||
   appEnv === "qa" ||
   appEnv === "test" ||
