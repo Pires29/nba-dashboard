@@ -21,7 +21,10 @@ function isSameHash(a, b) {
 }
 
 export function getEmailVerificationUrl(req, token, flowId = "") {
-  const configuredBaseUrl = process.env.NEXTAUTH_URL || process.env.APP_URL;
+  const configuredBaseUrl =
+    process.env.NODE_ENV === "production"
+      ? process.env.APP_URL || process.env.NEXTAUTH_URL
+      : "";
   const baseUrl = configuredBaseUrl || new URL(req.url).origin;
   const url = new URL(`/verify-email?token=${encodeURIComponent(token)}`, baseUrl);
   if (flowId) url.searchParams.set("flow", flowId);
