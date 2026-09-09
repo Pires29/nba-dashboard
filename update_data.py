@@ -9,6 +9,7 @@ OUTPUT (minified JSON):
   teams.json                → { [teamId]: { name, abbr } }
   rosters.json              → { [teamId]: [{ id, name, num, pos }] }
   season_stats.json         → { [playerId]: { gp, min, pts, reb, ast, ... } }
+  analytics.json             → usage, pace, opponent-vs-position, and insights
   props.json                → { [playerId]: { oppId, props: { pts: { avg, l5, ... } } } }
   team_defense.json         → { [teamId]: { pts, pts_rank, ast, ast_rank, ... } }
   injuries.json             → { [teamId]: [{ pid, status, type, detail, returnDate }] }
@@ -19,6 +20,8 @@ OUTPUT (minified JSON):
 Dependencies:
   pip install curl_cffi requests pandas
 """
+
+from scripts.player_trends import build_player_trends
 
 import json
 import math
@@ -195,6 +198,19 @@ TEAM_STATS_PARAMS = {
     "VsConference": "",
     "VsDivision": "",
 }
+
+ADVANCED_PLAYER_STATS_PARAMS = {
+    **PLAYER_STATS_PARAMS,
+    "MeasureType": "Advanced",
+    "PerMode": "PerGame",
+}
+
+ADVANCED_TEAM_STATS_PARAMS = {
+    **TEAM_STATS_PARAMS,
+    "MeasureType": "Advanced",
+}
+
+POSITIONAL_DEFENSE_POSITIONS = ["G", "F", "C"]
 
 GAME_LOG_PARAMS = {
     "Counter": "0",
@@ -394,6 +410,66 @@ def fetch_raw_team_stats():
         ),
     )
     return df_off, df_def
+
+def fetch_raw_analytics_stats():
+    """Fetch the advanced and position-filtered datasets used by props context."""
+    print("\n🧠 Fetching advanced player/team stats...")
+    df_player_advanced = retry_request(
+        "Advanced player stats",
+        lambda: nba_result_set_dataframe(
+            nba_stats_get_json(
+                "leaguedashplayerstats",
+                {**ADVANCED_PLAYER_STATS_PARAMS, "Season": SEASON},
+            ),
+        ),
+    )
+    random_sleep()
+    df_team_advanced = retry_request(
+        "Advanced team stats",
+        lambda: nba_result_set_dataframe(
+            nba_stats_get_json(
+                "leaguedashteamstats",
+                {**ADVANCED_TEAM_STATS_PARAMS, "Season": SEASON},
+            ),
+        ),
+    )
+
+    position_frames = {}
+    player_position_frames = {}
+    for position in POSITIONAL_DEFENSE_POSITIONS:
+        print(f"  🛡️ Opponent vs {position}...")
+        position_frames[position] = retry_request(
+            f"Opponent vs {position}",
+            lambda position=position: nba_result_set_dataframe(
+                nba_stats_get_json(
+                    "leaguedashteamstats",
+                    {
+                        **TEAM_STATS_PARAMS,
+                        "Season": SEASON,
+                        "MeasureType": "Opponent",
+                        "PlayerPosition": position,
+                    },
+                ),
+            ),
+        )
+        random_sleep()
+
+        player_position_frames[position] = retry_request(
+            f"Players at {position}",
+            lambda position=position: nba_result_set_dataframe(
+                nba_stats_get_json(
+                    "leaguedashplayerstats",
+                    {
+                        **PLAYER_STATS_PARAMS,
+                        "Season": SEASON,
+                        "PlayerPosition": position,
+                    },
+                ),
+            ),
+        )
+        random_sleep()
+
+    return df_player_advanced, df_team_advanced, position_frames, player_position_frames
 
 def fetch_raw_game_logs(season, season_type="Regular Season"):
     print(f"\n🎮 Fetching {season_type.lower()} game logs ({season}) in 1 request...")
@@ -682,6 +758,98 @@ def build_team_defense(df_off, df_def):
     return team_stats
 
 
+def row_number(row, *columns):
+    """Read the first available numeric column from an NBA Stats row."""
+    for column in columns:
+        if column in row.index and pd.notna(row[column]):
+            try:
+                return float(row[column])
+            except (TypeError, ValueError):
+                return None
+    return None
+
+
+def build_analytics(df_player_advanced, df_team_advanced, position_frames, player_position_frames=None):
+    """Build compact analytics data consumed by props and contextual insights."""
+    players = {}
+    for _, row in df_player_advanced.iterrows():
+        player_id = str(int(row["PLAYER_ID"]))
+        usage_rate = row_number(row, "USG_PCT")
+        if usage_rate is not None and usage_rate <= 1:
+            usage_rate *= 100
+        players[player_id] = {
+            "usageRate": safe_round(usage_rate, 1),
+            "pace": safe_round(row_number(row, "PACE"), 1),
+            "possessions": safe_round(row_number(row, "POSS"), 1),
+            "minutes": safe_round(row_number(row, "MIN"), 1),
+            "games": int(row_number(row, "GP") or 0),
+        }
+
+    player_position_frames = player_position_frames or {}
+    for position, frame in player_position_frames.items():
+        for _, row in frame.iterrows():
+            player_id = str(int(row["PLAYER_ID"]))
+            if player_id in players:
+                players[player_id]["position"] = position
+
+    teams = {}
+    for _, row in df_team_advanced.iterrows():
+        team_id = str(int(row["TEAM_ID"]))
+        teams[team_id] = {
+            "pace": safe_round(row_number(row, "PACE"), 1),
+            "possessions": safe_round(row_number(row, "POSS"), 1),
+            "offensiveRating": safe_round(row_number(row, "OFF_RATING"), 1),
+            "defensiveRating": safe_round(row_number(row, "DEF_RATING"), 1),
+            "paceRank": safe_round(row_number(row, "PACE_RANK"), 0),
+        }
+
+    positional = {}
+    for position, frame in position_frames.items():
+        rows = []
+        for _, row in frame.iterrows():
+            rows.append({
+                "teamId": str(int(row["TEAM_ID"])),
+                "points": row_number(row, "OPP_PTS"),
+                "rebounds": row_number(row, "OPP_REB"),
+                "assists": row_number(row, "OPP_AST"),
+                "threes": row_number(row, "OPP_FG3M", "OPP_3PM"),
+                "steals": row_number(row, "OPP_STL"),
+                "blocks": row_number(row, "OPP_BLK"),
+                "turnovers": row_number(row, "OPP_TOV"),
+                "pointsRank": row_number(row, "OPP_PTS_RANK"),
+                "reboundsRank": row_number(row, "OPP_REB_RANK"),
+                "assistsRank": row_number(row, "OPP_AST_RANK"),
+                "threesRank": row_number(row, "OPP_FG3M_RANK", "OPP_3PM_RANK"),
+                "stealsRank": row_number(row, "OPP_STL_RANK"),
+                "blocksRank": row_number(row, "OPP_BLK_RANK"),
+                "turnoversRank": row_number(row, "OPP_TOV_RANK"),
+            })
+
+        league_average = {}
+        for metric in ("points", "rebounds", "assists", "threes", "steals", "blocks", "turnovers"):
+            values = [item[metric] for item in rows if item[metric] is not None]
+            league_average[metric] = safe_round(sum(values) / len(values), 2) if values else None
+
+        for item in rows:
+            item["leagueAverage"] = league_average
+            item.pop("teamId", None)
+        positional[position] = {
+            "teams": {
+                str(int(row["TEAM_ID"])): item
+                for row, item in zip(frame.to_dict(orient="records"), rows)
+            },
+            "leagueAverage": league_average,
+        }
+
+    pace_values = [item["pace"] for item in teams.values() if item["pace"] is not None]
+    return fix_nan({
+        "players": players,
+        "teams": teams,
+        "leaguePace": safe_round(sum(pace_values) / len(pace_values), 1) if pace_values else None,
+        "opponentVsPosition": positional,
+    })
+
+
 def build_game_logs(df_logs):
     """
     game_logs_current.json / game_logs_prev.json
@@ -815,7 +983,7 @@ def update_live_files():
     save_json(fix_nan(standings), "standings.json")
 
 
-def build_props(schedule, raw_rosters, df_player_stats, df_current_logs):
+def build_props(schedule, raw_rosters, df_player_stats, df_current_logs, analytics=None):
     """
     props.json
     {
@@ -833,6 +1001,8 @@ def build_props(schedule, raw_rosters, df_player_stats, df_current_logs):
     - No "games" field anywhere (windows are implicit: l5=5, l10=10, etc.)
     - All averages precomputed here. Frontend does zero math.
     """
+
+    analytics = analytics or {}
 
     # ── Build schedule lookup: teamId → opponent teamId ──
     game_map = {}  # teamId → opponent_team_id
@@ -1136,6 +1306,7 @@ def publish_storage_version(datasets):
         "season_stats.json": datasets["season_stats"],
         "props.json": datasets["props"],
         "team_stats.json": datasets["team_stats"],
+        "analytics.json": datasets["analytics"],
         "injuries.json": datasets["injuries"],
         "schedule.json": datasets["schedule"],
         "standings.json": datasets["standings"],
@@ -1150,6 +1321,7 @@ def publish_storage_version(datasets):
                 "current": current_logs.get(player_id, []),
                 "previous": previous_logs.get(player_id, []),
                 "playoffs": playoff_logs.get(player_id, []),
+                "trends": build_player_trends(current_logs.get(player_id, []), playoff_logs.get(player_id, [])),
             },
             config,
         )
@@ -1216,6 +1388,7 @@ def run():
     # ── 1. Fetch all raw data ──────────────────────────────────────────────
     df_player_stats       = fetch_raw_player_stats();     random_sleep()
     df_off, df_def        = fetch_raw_team_stats();       random_sleep()
+    df_player_advanced, df_team_advanced, position_frames, player_position_frames = fetch_raw_analytics_stats(); random_sleep()
     raw_rosters           = fetch_raw_rosters()           # has its own sleep
     schedule              = fetch_raw_schedule()          # has its own sleep
     df_standings          = fetch_raw_standings();        random_sleep()
@@ -1247,6 +1420,10 @@ def run():
     team_stats = build_team_defense(df_off, df_def)
     if write_local_data: save_json(fix_nan(team_stats), "team_stats.json")
 
+    # analytics.json
+    analytics = build_analytics(df_player_advanced, df_team_advanced, position_frames, player_position_frames)
+    if write_local_data: save_json(analytics, "analytics.json")
+
     # injuries.json
     injuries = build_injuries(raw_injuries)
     if write_local_data: save_json(injuries, "injuries.json")
@@ -1263,7 +1440,7 @@ def run():
     logs_playoffs = build_game_logs(df_logs_playoffs)
 
     # props.json  (depends on schedule + rosters + stats + current logs)
-    props = build_props(schedule, raw_rosters, df_player_stats, df_logs_current)
+    props = build_props(schedule, raw_rosters, df_player_stats, df_logs_current, analytics)
     if write_local_data: save_json(props, "props.json")
 
     # Publish only after every local dataset has been built successfully. The
@@ -1276,6 +1453,7 @@ def run():
         "season_stats": fix_nan(season_stats),
         "props": props,
         "team_stats": fix_nan(team_stats),
+        "analytics": analytics,
         "injuries": injuries,
         "schedule": fix_nan(schedule),
         "standings": fix_nan(build_standings(df_standings)),

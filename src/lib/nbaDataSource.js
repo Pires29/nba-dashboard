@@ -46,7 +46,18 @@ async function getStorageSnapshot() {
   const values = await Promise.all(
     names.map((name) => fetchStorageJson(`${prefix}/${name}.json`, { revalidate: 86400 })),
   );
-  return Object.fromEntries(names.map((name, index) => [name, values[index]]));
+  let analytics = {};
+  try {
+    analytics = await fetchStorageJson(`${prefix}/analytics.json`, {
+      revalidate: 86400,
+      noStore: process.env.NODE_ENV !== "production",
+    });
+  } catch (error) {
+    console.warn("NBA analytics snapshot unavailable; using empty context", {
+      message: error?.message,
+    });
+  }
+  return { ...Object.fromEntries(names.map((name, index) => [name, values[index]])), analytics };
 }
 
 function buildLocalData() {
@@ -88,8 +99,10 @@ const loadNbaData = async () => {
         schedule: raw.schedule,
         teamStats: raw.team_stats,
         seasonStats: raw.season_stats,
+        analytics: raw.analytics,
         teams: raw.teams,
       }),
+      analytics: raw.analytics,
       games: getGamesSchedule(raw.schedule),
       standings: getStandings(raw.standings),
       injuries: getInjuries({ injuriesByTeam: raw.injuries, teamsById: raw.teams }),
@@ -122,6 +135,7 @@ export async function getNbaPlayerLogs(playerId) {
         { revalidate: 86400 },
       );
       return {
+        trends: bundle.trends ?? null,
         logs: bundle.current ?? [],
         logsPrev: bundle.previous ?? [],
         logsPlayoffs: bundle.playoffs ?? [],

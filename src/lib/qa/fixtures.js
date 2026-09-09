@@ -162,6 +162,37 @@ const teamStats = TEAM_DEFINITIONS.map((team, index) => ({
   ),
 }));
 
+const analytics = {
+  players: Object.fromEntries(
+    rosters.map((player, index) => [String(player.PLAYER_ID), {
+      position: player.POSITION,
+      usageRate: round(18 + (index % 13), 1),
+      pace: round(94 + (index % 7), 1),
+      possessions: round(88 + (index % 8), 1),
+      minutes: round(26 + (index % 12), 1),
+      games: 30,
+    }]),
+  ),
+  teams: Object.fromEntries(
+    TEAM_DEFINITIONS.map((team, index) => [String(team.id), {
+      pace: round(94 + index * 1.5, 1),
+      possessions: round(88 + index, 1),
+    }]),
+  ),
+  leaguePace: 96.5,
+  opponentVsPosition: Object.fromEntries(
+    ["PG", "SG", "SF", "PF", "C"].map((position, positionIndex) => [position, {
+      teams: Object.fromEntries(TEAM_DEFINITIONS.map((team, teamIndex) => [String(team.id), {
+        points: round(21 + positionIndex + teamIndex * 0.5),
+        rebounds: round(6 + positionIndex * 0.4 + teamIndex * 0.2),
+        assists: round(7 + positionIndex * 0.5 + teamIndex * 0.3),
+        threes: round(2 + positionIndex * 0.2 + teamIndex * 0.1),
+        leagueAverage: { points: 23, rebounds: 6.5, assists: 7.5, threes: 2.5 },
+      }])),
+    }]),
+  ),
+};
+
 const injuries = TEAM_DEFINITIONS.map((team, index) => ({
   displayName: team.name,
   injuries: [
@@ -176,12 +207,12 @@ const injuries = TEAM_DEFINITIONS.map((team, index) => ({
 
 export function getQaFixtures(scenario = "regular") {
   if (scenario === "no-games") {
-    return { rosters, props: [], games: [], standings, injuries: [], teamStats, logsByPlayer, previousLogsByPlayer: {} };
+    return { rosters, props: [], games: [], standings, injuries: [], teamStats, analytics, logsByPlayer, previousLogsByPlayer: {} };
   }
   if (scenario === "partial-data") {
-    return { rosters, props: props.slice(0, 28), games, standings, injuries, teamStats, logsByPlayer: Object.fromEntries(Object.entries(logsByPlayer).slice(0, 20)), previousLogsByPlayer: {} };
+    return { rosters, props: props.slice(0, 28), games, standings, injuries, teamStats, analytics, logsByPlayer: Object.fromEntries(Object.entries(logsByPlayer).slice(0, 20)), previousLogsByPlayer: {} };
   }
-  return { rosters, props, games, standings, injuries, teamStats, logsByPlayer, previousLogsByPlayer: logsByPlayer };
+  return { rosters, props, games, standings, injuries, teamStats, analytics, logsByPlayer, previousLogsByPlayer: logsByPlayer };
 }
 
 export const QA_SCENARIOS = ["regular", "no-games", "partial-data"];
