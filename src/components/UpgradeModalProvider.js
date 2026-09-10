@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { captureEvent } from "@/components/PostHogProvider";
 import { PAID_PLAN_PRICES, PRICING_PLANS, REFERRAL_DISCOUNT } from "@/lib/pricingPlans";
@@ -158,12 +159,14 @@ export default function UpgradeModalProvider() {
 
         <div className="relative z-20 flex shrink-0 items-center justify-between gap-4 border-b border-white/[0.06] bg-[#122040]/70 px-5 py-4 backdrop-blur-md sm:px-7">
           <div className="flex min-w-0 items-center gap-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-orange-500 shadow-[0_0_12px_rgba(249,115,22,.4)]">
-              <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M6.5 15.5v2.2M11.2 12.5v5.2M15.9 9.2v8.5" stroke="white" strokeWidth="2.2" strokeLinecap="round" />
-                <path d="M6.2 12.6 9.8 9.4l3 2.3 5-5.2" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
+            <Image
+              src="/icon.svg"
+              alt=""
+              width={32}
+              height={32}
+              aria-hidden="true"
+              className="h-8 w-8 shrink-0 rounded-lg shadow-[0_0_12px_rgba(249,115,22,.4)]"
+            />
             <h2 id="upgrade-modal-title" className="hidden font-mono text-sm font-black uppercase tracking-widest min-[360px]:block">
               PROPINSIGHT
             </h2>

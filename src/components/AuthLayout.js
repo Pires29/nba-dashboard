@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 export const AuthLayout = ({ title, subtitle, children, backHref = "/" }) => (
@@ -38,17 +39,14 @@ export const AuthLayout = ({ title, subtitle, children, backHref = "/" }) => (
 
       {/* Logo */}
       <div className="mb-5 flex items-center justify-center gap-2.5 sm:mb-8">
-        <div className="w-8 h-8 rounded-lg bg-orange-500 flex items-center justify-center shadow-[0_0_16px_rgba(249,115,22,0.5)]">
-          <svg width="16" height="16" viewBox="0 0 14 14" fill="none">
-            <path d="M2 10.5 5.2 7.3l2 2L12 4.5" stroke="white" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-            <path
-              d="M2 12h10"
-              stroke="white"
-              strokeWidth="1.2"
-              strokeLinecap="round"
-            />
-          </svg>
-        </div>
+        <Image
+          src="/icon.svg"
+          alt=""
+          width={32}
+          height={32}
+          aria-hidden="true"
+          className="h-8 w-8 rounded-lg shadow-[0_0_16px_rgba(249,115,22,0.5)]"
+        />
         <span className="font-mono font-black text-base tracking-widest text-white uppercase">
           PROPINSIGHT
         </span>
