@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { signOut } from "next-auth/react";
+import { signOutWithBetaCleanup } from "@/lib/signOutWithBetaCleanup";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -165,7 +165,7 @@ export default function SettingsPage({ session }) {
         return;
       }
       setShowDeleteModal(false);
-      await signOut({ callbackUrl: "/?signedOut=1" });
+      await signOutWithBetaCleanup({ callbackUrl: "/?signedOut=1" });
     } catch (err) {
       setActionError("Unable to connect. Please try again.");
     } finally {
