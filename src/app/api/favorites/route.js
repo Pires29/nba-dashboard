@@ -2,6 +2,7 @@
 export const runtime = "nodejs";
 
 import { getServerSession } from "next-auth";
+import { getToken } from "next-auth/jwt";
 import { authOptions } from "@/lib/authOptions";
 import prisma from "../../../../prisma/prismaClient";
 import { getAvailablePlayers } from "@/lib/getAvailablePlayers";
@@ -13,6 +14,10 @@ import { getQaFavorites, setQaFavorites } from "@/lib/qa/favorites";
 import { logError } from "@/lib/logger";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { requireBetaApiAccess } from "@/lib/betaGate";
+import {
+  sessionTokenCookieName,
+  useSecureAuthCookies,
+} from "@/lib/authCookies";
 
 const FAVORITE_STATS = new Set([
   "points", "assists", "rebounds", "blocks", "steals", "turnovers",
@@ -25,7 +30,6 @@ function hasFullFavoriteAccess(plan) {
 
 async function enforceFavoritesRateLimit(userId, action) {
   const limits = {
-    read: { limit: 120, windowMs: 15 * 60 * 1000 },
     write: { limit: 60, windowMs: 15 * 60 * 1000 },
     bulkDelete: { limit: 20, windowMs: 15 * 60 * 1000 },
   };
@@ -33,29 +37,72 @@ async function enforceFavoritesRateLimit(userId, action) {
   return result.allowed ? null : rateLimitResponse(result);
 }
 
-export async function GET() {
+function elapsedMilliseconds(start) {
+  return Math.round((performance.now() - start) * 10) / 10;
+}
+
+function favoritesResponse(favorites, timings) {
+  return Response.json(favorites, {
+    headers: {
+      // Visible in DevTools > Network > Timing. Keep these values coarse: they
+      // help identify a slow dependency without exposing any user data.
+      "Server-Timing": timings
+        .map(({ name, duration }) => `${name};dur=${duration}`)
+        .join(", "),
+      "Cache-Control": "private, no-store",
+    },
+  });
+}
+
+export async function GET(req) {
+  const requestStartedAt = performance.now();
   const betaBlocked = await requireBetaApiAccess();
   if (betaBlocked) return betaBlocked;
+  const betaDuration = elapsedMilliseconds(requestStartedAt);
 
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id)
+  // This route only needs the authenticated user id. Decoding the signed JWT
+  // avoids getServerSession's User lookup on every page visit. Writes still
+  // use getServerSession, which revalidates the account against the database.
+  const authStartedAt = performance.now();
+  const token = await getToken({
+    req,
+    secret: process.env.NEXTAUTH_SECRET,
+    cookieName: sessionTokenCookieName,
+    secureCookie: useSecureAuthCookies,
+  });
+  const userId = typeof token?.userId === "string" ? token.userId : null;
+  if (!userId)
     return Response.json({ error: "Unauthorized" }, { status: 401 });
+  const authDuration = elapsedMilliseconds(authStartedAt);
 
   try {
-    const limited = await enforceFavoritesRateLimit(session.user.id, "read");
-    if (limited) return limited;
-
+    const qaStartedAt = performance.now();
     const qa = await getQaContext();
-    if (qa) return Response.json(await getQaFavorites());
+    const qaDuration = elapsedMilliseconds(qaStartedAt);
+    if (qa) {
+      return favoritesResponse(await getQaFavorites(), [
+        { name: "beta", duration: betaDuration },
+        { name: "auth", duration: authDuration },
+        { name: "qa", duration: qaDuration },
+        { name: "total", duration: elapsedMilliseconds(requestStartedAt) },
+      ]);
+    }
 
+    const databaseStartedAt = performance.now();
     const favorites = await prisma.favorite.findMany({
-      where: { userId: session.user.id },
+      where: { userId },
       orderBy: { createdAt: "desc" },
     });
 
-    return Response.json(favorites);
+    return favoritesResponse(favorites, [
+      { name: "beta", duration: betaDuration },
+      { name: "auth", duration: authDuration },
+      { name: "qa", duration: qaDuration },
+      { name: "db", duration: elapsedMilliseconds(databaseStartedAt) },
+      { name: "total", duration: elapsedMilliseconds(requestStartedAt) },
+    ]);
   } catch (error) {
-    logError("favorites_fetch_failed", error, { userId: session.user.id });
+    logError("favorites_fetch_failed", error, { userId });
     return Response.json({ error: "Unable to load favorites" }, { status: 500 });
   }
 }

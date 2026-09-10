@@ -81,6 +81,7 @@ model Favorite {
   user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, playerId, stat])
+  @@index([userId, createdAt(sort: Desc)])
 }
 
 model ReferralCode {
