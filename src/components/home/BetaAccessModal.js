@@ -42,7 +42,7 @@ export default function BetaAccessModal({
       const response = await fetch("/api/beta/access", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code }),
+        body: JSON.stringify({ code: code.trim() }),
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Invalid beta code");
@@ -178,6 +178,8 @@ export default function BetaAccessModal({
                       Beta code
                     </span>
                     <input
+                      type="text"
+                      maxLength={128}
                       value={code}
                       onChange={(event) => setCode(event.target.value)}
                       className="mt-2 w-full rounded-lg border border-white/[0.08] bg-[#060b13] px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-orange-500/60"
