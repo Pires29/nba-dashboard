@@ -4,13 +4,14 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "Run a quick NBA API smoke test or publish the full dataset"
+        description: "Run a quick NBA API smoke test, publish live data, or refresh the historical QA snapshot"
         required: true
         default: smoke
         type: choice
         options:
           - smoke
           - full
+          - qa
   schedule:
     # GitHub schedules use UTC. The job below gates execution by
     # America/New_York time so daylight saving changes do not shift updates.
@@ -78,4 +79,15 @@ jobs:
 
       - name: Publish NBA data snapshot
         if: steps.window.outputs.run_update == 'true' && inputs.mode == 'full'
+        run: python update_data.py
+
+      - name: Publish historical QA data snapshot
+        if: steps.window.outputs.run_update == 'true' && inputs.mode == 'qa'
+        env:
+          NBA_QA_DATE: "2026-03-11"
+          NBA_STATS_SEASON: "2025-26"
+          NBA_PREV_SEASON: "2024-25"
+          NBA_ROSTER_SEASON: "2025-26"
+          NBA_STORAGE_MANIFEST: qa-current.json
+          NBA_STORAGE_VERSION: qa-2026-03-11-${{ github.run_id }}-${{ github.run_attempt }}
         run: python update_data.py
