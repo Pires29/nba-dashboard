@@ -144,10 +144,10 @@ function DesktopPropRow({ index, injuryStatus, player, prop, selectedStat }) {
               <PropsPlayerHeadshot playerId={player.player_id} width={40} height={30} alt="" priority={index === 0} className="h-full w-full object-cover" />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="flex items-center gap-2">
+              <span className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-1.5">
                 <span className="truncate text-[13px] font-semibold text-slate-100">{player.player_name}</span>
-                {player.position && <span className="rounded border border-white/[0.08] px-1 text-[9px] font-mono text-slate-400">{player.position}</span>}
-                {injuryStatus && <span className={`rounded border px-1.5 py-0.5 text-[9px] font-mono font-bold uppercase tracking-widest ${INJURY_STYLES[injuryStatus] || "border-slate-500/30 bg-slate-500/15 text-slate-300"}`}>{injuryStatus === "Day-To-Day" ? "DTD" : injuryStatus}</span>}
+                {player.position && <span className="shrink-0 rounded border border-white/[0.08] px-1 text-[9px] font-mono text-slate-400">{player.position}</span>}
+                {injuryStatus && <span className={`shrink-0 rounded border px-1.5 py-0.5 text-[9px] font-mono font-bold uppercase tracking-widest ${INJURY_STYLES[injuryStatus] || "border-slate-500/30 bg-slate-500/15 text-slate-300"}`}>{injuryStatus === "Day-To-Day" ? "DTD" : injuryStatus}</span>}
               </span>
               <span className="mt-0.5 flex items-center gap-1.5 text-[10px] font-mono">
                 <span className="font-bold text-orange-400">{player.team}</span>
