@@ -35,9 +35,9 @@ jobs:
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nba_dashboard_test
       DIRECT_URL: postgresql://postgres:postgres@localhost:5432/nba_dashboard_test
-      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_URL: https://ci.example.invalid
       NEXTAUTH_SECRET: ci-only-nextauth-secret-with-at-least-32-characters
-      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      NEXT_PUBLIC_APP_URL: https://ci.example.invalid
       STRIPE_SECRET_KEY: sk_test_ci_only
       STRIPE_WEBHOOK_SECRET: whsec_ci_only
       STRIPE_PRICE_MONTHLY: price_ci_monthly

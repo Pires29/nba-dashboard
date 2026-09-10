@@ -1,9 +1,23 @@
+import {
+  getProductionEnvironment,
+  validateProductionPublicUrls,
+} from "./productionEnvironment.js";
+
 export function getUseSecureAuthCookies(
   nextAuthUrl = process.env.NEXTAUTH_URL,
   nodeEnv = process.env.NODE_ENV,
+  environment = process.env,
 ) {
-  return nextAuthUrl?.startsWith("https://") ?? nodeEnv === "production";
+  const { isProduction } = getProductionEnvironment({
+    ...environment,
+    NEXTAUTH_URL: nextAuthUrl,
+    NODE_ENV: nodeEnv,
+  });
+
+  return isProduction || nextAuthUrl?.startsWith("https://") === true;
 }
+
+validateProductionPublicUrls();
 
 export const useSecureAuthCookies = getUseSecureAuthCookies();
 

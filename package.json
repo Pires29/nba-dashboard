@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "prebuild": "node scripts/clean-next-lock.js",
+    "prebuild": "node scripts/clean-next-lock.js && node scripts/validate-production-env.mjs --production",
     "build": "next build --webpack",
-    "prebuild:qa": "node scripts/clean-next-lock.js",
+    "prebuild:qa": "node scripts/clean-next-lock.js && node scripts/validate-production-env.mjs --production",
     "build:qa": "QA_MODE=true QA_ALLOW_PRODUCTION_LOCAL=true next build --webpack",
     "start": "next start",
     "start:qa": "QA_MODE=true QA_ALLOW_PRODUCTION_LOCAL=true next start",

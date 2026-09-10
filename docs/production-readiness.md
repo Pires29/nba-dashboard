@@ -20,6 +20,11 @@ Use production-only values here. Local development should use `.env.local` from
 `.env.local.example`; the data publisher should use `.env.pipeline` from
 `.env.pipeline.example`.
 
+`NEXTAUTH_URL` and `NEXT_PUBLIC_APP_URL` must be the same HTTPS origin (with
+no path), for example `https://www.propinsight.app`. The production build
+validates this before deployment. Do not use a localhost or HTTP URL in a
+production hosting environment.
+
 Database and auth:
 
 - `DATABASE_URL`
