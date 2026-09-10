@@ -206,10 +206,15 @@ export default function FavoritesPage() {
                   <th className="px-4 py-3 text-[10px] font-mono text-slate-600 uppercase tracking-widest font-bold text-right">
                     Line
                   </th>
-                  <th className="px-4 py-3 text-[10px] font-mono text-slate-600 uppercase tracking-widest font-bold text-right">
+                  <th
+                    scope="col"
+                    className="w-28 px-4 py-3 text-center text-[10px] font-mono font-bold uppercase tracking-widest text-slate-600"
+                  >
                     Saved
                   </th>
-                  <th className="px-4 py-3 w-10" />
+                  <th scope="col" className="w-12 px-3 py-3">
+                    <span className="sr-only">Actions</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -276,7 +281,7 @@ export default function FavoritesPage() {
                         {fav.avg?.toFixed(1) ?? "—"}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-right">
+                    <td className="w-28 px-4 py-3 text-center">
                       <span className="text-[10px] font-mono text-slate-600">
                         {new Date(fav.createdAt).toLocaleDateString("pt-PT", {
                           day: "2-digit",
@@ -284,7 +289,7 @@ export default function FavoritesPage() {
                         })}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="w-12 px-3 py-3 text-center">
                       <button
                         type="button"
                         aria-label={`Remove ${fav.playerName} ${fav.stat} from favorites`}

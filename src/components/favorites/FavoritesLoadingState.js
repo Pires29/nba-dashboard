@@ -35,8 +35,8 @@ export default function FavoritesLoadingState() {
                 <th className="w-[280px] px-4 py-3 text-[10px] font-mono font-bold uppercase tracking-widest text-slate-600">Player</th>
                 <th className="px-4 py-3 text-[10px] font-mono font-bold uppercase tracking-widest text-slate-600">Stat</th>
                 <th className="px-4 py-3 text-right text-[10px] font-mono font-bold uppercase tracking-widest text-slate-600">Line</th>
-                <th className="px-4 py-3 text-right text-[10px] font-mono font-bold uppercase tracking-widest text-slate-600">Saved</th>
-                <th className="w-10 px-4 py-3" />
+                <th scope="col" className="w-28 px-4 py-3 text-center text-[10px] font-mono font-bold uppercase tracking-widest text-slate-600">Saved</th>
+                <th scope="col" className="w-12 px-3 py-3"><span className="sr-only">Actions</span></th>
               </tr>
             </thead>
             <tbody>
@@ -57,11 +57,11 @@ export default function FavoritesLoadingState() {
                   <td className="px-4 py-3">
                     <div className="ml-auto h-4 w-10 animate-pulse rounded bg-white/[0.08]" />
                   </td>
-                  <td className="px-4 py-3">
-                    <div className="ml-auto h-3 w-10 animate-pulse rounded bg-white/[0.05]" />
+                  <td className="w-28 px-4 py-3">
+                    <div className="mx-auto h-3 w-10 animate-pulse rounded bg-white/[0.05]" />
                   </td>
-                  <td className="px-4 py-3">
-                    <div className="ml-auto h-4 w-4 animate-pulse rounded bg-orange-500/30" />
+                  <td className="w-12 px-3 py-3">
+                    <div className="mx-auto h-4 w-4 animate-pulse rounded bg-orange-500/30" />
                   </td>
                 </tr>
               ))}
