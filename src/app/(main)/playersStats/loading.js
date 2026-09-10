@@ -55,13 +55,20 @@ const MainCardSkeleton = () => (
       <SkeletonBlock className="h-[60px] w-full rounded-xl" />
     </div>
     <div className="space-y-6 p-4 sm:p-5">
-      <div className="flex gap-2 overflow-hidden">
+      <div className="grid grid-cols-2 gap-2 lg:hidden">
+        <SkeletonBlock className="h-9 rounded-lg" />
+        <SkeletonBlock className="h-9 rounded-lg" />
+      </div>
+      <div className="hidden gap-2 overflow-hidden lg:flex">
         {Array.from({ length: 9 }, (_, index) => (
           <SkeletonBlock key={index} className="h-8 min-w-20 flex-1 rounded-lg" />
         ))}
       </div>
-      <SkeletonBlock className="h-[300px] w-full rounded-xl lg:h-[360px]" />
-      <div className="grid grid-cols-5 gap-2 lg:grid-cols-10">
+      <div className="flex h-[300px] w-full items-end justify-center rounded-xl border border-white/[0.04] bg-white/[0.015] px-8 pb-12 lg:hidden">
+        <SkeletonBlock className="h-[168px] w-[90px] rounded-t" />
+      </div>
+      <SkeletonBlock className="hidden h-[360px] w-full rounded-xl lg:block" />
+      <div className="hidden grid-cols-5 gap-2 lg:grid lg:grid-cols-10">
         {Array.from({ length: 10 }, (_, index) => (
           <SkeletonBlock key={index} className="h-[70px] rounded-lg" />
         ))}
