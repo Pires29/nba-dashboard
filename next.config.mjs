@@ -26,11 +26,11 @@ const contentSecurityPolicy = [
   "form-action 'self'",
   `script-src ${scriptSrc}`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://ak-static.cms.nba.com https://cdn.nba.com https://lh3.googleusercontent.com",
+  "img-src 'self' data: blob: https://ak-static.cms.nba.com https://cdn.nba.com https://lh3.googleusercontent.com https://authjs.dev",
   "font-src 'self' data:",
   "connect-src 'self' https://api.stripe.com https://challenges.cloudflare.com https://*.sentry.io https://*.posthog.com https://*.posthog.io",
   "frame-src https://js.stripe.com https://hooks.stripe.com https://challenges.cloudflare.com",
-  "upgrade-insecure-requests",
+  ...(isProduction ? ["upgrade-insecure-requests"] : []),
 ].join("; ");
 
 const securityHeaders = [

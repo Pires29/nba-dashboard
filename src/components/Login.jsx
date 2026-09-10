@@ -27,6 +27,13 @@ export function LoginForm() {
   const searchParams = useSearchParams();
   const callbackUrl = safeInternalPath(searchParams.get("callbackUrl"), "/");
   const sessionEnded = searchParams.get("session") === "ended";
+  const authError = searchParams.get("error");
+  const oauthErrorMessage =
+    authError === "OAuthCallback"
+      ? "Google sign-in could not be completed. Please try again; if it keeps happening, check that cookies are enabled and the Google OAuth redirect URI matches this local URL."
+      : authError
+        ? "Sign-in could not be completed. Please try again."
+        : null;
   const verificationResendKey = unverifiedEmail
     ? `hoopiq:verificationResent:login:${unverifiedEmail.trim().toLowerCase()}`
     : "";
@@ -191,7 +198,15 @@ export function LoginForm() {
           </div>
         )}
 
-        {sessionEnded && !error && !notice && (
+        {oauthErrorMessage && !error && !notice && (
+          <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2">
+            <p className="text-[11px] font-mono leading-relaxed text-red-300">
+              {oauthErrorMessage}
+            </p>
+          </div>
+        )}
+
+        {sessionEnded && !error && !notice && !oauthErrorMessage && (
           <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2">
             <p className="text-[11px] font-mono leading-relaxed text-amber-300">
               Your session ended. Please sign in again.

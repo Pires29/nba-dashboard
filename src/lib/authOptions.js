@@ -5,6 +5,12 @@ import { authorizeCredentials } from "@/lib/credentialsAuth";
 import { enrichSessionWithUser } from "@/lib/enrichSessionWithUser";
 import { isValidEmail, normalizeEmail } from "@/lib/security";
 import { logWarning } from "@/lib/logger";
+import {
+  callbackUrlCookieName,
+  csrfTokenCookieName,
+  sessionTokenCookieName,
+  useSecureAuthCookies,
+} from "@/lib/authCookies";
 
 const GoogleProvider = GoogleProviderModule.default ?? GoogleProviderModule;
 const CredentialsProvider =
@@ -16,38 +22,29 @@ export const authOptions = {
   },
   cookies: {
     sessionToken: {
-      name:
-        process.env.NODE_ENV === "production"
-          ? "__Secure-next-auth.session-token"
-          : "next-auth.session-token",
+      name: sessionTokenCookieName,
       options: {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        secure: process.env.NODE_ENV === "production",
+        secure: useSecureAuthCookies,
       },
     },
     callbackUrl: {
-      name:
-        process.env.NODE_ENV === "production"
-          ? "__Secure-next-auth.callback-url"
-          : "next-auth.callback-url",
+      name: callbackUrlCookieName,
       options: {
         sameSite: "lax",
         path: "/",
-        secure: process.env.NODE_ENV === "production",
+        secure: useSecureAuthCookies,
       },
     },
     csrfToken: {
-      name:
-        process.env.NODE_ENV === "production"
-          ? "__Host-next-auth.csrf-token"
-          : "next-auth.csrf-token",
+      name: csrfTokenCookieName,
       options: {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        secure: process.env.NODE_ENV === "production",
+        secure: useSecureAuthCookies,
       },
     },
   },
@@ -68,6 +65,10 @@ export const authOptions = {
     }),
   ],
   secret: process.env.NEXTAUTH_SECRET,
+  pages: {
+    signIn: "/login",
+    error: "/login",
+  },
   callbacks: {
     async signIn({ user, account, profile }) {
       if (!user.email) return false;
