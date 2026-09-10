@@ -76,6 +76,12 @@ export default async function Page({ searchParams }) {
           Number(rosterPlayer.TEAM_ID) === selectedTeamId &&
           Number(rosterPlayer.PLAYER_ID) !== playerId,
       );
+  const teammateLogBundles = await Promise.all(
+    teammates.map(async (teammate) => ({
+      player: teammate,
+      ...(await getNbaPlayerLogs(Number(teammate.PLAYER_ID))),
+    })),
+  );
   const data = await buildPlayerStatsPageData({
     playerId,
     team1Id,
@@ -92,6 +98,7 @@ export default async function Page({ searchParams }) {
     playerLogsPrev: logsPrev,
     playerLogsPlayoffs: logsPlayoffs,
     teammateRoster: teammates,
+    teammateLogBundles,
   });
 
   return (

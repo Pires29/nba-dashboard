@@ -39,6 +39,7 @@ const TeamStats = dynamic(() => import("../TeamStats"), {
 });
 
 const ResponsiveLayout = ({
+  playerId,
   player,
   playerStats,
   contextGames,
@@ -93,12 +94,14 @@ const ResponsiveLayout = ({
   const selectedTeammates = visibleTeammateImpact.filter((entry) =>
     selectedTeammateIds.includes(String(entry.playerId)),
   );
-  const loadTeammateLogs = useCallback(async (playerId) => {
-    const key = String(playerId);
+  const loadTeammateLogs = useCallback(async (teammateId) => {
+    const key = String(teammateId);
     if (loadedTeammateData[key]) return;
 
     try {
-      const response = await fetch(`/api/player-logs?playerId=${encodeURIComponent(key)}`);
+      const response = await fetch(
+        `/api/player-logs?playerId=${encodeURIComponent(key)}&teammateOfPlayerId=${encodeURIComponent(playerId)}`,
+      );
       if (!response.ok) return;
       const bundle = await response.json();
       const logs = Array.isArray(bundle.logs) ? bundle.logs : [];
@@ -121,7 +124,7 @@ const ResponsiveLayout = ({
     } catch {
       // Keep the teammate available in the selector if its optional logs fail.
     }
-  }, [loadedTeammateData]);
+  }, [loadedTeammateData, playerId]);
   const handleTeammateChange = (playerId) => {
     if (!playerId || selectedTeammateIds.length >= maxTeammates) return;
     void loadTeammateLogs(playerId);

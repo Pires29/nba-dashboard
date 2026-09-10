@@ -27,11 +27,24 @@ export async function GET(req) {
 
   const { searchParams } = new URL(req.url);
   const playerId = Number(searchParams.get("playerId"));
+  const teammateOfPlayerId = Number(searchParams.get("teammateOfPlayerId"));
 
   if (!Number.isSafeInteger(playerId) || playerId <= 0) {
     return NextResponse.json({ error: "INVALID_PLAYER_ID" }, { status: 400 });
   }
-  if (!allowedPlayerIds.has(playerId)) {
+  const selectedPlayer = nbaData.rosters.find(
+    (player) => Number(player.PLAYER_ID) === teammateOfPlayerId,
+  );
+  const isAccessibleTeammate = Number.isSafeInteger(teammateOfPlayerId) &&
+    teammateOfPlayerId > 0 &&
+    allowedPlayerIds.has(teammateOfPlayerId) &&
+    selectedPlayer &&
+    nbaData.rosters.some((player) =>
+      Number(player.PLAYER_ID) === playerId &&
+      Number(player.TEAM_ID) === Number(selectedPlayer.TEAM_ID),
+    );
+
+  if (!allowedPlayerIds.has(playerId) && !isAccessibleTeammate) {
     return NextResponse.json({ error: "PLAYER_LOCKED" }, { status: 403 });
   }
 

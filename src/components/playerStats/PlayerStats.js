@@ -2,6 +2,7 @@ import ResponsiveLayout from "./layout/ResponsiveLayout";
 
 const PlayerStats = ({
   data,
+  playerId,
   plan,
   stat,
   isPlayerLocked = false,
@@ -20,6 +21,7 @@ const PlayerStats = ({
       />
 
       <ResponsiveLayout
+        playerId={playerId}
         player={data.player}
         playerStats={data.playerStats}
         contextGames={data.contextGames}
