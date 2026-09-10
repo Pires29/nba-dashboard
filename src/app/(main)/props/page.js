@@ -1,5 +1,6 @@
 import { classifyMatchup, getPositionMatchup } from "@/lib/matchup";
 import { getAvailablePlayers } from "@/lib/getAvailablePlayers";
+import { hasFullPlayerAccess } from "@/lib/playerEntitlements";
 import { getCurrentSession } from "@/lib/getCurrentSession";
 import PropsTableWrapper from "./PropsTableWrapper";
 import { getQaContext } from "@/lib/qa/context";
@@ -132,7 +133,10 @@ export default async function PropsPage({ searchParams }) {
     return { ...classifyMatchup(selectedStat, matchup), position };
   };
   const plan = resolveQaPlan(qa?.persona, session?.user?.plan);
-  const allowedPlayerIds = getAvailablePlayers(plan, nbaData);
+  const hasBetaProAccess = qa?.persona && qa.persona !== "account"
+    ? false
+    : Boolean(session?.user?.hasBetaProAccess);
+  const allowedPlayerIds = getAvailablePlayers(plan, nbaData, { hasBetaProAccess });
   const selectedStatParam = getSingleParam(resolvedSearchParams?.stat);
   const sortPeriodParam = getFirstParam(resolvedSearchParams, [
     "sort",
@@ -332,7 +336,7 @@ export default async function PropsPage({ searchParams }) {
       standings={teamNameMap}
       schedule={slimSchedule}
       propsCount={enrichedProps.length}
-      isFreePlan={plan === "free"}
+      isFreePlan={!hasFullPlayerAccess(plan, { hasBetaProAccess })}
       dataStatus={{
         updatedAt: nbaData.updatedAt ?? null,
       }}

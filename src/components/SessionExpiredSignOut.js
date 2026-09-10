@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect } from "react";
-import { signOut } from "next-auth/react";
+import { signOutWithBetaCleanup } from "@/lib/signOutWithBetaCleanup";
 
 export default function SessionExpiredSignOut() {
   useEffect(() => {
-    signOut({ callbackUrl: "/login?session=ended" });
+    signOutWithBetaCleanup({ callbackUrl: "/login?session=ended" });
   }, []);
 
   return null;

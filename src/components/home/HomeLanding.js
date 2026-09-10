@@ -12,12 +12,20 @@ const BENEFITS = [
   { number: "03", title: "Research the whole slate faster", text: "Filter by game, team, market, matchup, injury status, and hit rate from one focused workspace." },
 ];
 
-function PrimaryCta({ className }) {
-  if (launchConfig.access.showBetaAccess) {
+function PrimaryCta({ className, hasBetaAccess }) {
+  if (launchConfig.access.showBetaAccess && !hasBetaAccess) {
     return (
       <BetaAccessModal className={className}>
         {launchConfig.cta.primary}
       </BetaAccessModal>
+    );
+  }
+
+  if (launchConfig.access.showBetaAccess && hasBetaAccess) {
+    return (
+      <Link href="/props" className={className}>
+        Open Props
+      </Link>
     );
   }
 
@@ -28,7 +36,7 @@ function PrimaryCta({ className }) {
   );
 }
 
-export default function HomeLanding() {
+export default function HomeLanding({ hasBetaAccess = false }) {
   return (
     <div className="overflow-hidden scroll-smooth bg-[#060b13] text-white">
       <div className="pointer-events-none fixed inset-0 opacity-[0.12] [background-image:linear-gradient(rgba(255,255,255,.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.04)_1px,transparent_1px)] [background-size:48px_48px]" />
@@ -38,8 +46,8 @@ export default function HomeLanding() {
           <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-orange-500/20 bg-orange-500/[0.08] px-4 py-2 font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-orange-300"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-orange-400" />Built for the NBA slate</div>
           <h1 className="text-5xl font-black leading-[1.12] tracking-normal sm:text-7xl sm:leading-[1.08] lg:text-[84px]">NBA player props research.<span className="block pb-3 bg-gradient-to-r from-orange-400 via-amber-300 to-orange-500 bg-clip-text text-transparent">See the full picture.</span></h1>
           <p className="mx-auto mt-7 max-w-2xl text-base leading-7 text-slate-400 sm:text-lg">Research NBA player props with hit rates, player trends, matchup stats, injuries, and slate filters in one fast dashboard.</p>
-          <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row"><PrimaryCta className="w-full rounded-xl bg-orange-500 px-7 py-3.5 text-center font-mono text-xs font-black uppercase tracking-widest text-white shadow-[0_0_35px_rgba(249,115,22,.28)] transition hover:bg-orange-400 sm:w-auto" /><PricingLink className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-7 py-3.5 text-center font-mono text-xs font-bold uppercase tracking-widest text-slate-300 transition hover:border-white/20 hover:text-white sm:w-auto">{launchConfig.cta.secondary}</PricingLink></div>
-          {launchConfig.access.showBetaAccess ? <div className="mx-auto mt-6 max-w-xl rounded-xl border border-orange-500/50 bg-orange-500/[0.12] px-5 py-4 text-center"><p className="font-mono text-[10px] font-black uppercase tracking-[0.22em] text-orange-300">{launchConfig.betaApplication.title}</p><p className="mt-2 text-sm leading-6 text-slate-300">{launchConfig.betaApplication.description} {launchConfig.betaApplication.perkText}</p></div> : null}
+          <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row"><PrimaryCta hasBetaAccess={hasBetaAccess} className="w-full rounded-xl bg-orange-500 px-7 py-3.5 text-center font-mono text-xs font-black uppercase tracking-widest text-white shadow-[0_0_35px_rgba(249,115,22,.28)] transition hover:bg-orange-400 sm:w-auto" /><PricingLink className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-7 py-3.5 text-center font-mono text-xs font-bold uppercase tracking-widest text-slate-300 transition hover:border-white/20 hover:text-white sm:w-auto">{launchConfig.cta.secondary}</PricingLink></div>
+          {launchConfig.access.showBetaAccess && !hasBetaAccess ? <div className="mx-auto mt-6 max-w-xl rounded-xl border border-orange-500/50 bg-orange-500/[0.12] px-5 py-4 text-center"><p className="font-mono text-[10px] font-black uppercase tracking-[0.22em] text-orange-300">{launchConfig.betaApplication.title}</p><p className="mt-2 text-sm leading-6 text-slate-300">{launchConfig.betaApplication.description} {launchConfig.betaApplication.perkText}</p></div> : null}
           <p className="mt-4 font-mono text-[10px] uppercase tracking-widest text-slate-400">No spreadsheets. No tab overload. Just the context that matters.</p>
         </div>
       </section>
@@ -57,7 +65,7 @@ export default function HomeLanding() {
       <HomePricingSection />
 
       <FaqSection />
-      <section className="relative px-6 py-24 text-center"><div className="absolute left-1/2 top-1/2 h-52 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-orange-500/10 blur-[100px]" /><div className="relative"><p className="font-mono text-[10px] uppercase tracking-[0.25em] text-orange-400">Your next slate starts here</p><h2 className="mx-auto mt-5 max-w-3xl text-4xl font-black tracking-tight sm:text-6xl">Stop guessing. Start researching.</h2><div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row"><PrimaryCta className="inline-flex items-center justify-center rounded-xl bg-orange-500 px-7 py-3.5 font-mono text-xs font-black uppercase leading-none tracking-widest hover:bg-orange-400" /><PricingLink className="inline-flex items-center justify-center rounded-xl border border-white/10 px-7 py-3.5 font-mono text-xs font-bold uppercase leading-none tracking-widest text-slate-300 hover:border-white/20">{launchConfig.cta.secondary}</PricingLink></div></div></section>
+      <section className="relative px-6 py-24 text-center"><div className="absolute left-1/2 top-1/2 h-52 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-orange-500/10 blur-[100px]" /><div className="relative"><p className="font-mono text-[10px] uppercase tracking-[0.25em] text-orange-400">Your next slate starts here</p><h2 className="mx-auto mt-5 max-w-3xl text-4xl font-black tracking-tight sm:text-6xl">Stop guessing. Start researching.</h2><div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row"><PrimaryCta hasBetaAccess={hasBetaAccess} className="inline-flex items-center justify-center rounded-xl bg-orange-500 px-7 py-3.5 font-mono text-xs font-black uppercase leading-none tracking-widest hover:bg-orange-400" /><PricingLink className="inline-flex items-center justify-center rounded-xl border border-white/10 px-7 py-3.5 font-mono text-xs font-bold uppercase leading-none tracking-widest text-slate-300 hover:border-white/20">{launchConfig.cta.secondary}</PricingLink></div></div></section>
       <footer className="border-t border-white/[0.06]"><div className="mx-auto flex max-w-[1320px] flex-wrap items-center justify-between gap-5 px-6 py-7"><p className="font-mono text-[10px] text-slate-400">© {new Date().getFullYear()} PropInsight. Research responsibly.</p><div className="flex gap-5 font-mono text-[9px] uppercase tracking-widest text-slate-400"><a href="#features" className="hover:text-slate-300">Features</a><PricingLink className="hover:text-slate-300">Pricing</PricingLink><a href="#faq" className="hover:text-slate-300">FAQ</a><Link href="/privacy" className="hover:text-slate-300">Privacy</Link><Link href="/terms" className="hover:text-slate-300">Terms</Link></div></div></footer>
     </div>
   );

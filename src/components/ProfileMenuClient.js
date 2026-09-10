@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { signOut } from "next-auth/react";
+import { signOutWithBetaCleanup } from "@/lib/signOutWithBetaCleanup";
 import Image from "next/image";
 import Link from "next/link";
 import PricingLink from "./PricingLink";
@@ -186,7 +186,7 @@ const ProfileMenuClient = ({ session }) => {
               <button
                 onClick={() => {
                   setOpen(false);
-                  signOut({ callbackUrl: "/?signedOut=1" });
+                  signOutWithBetaCleanup({ callbackUrl: "/?signedOut=1" });
                 }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-red-500/10 transition-colors group"
               >

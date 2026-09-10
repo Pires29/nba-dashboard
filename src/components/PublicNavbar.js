@@ -4,8 +4,8 @@ import { launchConfig } from "@/config/launch";
 import PricingLink from "@/components/PricingLink";
 import BetaAccessModal from "./home/BetaAccessModal";
 
-function AccessButton({ className }) {
-  if (launchConfig.access.showBetaAccess) {
+function AccessButton({ className, hasBetaAccess }) {
+  if (launchConfig.access.showBetaAccess && !hasBetaAccess) {
     return (
       <BetaAccessModal aria-label="Open beta access" className={className}>
         {launchConfig.cta.navPrimary}
@@ -15,12 +15,12 @@ function AccessButton({ className }) {
 
   return (
     <Link href="/props" aria-label="Open props table" className={className}>
-      {launchConfig.cta.navPrimary}
+      Open Props
     </Link>
   );
 }
 
-export default function PublicNavbar() {
+export default function PublicNavbar({ hasBetaAccess = false }) {
   return (
     <nav className="relative sticky top-0 z-50 border-b border-white/6 bg-gradient-to-b from-[#122040] to-[#0D1828]">
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-orange-500 via-amber-400 to-transparent" />
@@ -63,7 +63,7 @@ export default function PublicNavbar() {
               Upgrade
             </span>
           </PricingLink>
-          <AccessButton className="inline-flex min-h-8 items-center justify-center rounded-lg border border-white/[0.08] bg-[#0D1828] px-3 py-1.5 font-mono text-[10px] font-bold uppercase leading-none tracking-widest text-slate-300 transition-all duration-150 hover:border-white/20 hover:text-white md:min-h-9 md:px-4 md:py-2 md:text-[11px]" />
+          <AccessButton hasBetaAccess={hasBetaAccess} className="inline-flex min-h-8 items-center justify-center rounded-lg border border-white/[0.08] bg-[#0D1828] px-3 py-1.5 font-mono text-[10px] font-bold uppercase leading-none tracking-widest text-slate-300 transition-all duration-150 hover:border-white/20 hover:text-white md:min-h-9 md:px-4 md:py-2 md:text-[11px]" />
         </div>
       </div>
     </nav>

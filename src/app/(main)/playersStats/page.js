@@ -19,7 +19,8 @@ export default async function Page({ searchParams }) {
   const session = await getCurrentSession();
   const nbaData = await getNbaData();
   const plan = session?.user?.plan ?? "free";
-  const allowedPlayerIds = getAvailablePlayers(plan, nbaData);
+  const hasBetaProAccess = Boolean(session?.user?.hasBetaProAccess);
+  const allowedPlayerIds = getAvailablePlayers(plan, nbaData, { hasBetaProAccess });
 
   const rawRosterData = nbaData.rosters;
   const rawTeams = nbaData.teams;

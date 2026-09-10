@@ -23,11 +23,13 @@ model User {
   planRenewsAt            DateTime?
   planInterval            String?
   emailVerifiedAt         DateTime?
+  betaAccessGrantedAt     DateTime?
   checkoutAttempt         CheckoutAttempt?
   emailVerificationTokens EmailVerificationToken[]
   favorites               Favorite[]
   passwordResetTokens     PasswordResetToken[]
   referralCode            ReferralCode?
+  accessGrants            AccessGrant[]
 }
 
 model EmailVerificationToken {
@@ -120,9 +122,41 @@ model RateLimitBucket {
 }
 
 model BetaWaitlist {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  createdAt DateTime @default(now())
+  id          String   @id @default(cuid())
+  email       String   @unique
+  status      String   @default("pending")
+  approvedAt  DateTime?
+  rejectedAt  DateTime?
+  notes       String?
+  createdAt   DateTime @default(now())
 
   @@index([createdAt])
+  @@index([status, createdAt])
+}
+
+model BetaCampaign {
+  id           String        @id @default(cuid())
+  slug         String        @unique
+  name         String
+  endsAt       DateTime?
+  createdAt    DateTime      @default(now())
+  accessGrants AccessGrant[]
+}
+
+model AccessGrant {
+  id         String       @id @default(cuid())
+  userId     String
+  campaignId String
+  access     String       @default("pro_access")
+  status     String       @default("active")
+  grantedAt  DateTime     @default(now())
+  expiresAt  DateTime?
+  revokedAt  DateTime?
+  notes      String?
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  campaign   BetaCampaign @relation(fields: [campaignId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, campaignId, access])
+  @@index([userId, status])
+  @@index([campaignId, status])
 }

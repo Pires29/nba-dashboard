@@ -14,6 +14,7 @@ import { getQaFavorites, setQaFavorites } from "@/lib/qa/favorites";
 import { logError } from "@/lib/logger";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { requireBetaApiAccess } from "@/lib/betaGate";
+import { hasFullPlayerAccess } from "@/lib/playerEntitlements";
 import {
   sessionTokenCookieName,
   useSecureAuthCookies,
@@ -23,10 +24,6 @@ const FAVORITE_STATS = new Set([
   "points", "assists", "rebounds", "blocks", "steals", "turnovers",
   "fg3m", "pra", "pa", "pr", "ra",
 ]);
-
-function hasFullFavoriteAccess(plan) {
-  return plan === "pro" || plan === "trial";
-}
 
 async function enforceFavoritesRateLimit(userId, action) {
   const limits = {
@@ -128,9 +125,12 @@ export async function POST(req) {
     const avg = Number(body.avg);
     const gameDate = body.gameDate;
     const plan = resolveQaPlan(qa?.persona, session.user.plan);
-    const allowedPlayers = hasFullFavoriteAccess(plan)
+    const hasBetaProAccess = qa?.persona && qa.persona !== "account"
+      ? false
+      : Boolean(session.user.hasBetaProAccess);
+    const allowedPlayers = hasFullPlayerAccess(plan, { hasBetaProAccess })
       ? null
-      : getAvailablePlayers(plan, qa?.data ?? (await getNbaData()));
+      : getAvailablePlayers(plan, qa?.data ?? (await getNbaData()), { hasBetaProAccess });
 
     if (
       !Number.isSafeInteger(playerId) ||

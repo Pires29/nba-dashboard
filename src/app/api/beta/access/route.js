@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/authOptions";
 import {
-  BETA_COOKIE_MAX_AGE_SECONDS,
-  BETA_COOKIE_NAME,
-  createBetaAccessToken,
   isClosedBetaEnabled,
   isValidBetaCode,
 } from "@/lib/betaAccess";
+import { grantUserBetaAccess } from "@/lib/betaUserAccess";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { getRequestIp, readJson, RequestError } from "@/lib/security";
 
@@ -26,23 +26,23 @@ export async function POST(req) {
       return NextResponse.json({ error: "Invalid beta code" }, { status: 400 });
     }
 
-    const token = await createBetaAccessToken();
-    if (!token) {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
       return NextResponse.json(
-        { error: "Beta access is not configured" },
-        { status: 500 },
+        { error: "Sign in to redeem your beta code" },
+        { status: 401 },
       );
     }
 
-    const response = NextResponse.json({ success: true });
-    response.cookies.set(BETA_COOKIE_NAME, token, {
-      httpOnly: true,
-      maxAge: BETA_COOKIE_MAX_AGE_SECONDS,
-      path: "/",
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-    });
-    return response;
+    const grant = await grantUserBetaAccess(session.user.id);
+    if (!grant) {
+      return NextResponse.json(
+        { error: "Unable to save beta access to your account" },
+        { status: 503 },
+      );
+    }
+
+    return NextResponse.json({ success: true });
   } catch (error) {
     if (error instanceof RequestError) {
       return NextResponse.json(

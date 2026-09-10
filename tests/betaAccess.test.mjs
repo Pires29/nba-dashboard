@@ -5,6 +5,7 @@ import {
   isValidBetaAccessToken,
   isValidBetaCode,
 } from "../src/lib/betaAccess.js";
+import { resolveBetaAccess } from "../src/lib/resolveBetaAccess.js";
 
 const ORIGINAL_ENV = {
   APP_PHASE: process.env.APP_PHASE,
@@ -52,4 +53,20 @@ test("allows access when closed beta is disabled", async () => {
   delete process.env.NEXT_PUBLIC_APP_PHASE;
 
   assert.equal(await isValidBetaAccessToken(""), true);
+});
+
+test("requires account-level beta access when the closed beta is enabled", async () => {
+  process.env.APP_PHASE = "beta";
+  delete process.env.CLOSED_BETA;
+  delete process.env.NEXT_PUBLIC_APP_PHASE;
+
+  assert.equal(await resolveBetaAccess(null), false);
+  assert.equal(
+    await resolveBetaAccess({ user: { betaAccessGrantedAt: null } }),
+    false,
+  );
+  assert.equal(
+    await resolveBetaAccess({ user: { betaAccessGrantedAt: new Date() } }),
+    true,
+  );
 });

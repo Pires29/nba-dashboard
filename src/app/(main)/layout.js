@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import PostHogProvider from "@/components/PostHogProvider";
 import UpgradeModalProvider from "@/components/UpgradeModalProvider";
 import { redirect } from "next/navigation";
+import { resolveBetaAccess } from "@/lib/resolveBetaAccess";
 
 export const metadata = {
   robots: {
@@ -19,6 +20,10 @@ export default async function MainLayout({ children }) {
 
   if (!session?.user || session.user.accountDeleted) {
     redirect("/login");
+  }
+
+  if (!(await resolveBetaAccess(session))) {
+    redirect("/?beta=required");
   }
 
   return (

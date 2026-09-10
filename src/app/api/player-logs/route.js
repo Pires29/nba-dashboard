@@ -23,7 +23,9 @@ export async function GET(req) {
 
   const nbaData = await getNbaData();
   const plan = session?.user?.plan ?? "free";
-  const allowedPlayerIds = getAvailablePlayers(plan, nbaData);
+  const allowedPlayerIds = getAvailablePlayers(plan, nbaData, {
+    hasBetaProAccess: Boolean(session?.user?.hasBetaProAccess),
+  });
 
   const { searchParams } = new URL(req.url);
   const playerId = Number(searchParams.get("playerId"));

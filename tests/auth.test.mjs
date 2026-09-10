@@ -2,6 +2,10 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { authorizeCredentials } from "../src/lib/credentialsAuth.js";
 import { enrichSessionWithUser } from "../src/lib/enrichSessionWithUser.js";
+import {
+  grantUserBetaAccess,
+  userHasBetaAccess,
+} from "../src/lib/betaUserAccess.js";
 
 const user = {
   id: "user_1",
@@ -108,4 +112,48 @@ test("session enrichment marks sessions invalid when the user no longer exists",
   assert.equal(result.user.id, undefined);
   assert.equal(result.user.plan, "free");
   assert.equal(result.user.accountDeleted, true);
+});
+
+test("session enrichment includes account beta access", async () => {
+  const betaAccessGrantedAt = new Date("2026-09-10T10:00:00Z");
+  const session = { user: { email: "user@example.com", name: "Test User" } };
+  const result = await enrichSessionWithUser(session, {
+    db: {
+      user: {
+        findUnique: async () => ({ ...user, betaAccessGrantedAt }),
+      },
+    },
+  });
+
+  assert.equal(result.user.id, user.id);
+  assert.equal(result.user.betaAccessGrantedAt, betaAccessGrantedAt);
+});
+
+test("beta user access grants once without overwriting its original timestamp", async () => {
+  let updateManyArgs;
+  const betaAccessGrantedAt = new Date("2026-09-10T12:00:00Z");
+  const db = {
+    user: {
+      findUnique: async ({ where, select }) => {
+        assert.deepEqual(where, { id: "user_1" });
+        assert.deepEqual(select, { betaAccessGrantedAt: true });
+        return { betaAccessGrantedAt };
+      },
+      updateMany: async (args) => {
+        updateManyArgs = args;
+        return { count: 0 };
+      },
+    },
+  };
+
+  assert.equal(userHasBetaAccess({ betaAccessGrantedAt }), true);
+  assert.equal(userHasBetaAccess({ betaAccessGrantedAt: null }), false);
+
+  const granted = await grantUserBetaAccess("user_1", { db });
+  assert.equal(granted.betaAccessGrantedAt instanceof Date, true);
+  assert.deepEqual(updateManyArgs.where, {
+    id: "user_1",
+    betaAccessGrantedAt: null,
+  });
+  assert.equal(updateManyArgs.data.betaAccessGrantedAt instanceof Date, true);
 });

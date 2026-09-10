@@ -4,11 +4,6 @@ import {
   sessionTokenCookieName,
   useSecureAuthCookies,
 } from "@/lib/authCookies";
-import {
-  BETA_COOKIE_NAME,
-  isClosedBetaEnabled,
-  isValidBetaAccessToken,
-} from "@/lib/betaAccess";
 
 function createRedirectUrl(req, pathname) {
   const url = req.nextUrl.clone();
@@ -40,21 +35,6 @@ export async function proxy(req) {
       `${req.nextUrl.pathname}${req.nextUrl.search}`,
     );
     return NextResponse.redirect(loginUrl);
-  }
-
-  if (isClosedBetaEnabled()) {
-    const betaAccessToken = req.cookies.get(BETA_COOKIE_NAME)?.value;
-    const hasBetaAccess = await isValidBetaAccessToken(betaAccessToken);
-
-    if (!hasBetaAccess) {
-      const betaUrl = createRedirectUrl(req, "/");
-      betaUrl.searchParams.set("beta", "required");
-      betaUrl.searchParams.set(
-        "callbackUrl",
-        `${req.nextUrl.pathname}${req.nextUrl.search}`,
-      );
-      return NextResponse.redirect(betaUrl);
-    }
   }
 
   return NextResponse.next();

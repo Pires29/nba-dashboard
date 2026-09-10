@@ -1,7 +1,7 @@
 export const FREE_PLAYER_LIMIT = 15;
 
-export function hasFullPlayerAccess(plan) {
-  return plan === "pro" || plan === "trial";
+export function hasFullPlayerAccess(plan, { hasBetaProAccess = false } = {}) {
+  return hasBetaProAccess || plan === "pro" || plan === "trial";
 }
 
 function seededShuffle(array, seed) {

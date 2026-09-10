@@ -1,5 +1,8 @@
 import HomeLanding from "@/components/home/HomeLanding";
 import PublicNavbar from "@/components/PublicNavbar";
+import { isClosedBetaEnabled } from "@/lib/betaAccess";
+import { getCurrentSession } from "@/lib/getCurrentSession";
+import { resolveBetaAccess } from "@/lib/resolveBetaAccess";
 
 export const metadata = {
   title: "NBA Player Props Research & Stats Dashboard",
@@ -21,12 +24,18 @@ export const metadata = {
   },
 };
 
-export default function Home() {
+export default async function Home() {
+  const isClosedBeta = isClosedBetaEnabled();
+  const session = isClosedBeta ? await getCurrentSession() : null;
+  const hasBetaAccess = isClosedBeta
+    ? await resolveBetaAccess(session)
+    : true;
+
   return (
     <div className="flex min-h-screen flex-col bg-[#060E1A]">
-      <PublicNavbar />
+      <PublicNavbar hasBetaAccess={hasBetaAccess} />
       <main className="flex min-h-0 flex-1 flex-col">
-        <HomeLanding />
+        <HomeLanding hasBetaAccess={hasBetaAccess} />
       </main>
     </div>
   );
