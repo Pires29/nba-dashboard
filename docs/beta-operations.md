@@ -85,3 +85,7 @@ Define `expiresAt` no `AccessGrant` da pessoa para uma data posterior à data da
 - Antes de executar SQL, confirma o email com um `SELECT` equivalente.
 - Mantém `endsAt` vazio enquanto a beta estiver aberta; define-o quando tiveres a data final.
 - Aplica a migration em produção antes de começares a aprovar candidaturas (`npx prisma migrate deploy` no ambiente de deploy).
+
+## Limpar dados de desenvolvimento
+
+Ao limpar uma base de desenvolvimento, preserva `BetaCampaign`: contém a configuração global da beta. A aplicação recria a campanha `closed-beta-2026` automaticamente se ela não existir, mas não remove nem reabre uma campanha que tenha uma data de fim definida.

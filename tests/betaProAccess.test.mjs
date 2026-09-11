@@ -34,8 +34,13 @@ test("a redeemed beta invitation grants Pro exactly once", async () => {
   const calls = [];
   const db = {
     betaCampaign: {
-      findUnique: async ({ where }) => {
+      upsert: async ({ where, update, create }) => {
         assert.equal(where.slug, CLOSED_BETA_CAMPAIGN_SLUG);
+        assert.deepEqual(update, {});
+        assert.deepEqual(create, {
+          slug: CLOSED_BETA_CAMPAIGN_SLUG,
+          name: "Closed Beta 2026",
+        });
         return { id: "campaign_1", endsAt: null };
       },
     },
@@ -59,7 +64,7 @@ test("a redeemed beta invitation grants Pro exactly once", async () => {
 test("a revoked beta grant is never recreated by an invitation", async () => {
   let writes = 0;
   const db = {
-    betaCampaign: { findUnique: async () => ({ id: "campaign_1", endsAt: null }) },
+    betaCampaign: { upsert: async () => ({ id: "campaign_1", endsAt: null }) },
     accessGrant: {
       findUnique: async () => ({
         access: "pro_access", status: "revoked", revokedAt: now, expiresAt: null,

@@ -20,11 +20,16 @@ export function hasActiveBetaProAccess(user, now = new Date()) {
 export async function grantBetaProAccess(userId, dependencies = { db: prisma }) {
   if (!userId) return null;
   const db = dependencies.db;
-  const campaign = await db.betaCampaign.findUnique({
+  const campaign = await db.betaCampaign.upsert({
     where: { slug: CLOSED_BETA_CAMPAIGN_SLUG },
+    update: {},
+    create: {
+      slug: CLOSED_BETA_CAMPAIGN_SLUG,
+      name: "Closed Beta 2026",
+    },
   });
   const now = new Date();
-  if (!campaign || (campaign.endsAt && campaign.endsAt <= now)) return null;
+  if (campaign.endsAt && campaign.endsAt <= now) return null;
 
   const existingGrant = await db.accessGrant.findUnique({
     where: {
