@@ -118,7 +118,7 @@ export default function BetaAccessModal({
 
       {isOpen ? (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 px-4 py-8 backdrop-blur-sm"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 px-4 py-8"
           role="dialog"
           aria-modal="true"
           aria-labelledby="beta-access-title"
