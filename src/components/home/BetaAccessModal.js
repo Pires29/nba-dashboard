@@ -1,20 +1,57 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { launchConfig } from "@/config/launch";
 import TurnstileWidget, { isTurnstileEnabled } from "@/components/TurnstileWidget";
+import { safeInternalPath } from "@/lib/security";
+import { signOutWithBetaCleanup } from "@/lib/signOutWithBetaCleanup";
 
 const INITIAL_STATUS = { type: "idle", message: "" };
 const WAITLIST_JOINED_STORAGE_KEY = "hoopiq:waitlist-joined";
 
+function redemptionErrorDetails(error) {
+  if (error.status === 403) {
+    return {
+      title: "This code belongs to another account",
+      description:
+        "Sign in with the email address that received this beta invitation, then enter the code again.",
+      action: "signout",
+    };
+  }
+
+  if (error.status === 400) {
+    return {
+      title: "Your beta code confirmation expired",
+      description: "Enter the beta code again to start a new confirmation.",
+      action: "retry",
+    };
+  }
+
+  if (error.status === 409) {
+    return {
+      title: "This beta code has already been used",
+      description: "Request a new code if you still need access to the beta.",
+      action: "retry",
+    };
+  }
+
+  return {
+    title: "Beta access could not be confirmed",
+    description: error.message || "Please try again in a moment.",
+    action: "retry",
+  };
+}
+
 export default function BetaAccessModal({
   className = "",
   children = launchConfig.cta.primary,
+  processBetaRedemption = false,
+  initiallyRedeeming = false,
   ...buttonProps
 }) {
   const router = useRouter();
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(initiallyRedeeming);
   const [mode, setMode] = useState("code");
   const [code, setCode] = useState("");
   const [email, setEmail] = useState("");
@@ -23,15 +60,55 @@ export default function BetaAccessModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [redirectTo, setRedirectTo] = useState("/props");
   const [turnstileToken, setTurnstileToken] = useState("");
+  const [redemptionStage, setRedemptionStage] = useState(
+    initiallyRedeeming ? "processing" : "idle",
+  );
+  const [redemptionError, setRedemptionError] = useState(null);
+  const hasStartedRedemption = useRef(false);
+
+  const redeemBetaAccess = useCallback(async (destination) => {
+    setRedemptionError(null);
+    setRedemptionStage("processing");
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch("/api/beta/redeem", { method: "POST" });
+      const result = await response.json();
+      if (!response.ok) {
+        setRedemptionError({
+          status: response.status,
+          message: result.error || "Unable to redeem beta access",
+        });
+        setRedemptionStage("error");
+        return;
+      }
+      window.location.replace(destination);
+    } catch (error) {
+      setRedemptionError({ message: error.message });
+      setRedemptionStage("error");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, []);
 
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
     const callbackUrl = searchParams.get("callbackUrl");
-    if (callbackUrl?.startsWith("/") && !callbackUrl.startsWith("//")) {
-      setRedirectTo(callbackUrl);
-    }
+    const destination = safeInternalPath(callbackUrl, "/props");
+    setRedirectTo(destination);
     if (searchParams.get("beta") === "required") {
       setIsOpen(true);
+    }
+
+    if (
+      processBetaRedemption &&
+      searchParams.get("beta") === "redeem" &&
+      !hasStartedRedemption.current
+    ) {
+      hasStartedRedemption.current = true;
+      setMode("code");
+      setIsOpen(true);
+      redeemBetaAccess(destination);
     }
     try {
       setHasJoinedWaitlist(
@@ -40,7 +117,7 @@ export default function BetaAccessModal({
     } catch {
       // Local storage may be unavailable because of browser privacy settings.
     }
-  }, []);
+  }, [processBetaRedemption, redeemBetaAccess]);
 
   async function submitBetaCode(event) {
     event.preventDefault();
@@ -56,11 +133,11 @@ export default function BetaAccessModal({
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Invalid beta code");
       if (result.requiresSignIn) {
-        const redeemPath = `/beta/redeem?callbackUrl=${encodeURIComponent(redirectTo)}`;
+        const redeemPath = `/?beta=redeem&callbackUrl=${encodeURIComponent(redirectTo)}`;
         router.push(`/login?callbackUrl=${encodeURIComponent(redeemPath)}`);
         return;
       }
-      router.push(`/beta/redeem?callbackUrl=${encodeURIComponent(redirectTo)}`);
+      await redeemBetaAccess(redirectTo);
     } catch (error) {
       setStatus({ type: "error", message: error.message });
     } finally {
@@ -105,6 +182,14 @@ export default function BetaAccessModal({
     }
   }
 
+  function returnToCodeEntry() {
+    hasStartedRedemption.current = false;
+    setRedemptionStage("idle");
+    setRedemptionError(null);
+    setCode("");
+    router.replace(`/?beta=required&callbackUrl=${encodeURIComponent(redirectTo)}`);
+  }
+
   return (
     <>
       <button
@@ -124,7 +209,62 @@ export default function BetaAccessModal({
           aria-labelledby="beta-access-title"
         >
           <div className="w-full max-w-md overflow-hidden rounded-xl border border-white/[0.08] bg-[#0b1421] text-white shadow-2xl">
-            <div className="flex items-start justify-between gap-4 border-b border-white/[0.06] px-5 py-4">
+            {redemptionStage !== "idle" ? (
+              <div className="px-6 py-8 text-center sm:px-8">
+                <p className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-orange-400">
+                  Closed beta access
+                </p>
+                {redemptionStage === "processing" ? (
+                  <div className="mx-auto mt-6 flex h-12 w-12 items-center justify-center rounded-full border border-orange-400/20 bg-orange-500/[0.08]">
+                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-orange-400 border-t-transparent" />
+                  </div>
+                ) : (
+                  <div className="mx-auto mt-6 flex h-12 w-12 items-center justify-center rounded-full border border-red-400/20 bg-red-400/[0.08] text-xl text-red-300">
+                    !
+                  </div>
+                )}
+                <h2 id="beta-access-title" className="mt-5 text-xl font-black">
+                  {redemptionStage === "processing"
+                    ? "Confirming beta access"
+                    : redemptionErrorDetails(redemptionError).title}
+                </h2>
+                <p className="mt-3 text-sm leading-6 text-slate-400" role={redemptionStage === "error" ? "alert" : "status"}>
+                  {redemptionStage === "processing"
+                    ? "We are linking your beta code to this account. You will be redirected automatically."
+                    : redemptionErrorDetails(redemptionError).description}
+                </p>
+                {redemptionStage === "error" ? (
+                  <div className="mt-6 space-y-3">
+                    {redemptionErrorDetails(redemptionError).action === "signout" ? (
+                      <button
+                        type="button"
+                        onClick={() => signOutWithBetaCleanup({ callbackUrl: "/" })}
+                        className="w-full rounded-lg bg-orange-500 px-4 py-3 font-mono text-xs font-black uppercase tracking-widest text-white transition hover:bg-orange-400"
+                      >
+                        Sign out and use invited email
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={returnToCodeEntry}
+                        className="w-full rounded-lg bg-orange-500 px-4 py-3 font-mono text-xs font-black uppercase tracking-widest text-white transition hover:bg-orange-400"
+                      >
+                        Try another beta code
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setIsOpen(false)}
+                      className="font-mono text-[10px] font-bold uppercase tracking-widest text-slate-400 transition hover:text-white"
+                    >
+                      Close
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+            ) : (
+              <>
+                <div className="flex items-start justify-between gap-4 border-b border-white/[0.06] px-5 py-4">
               <div>
                 <p className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-orange-400">
                   {launchConfig.betaModal.eyebrow}
@@ -153,9 +293,9 @@ export default function BetaAccessModal({
                   <path d="m6 6 12 12" />
                 </svg>
               </button>
-            </div>
+                </div>
 
-            <div className="px-5 py-5">
+                <div className="px-5 py-5">
               <p className="text-sm leading-6 text-slate-400">
                 {launchConfig.betaModal.description}
               </p>
@@ -211,7 +351,7 @@ export default function BetaAccessModal({
                     disabled={isSubmitting}
                     className="w-full rounded-lg bg-orange-500 px-4 py-3 font-mono text-xs font-black uppercase tracking-widest text-white transition hover:bg-orange-400 disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    {isSubmitting ? "Checking..." : "Unlock beta"}
+                    {isSubmitting ? "Confirming access..." : "Unlock beta"}
                   </button>
                 </form>
               ) : hasJoinedWaitlist ? (
@@ -247,12 +387,19 @@ export default function BetaAccessModal({
                 </form>
               )}
 
-              {status.message && !hasJoinedWaitlist ? (
-                <p className={`mt-4 text-sm ${status.type === "success" ? "text-emerald-400" : "text-red-400"}`}>
-                  {status.message}
-                </p>
+              {status.message && !(mode === "waitlist" && hasJoinedWaitlist) ? (
+                <div className="mt-4">
+                  <p
+                    className={`text-sm ${status.type === "error" ? "text-red-400" : "text-slate-400"}`}
+                    role={status.type === "error" ? "alert" : "status"}
+                  >
+                    {status.message}
+                  </p>
+                </div>
               ) : null}
-            </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       ) : null}

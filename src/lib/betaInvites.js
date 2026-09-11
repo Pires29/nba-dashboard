@@ -40,16 +40,21 @@ export async function findBetaInviteByCode(code, dependencies) {
   return isRedeemable(invite) ? invite : null;
 }
 
-export async function findBetaInviteById(inviteId, dependencies) {
+export async function findBetaInviteById(
+  inviteId,
+  dependencies,
+  { includeUsed = false } = {},
+) {
   const [invite] = await dependencies.db.$queryRaw`
-    SELECT invite."id", invite."waitlistEmail", invite."status", invite."expiresAt",
+    SELECT invite."id", invite."waitlistEmail", invite."status", invite."expiresAt", invite."usedByUserId",
       waitlist."status" AS "waitlistStatus"
     FROM "BetaInvite" AS invite
     INNER JOIN "BetaWaitlist" AS waitlist ON waitlist."email" = invite."waitlistEmail"
     WHERE invite."id" = ${inviteId}
     LIMIT 1
   `;
-  return isRedeemable(invite) ? invite : null;
+  if (isRedeemable(invite)) return invite;
+  return includeUsed && invite?.status === "used" ? invite : null;
 }
 
 export async function consumeBetaInvite(inviteId, userId, dependencies) {
@@ -60,7 +65,21 @@ export async function consumeBetaInvite(inviteId, userId, dependencies) {
     WHERE "id" = ${inviteId} AND "status" = 'active'
     RETURNING "id"
   `;
-  return consumed.length === 1;
+  if (consumed.length === 1) return true;
+
+  // Redeeming can be submitted twice while the browser transitions after
+  // sign-in. Treat a replay by the same account as a successful, idempotent
+  // confirmation; a different account must still be rejected by the caller.
+  const [existingInvite] = await dependencies.db.$queryRaw`
+    SELECT "status", "usedByUserId"
+    FROM "BetaInvite"
+    WHERE "id" = ${inviteId}
+    LIMIT 1
+  `;
+  return (
+    existingInvite?.status === "used" &&
+    existingInvite.usedByUserId === userId
+  );
 }
 
 export async function createBetaInvite(email, dependencies) {
