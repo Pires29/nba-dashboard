@@ -43,6 +43,10 @@ export default async function Home({ searchParams }) {
     <div className="flex min-h-screen flex-col bg-[#060E1A]">
       <PublicNavbar
         hasBetaAccess={hasBetaAccess}
+        profileUser={session?.user ? {
+          id: session.user.id,
+          image: session.user.image ?? null,
+        } : null}
         initiallyRedeeming={isRedeemingBeta}
       />
       <main className="flex min-h-0 flex-1 flex-col">
