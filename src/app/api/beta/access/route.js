@@ -2,10 +2,13 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import {
+  BETA_REDEMPTION_COOKIE_NAME,
+  BETA_REDEMPTION_MAX_AGE_SECONDS,
+  createBetaRedemptionToken,
   isClosedBetaEnabled,
-  isValidBetaCode,
 } from "@/lib/betaAccess";
-import { grantUserBetaAccess } from "@/lib/betaUserAccess";
+import prisma from "../../../../../prisma/prismaClient";
+import { findBetaInviteByCode } from "@/lib/betaInvites";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { getRequestIp, readJson, RequestError } from "@/lib/security";
 
@@ -22,27 +25,32 @@ export async function POST(req) {
       return NextResponse.json({ success: true, closedBeta: false });
     }
 
-    if (!isValidBetaCode(code)) {
+    const invite = await findBetaInviteByCode(code, { db: prisma });
+    if (!invite) {
       return NextResponse.json({ error: "Invalid beta code" }, { status: 400 });
     }
 
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const token = await createBetaRedemptionToken(invite.id);
+    if (!token) {
       return NextResponse.json(
-        { error: "Sign in to redeem your beta code" },
-        { status: 401 },
+        { error: "Beta access is not configured" },
+        { status: 500 },
       );
     }
 
-    const grant = await grantUserBetaAccess(session.user.id);
-    if (!grant) {
-      return NextResponse.json(
-        { error: "Unable to save beta access to your account" },
-        { status: 503 },
-      );
-    }
-
-    return NextResponse.json({ success: true });
+    const response = NextResponse.json({
+      success: true,
+      requiresSignIn: !session?.user?.id,
+    });
+    response.cookies.set(BETA_REDEMPTION_COOKIE_NAME, token, {
+      httpOnly: true,
+      maxAge: BETA_REDEMPTION_MAX_AGE_SECONDS,
+      path: "/",
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+    });
+    return response;
   } catch (error) {
     if (error instanceof RequestError) {
       return NextResponse.json(

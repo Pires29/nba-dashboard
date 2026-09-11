@@ -5,10 +5,11 @@ Esta aplicação não tem painel de administração. O Supabase é a consola de 
 ## Conceitos
 
 - `BetaWaitlist` é a candidatura por email. Os estados possíveis são `pending`, `approved` e `rejected`.
+- `BetaInvite` é um convite de uso único, associado ao email aprovado. O código nunca é guardado em texto legível.
 - `BetaCampaign` é a campanha global. A campanha inicial chama-se `closed-beta-2026`.
 - `AccessGrant` é o acesso Pro beta de uma pessoa. Não é uma subscrição Stripe e não altera `User.plan`.
 
-Uma waitlist aprovada recebe acesso beta e Pro na próxima sessão iniciada com o mesmo email. Se a pessoa já tiver uma conta, pede-lhe para terminar e iniciar sessão novamente (ou simplesmente atualizar a página). O registo é criado automaticamente pela aplicação.
+Uma waitlist aprovada ainda precisa de um convite. O acesso só é concedido depois de a pessoa inserir esse código e iniciar sessão com o mesmo email.
 
 ## Aprovar uma candidatura
 
@@ -19,7 +20,13 @@ status: approved
 approvedAt: data/hora atual (UTC)
 ```
 
-Depois comunica à pessoa para iniciar sessão com o mesmo email usado na waitlist. Não é preciso alterar `User.plan` nem criar manualmente um `AccessGrant` no fluxo normal.
+Depois gera um convite no terminal e envia o código mostrado à pessoa:
+
+```bash
+BETA_ENV_FILE=.env.local npm run beta:invite -- pessoa@example.com
+```
+
+No ambiente de produção, executa o mesmo comando com as variáveis de produção carregadas. O comando invalida qualquer convite ativo anterior para esse email. A pessoa insere o código e inicia sessão com o mesmo email usado na waitlist. Não é preciso alterar `User.plan` nem criar manualmente um `AccessGrant`.
 
 Para rejeitar, usa `status: rejected` e `rejectedAt`. Não apagues candidaturas: o histórico é útil.
 

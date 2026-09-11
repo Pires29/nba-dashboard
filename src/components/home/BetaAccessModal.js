@@ -6,6 +6,7 @@ import { launchConfig } from "@/config/launch";
 import TurnstileWidget, { isTurnstileEnabled } from "@/components/TurnstileWidget";
 
 const INITIAL_STATUS = { type: "idle", message: "" };
+const WAITLIST_JOINED_STORAGE_KEY = "hoopiq:waitlist-joined";
 
 export default function BetaAccessModal({
   className = "",
@@ -18,6 +19,7 @@ export default function BetaAccessModal({
   const [code, setCode] = useState("");
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState(INITIAL_STATUS);
+  const [hasJoinedWaitlist, setHasJoinedWaitlist] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [redirectTo, setRedirectTo] = useState("/props");
   const [turnstileToken, setTurnstileToken] = useState("");
@@ -30,6 +32,13 @@ export default function BetaAccessModal({
     }
     if (searchParams.get("beta") === "required") {
       setIsOpen(true);
+    }
+    try {
+      setHasJoinedWaitlist(
+        window.localStorage.getItem(WAITLIST_JOINED_STORAGE_KEY) === "true",
+      );
+    } catch {
+      // Local storage may be unavailable because of browser privacy settings.
     }
   }, []);
 
@@ -46,8 +55,12 @@ export default function BetaAccessModal({
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Invalid beta code");
-      router.push(redirectTo);
-      router.refresh();
+      if (result.requiresSignIn) {
+        const redeemPath = `/beta/redeem?callbackUrl=${encodeURIComponent(redirectTo)}`;
+        router.push(`/login?callbackUrl=${encodeURIComponent(redeemPath)}`);
+        return;
+      }
+      router.push(`/beta/redeem?callbackUrl=${encodeURIComponent(redirectTo)}`);
     } catch (error) {
       setStatus({ type: "error", message: error.message });
     } finally {
@@ -75,6 +88,12 @@ export default function BetaAccessModal({
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Unable to join the waitlist");
       setEmail("");
+      setHasJoinedWaitlist(true);
+      try {
+        window.localStorage.setItem(WAITLIST_JOINED_STORAGE_KEY, "true");
+      } catch {
+        // The in-memory state still prevents a duplicate submission this visit.
+      }
       setStatus({
         type: "success",
         message: launchConfig.betaModal.waitlistSuccess,
@@ -195,6 +214,10 @@ export default function BetaAccessModal({
                     {isSubmitting ? "Checking..." : "Unlock beta"}
                   </button>
                 </form>
+              ) : hasJoinedWaitlist ? (
+                <div className="mt-5 rounded-lg border border-emerald-400/20 bg-emerald-400/[0.08] px-4 py-3 text-sm text-emerald-400">
+                  {launchConfig.betaModal.waitlistSuccess}
+                </div>
               ) : (
                 <form className="mt-5 space-y-3" onSubmit={submitWaitlist}>
                   <label className="block">
@@ -224,7 +247,7 @@ export default function BetaAccessModal({
                 </form>
               )}
 
-              {status.message ? (
+              {status.message && !hasJoinedWaitlist ? (
                 <p className={`mt-4 text-sm ${status.type === "success" ? "text-emerald-400" : "text-red-400"}`}>
                   {status.message}
                 </p>

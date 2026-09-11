@@ -2,8 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   CLOSED_BETA_CAMPAIGN_SLUG,
+  grantBetaProAccess,
   hasActiveBetaProAccess,
-  syncApprovedBetaWaitlistAccess,
 } from "../src/lib/betaProAccess.js";
 
 const now = new Date("2026-09-10T12:00:00Z");
@@ -30,12 +30,9 @@ test("an active beta grant gives Pro access until either expiry boundary", () =>
   );
 });
 
-test("an approved waitlist entry grants beta access and Pro exactly once", async () => {
+test("a redeemed beta invitation grants Pro exactly once", async () => {
   const calls = [];
   const db = {
-    betaWaitlist: {
-      findUnique: async () => ({ status: "approved" }),
-    },
     betaCampaign: {
       findUnique: async ({ where }) => {
         assert.equal(where.slug, CLOSED_BETA_CAMPAIGN_SLUG);
@@ -46,30 +43,22 @@ test("an approved waitlist entry grants beta access and Pro exactly once", async
       findUnique: async () => null,
       upsert: async ({ create }) => calls.push(["grant", create]),
     },
-    user: {
-      updateMany: async ({ data }) => calls.push(["beta", data]),
-    },
   };
 
-  const result = await syncApprovedBetaWaitlistAccess(
-    { id: "user_1", email: "TEST@Example.com", betaAccessGrantedAt: null },
-    { db },
-  );
+  const result = await grantBetaProAccess("user_1", { db });
 
-  assert.equal(result.hasBetaProAccess, true);
-  assert.equal(calls[0][0], "beta");
-  assert.deepEqual(calls[1], ["grant", {
+  assert.equal(result, true);
+  assert.deepEqual(calls[0], ["grant", {
     userId: "user_1",
     campaignId: "campaign_1",
     access: "pro_access",
-    notes: "Granted automatically after beta waitlist approval.",
+    notes: "Granted after redeeming a beta invitation.",
   }]);
 });
 
-test("a revoked beta grant is never recreated by waitlist synchronization", async () => {
+test("a revoked beta grant is never recreated by an invitation", async () => {
   let writes = 0;
   const db = {
-    betaWaitlist: { findUnique: async () => ({ status: "approved" }) },
     betaCampaign: { findUnique: async () => ({ id: "campaign_1", endsAt: null }) },
     accessGrant: {
       findUnique: async () => ({
@@ -77,14 +66,10 @@ test("a revoked beta grant is never recreated by waitlist synchronization", asyn
       }),
       upsert: async () => { writes += 1; },
     },
-    user: { updateMany: async () => { writes += 1; } },
   };
 
-  const result = await syncApprovedBetaWaitlistAccess(
-    { id: "user_1", email: "test@example.com", betaAccessGrantedAt: now },
-    { db },
-  );
+  const result = await grantBetaProAccess("user_1", { db });
 
-  assert.equal(result.hasBetaProAccess, false);
+  assert.equal(result, false);
   assert.equal(writes, 0);
 });

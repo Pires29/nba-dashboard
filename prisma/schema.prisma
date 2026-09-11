@@ -30,6 +30,7 @@ model User {
   passwordResetTokens     PasswordResetToken[]
   referralCode            ReferralCode?
   accessGrants            AccessGrant[]
+  betaInvitesRedeemed     BetaInvite[]             @relation("BetaInviteRedeemedBy")
 }
 
 model EmailVerificationToken {
@@ -122,16 +123,34 @@ model RateLimitBucket {
 }
 
 model BetaWaitlist {
-  id          String   @id @default(cuid())
-  email       String   @unique
-  status      String   @default("pending")
-  approvedAt  DateTime?
-  rejectedAt  DateTime?
-  notes       String?
-  createdAt   DateTime @default(now())
+  id         String       @id @default(cuid())
+  email      String       @unique
+  status     String       @default("pending")
+  approvedAt DateTime?
+  rejectedAt DateTime?
+  notes      String?
+  createdAt  DateTime     @default(now())
+  invites    BetaInvite[]
 
   @@index([createdAt])
   @@index([status, createdAt])
+}
+
+model BetaInvite {
+  id            String       @id @default(cuid())
+  waitlistEmail String
+  codeHash      String       @unique
+  status        String       @default("active")
+  expiresAt     DateTime
+  usedAt        DateTime?
+  usedByUserId  String?
+  revokedAt     DateTime?
+  createdAt     DateTime     @default(now())
+  waitlist      BetaWaitlist @relation(fields: [waitlistEmail], references: [email], onDelete: Restrict)
+  usedByUser    User?        @relation("BetaInviteRedeemedBy", fields: [usedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([waitlistEmail, status])
+  @@index([usedByUserId])
 }
 
 model BetaCampaign {

@@ -1,8 +1,8 @@
 import { getLaunchConfig } from "../config/launch.js";
 
-const BETA_COOKIE_NAME = "propinsight_beta_access";
-const BETA_TOKEN_PREFIX = "v1";
-const BETA_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 90;
+const BETA_REDEMPTION_COOKIE_NAME = "propinsight_beta_redemption";
+const BETA_REDEMPTION_TOKEN_PREFIX = "v2";
+const BETA_REDEMPTION_MAX_AGE_SECONDS = 10 * 60;
 
 function isClosedBetaEnabled() {
   return getLaunchConfig().access.requiresBetaCode;
@@ -10,13 +10,6 @@ function isClosedBetaEnabled() {
 
 function getBetaSecret() {
   return process.env.BETA_ACCESS_SECRET || process.env.NEXTAUTH_SECRET || "";
-}
-
-function getAllowedBetaCodes() {
-  return (process.env.BETA_ACCESS_CODES || "")
-    .split(",")
-    .map((code) => code.trim())
-    .filter(Boolean);
 }
 
 function timingSafeEqual(a, b) {
@@ -33,7 +26,7 @@ function base64UrlEncode(bytes) {
   return btoa(binary).replaceAll("+", "-").replaceAll("/", "_").replaceAll("=", "");
 }
 
-async function signBetaAccessToken(timestamp) {
+async function signBetaToken(purpose, payload) {
   const secret = getBetaSecret();
   if (!secret) return "";
 
@@ -47,48 +40,45 @@ async function signBetaAccessToken(timestamp) {
   const signature = await crypto.subtle.sign(
     "HMAC",
     key,
-    new TextEncoder().encode(`beta-access:${timestamp}`),
+    new TextEncoder().encode(`${purpose}:${payload}`),
   );
   return base64UrlEncode(signature);
 }
 
 export {
-  BETA_COOKIE_MAX_AGE_SECONDS,
-  BETA_COOKIE_NAME,
-  getAllowedBetaCodes,
+  BETA_REDEMPTION_COOKIE_NAME,
+  BETA_REDEMPTION_MAX_AGE_SECONDS,
   isClosedBetaEnabled,
 };
 
-export function isValidBetaCode(value) {
-  const normalizedCode = typeof value === "string" ? value.trim() : "";
-  if (!normalizedCode) return false;
-
-  return getAllowedBetaCodes().some((code) =>
-    timingSafeEqual(code, normalizedCode),
-  );
-}
-
-export async function createBetaAccessToken() {
+export async function createBetaRedemptionToken(inviteId) {
+  if (typeof inviteId !== "string" || !inviteId) return "";
   const timestamp = String(Date.now());
-  const signature = await signBetaAccessToken(timestamp);
+  const signature = await signBetaToken("beta-redemption", `${timestamp}:${inviteId}`);
   if (!signature) return "";
-  return `${BETA_TOKEN_PREFIX}.${timestamp}.${signature}`;
+  return `${BETA_REDEMPTION_TOKEN_PREFIX}.${timestamp}.${inviteId}.${signature}`;
 }
 
-export async function isValidBetaAccessToken(value) {
-  if (!isClosedBetaEnabled()) return true;
+export async function readBetaRedemptionToken(value) {
+  if (!isClosedBetaEnabled()) return null;
   if (typeof value !== "string") return false;
 
-  const [prefix, timestamp, signature] = value.split(".");
-  if (prefix !== BETA_TOKEN_PREFIX || !timestamp || !signature) return false;
+  const [prefix, timestamp, inviteId, signature] = value.split(".");
+  if (prefix !== BETA_REDEMPTION_TOKEN_PREFIX || !timestamp || !inviteId || !signature) {
+    return null;
+  }
 
   const issuedAt = Number(timestamp);
-  if (!Number.isFinite(issuedAt)) return false;
+  if (!Number.isFinite(issuedAt)) return null;
+  if (Date.now() - issuedAt > BETA_REDEMPTION_MAX_AGE_SECONDS * 1000) {
+    return null;
+  }
 
-  const maxAgeMs = BETA_COOKIE_MAX_AGE_SECONDS * 1000;
-  if (Date.now() - issuedAt > maxAgeMs) return false;
+  const expectedSignature = await signBetaToken("beta-redemption", `${timestamp}:${inviteId}`);
+  if (!expectedSignature || !timingSafeEqual(expectedSignature, signature)) return null;
+  return { inviteId };
+}
 
-  const expectedSignature = await signBetaAccessToken(timestamp);
-  if (!expectedSignature) return false;
-  return timingSafeEqual(expectedSignature, signature);
+export async function isValidBetaRedemptionToken(value) {
+  return Boolean(await readBetaRedemptionToken(value));
 }

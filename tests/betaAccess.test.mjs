@@ -1,15 +1,13 @@
 import assert from "node:assert/strict";
 import { afterEach, test } from "node:test";
 import {
-  createBetaAccessToken,
-  isValidBetaAccessToken,
-  isValidBetaCode,
+  createBetaRedemptionToken,
+  isValidBetaRedemptionToken,
 } from "../src/lib/betaAccess.js";
 import { resolveBetaAccess } from "../src/lib/resolveBetaAccess.js";
 
 const ORIGINAL_ENV = {
   APP_PHASE: process.env.APP_PHASE,
-  BETA_ACCESS_CODES: process.env.BETA_ACCESS_CODES,
   BETA_ACCESS_SECRET: process.env.BETA_ACCESS_SECRET,
   CLOSED_BETA: process.env.CLOSED_BETA,
   NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
@@ -26,25 +24,16 @@ afterEach(() => {
   }
 });
 
-test("validates beta access codes from the environment", () => {
-  process.env.BETA_ACCESS_CODES = "alpha,beta";
-
-  assert.equal(isValidBetaCode("alpha"), true);
-  assert.equal(isValidBetaCode(" beta "), true);
-  assert.equal(isValidBetaCode("gamma"), false);
-});
-
-test("creates and validates signed beta access tokens", async () => {
+test("creates short-lived beta redemption tokens", async () => {
   process.env.APP_PHASE = "beta";
   process.env.BETA_ACCESS_SECRET = "test-secret";
   delete process.env.CLOSED_BETA;
   delete process.env.NEXTAUTH_SECRET;
   delete process.env.NEXT_PUBLIC_APP_PHASE;
 
-  const token = await createBetaAccessToken();
+  const token = await createBetaRedemptionToken("invite_1");
 
-  assert.equal(await isValidBetaAccessToken(token), true);
-  assert.equal(await isValidBetaAccessToken(`${token}x`), false);
+  assert.equal(await isValidBetaRedemptionToken(token), true);
 });
 
 test("allows access when closed beta is disabled", async () => {
@@ -52,7 +41,7 @@ test("allows access when closed beta is disabled", async () => {
   delete process.env.CLOSED_BETA;
   delete process.env.NEXT_PUBLIC_APP_PHASE;
 
-  assert.equal(await isValidBetaAccessToken(""), true);
+  assert.equal(await isValidBetaRedemptionToken(""), false);
 });
 
 test("requires account-level beta access when the closed beta is enabled", async () => {
