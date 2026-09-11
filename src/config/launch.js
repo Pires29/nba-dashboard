@@ -84,7 +84,8 @@ export function getLaunchConfig() {
         ? "The landing page is public, but the live NBA research tables are currently limited to approved beta testers."
         : "Join the early access list to be notified when more seats open.",
       perkText: "",
-      waitlistSuccess: "You are on the waitlist.",
+      waitlistSuccess:
+        "You are on the waitlist. Keep an eye on your inbox: if your application is approved, we’ll email you an access code and the next steps.",
     },
     betaApplication: {
       title: "Join the Closed Beta",
