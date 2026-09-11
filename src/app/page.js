@@ -46,6 +46,8 @@ export default async function Home({ searchParams }) {
         profileUser={session?.user ? {
           id: session.user.id,
           image: session.user.image ?? null,
+          name: session.user.name ?? null,
+          email: session.user.email ?? null,
         } : null}
         initiallyRedeeming={isRedeemingBeta}
       />
