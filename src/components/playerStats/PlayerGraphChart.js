@@ -121,6 +121,7 @@ const PlayerGraphChart = ({
           />
           {betLine != null && (
             <ReferenceLine
+              yAxisId="stats"
               y={betLine}
               stroke="rgba(249,115,22,0.5)"
               strokeDasharray="4 4"

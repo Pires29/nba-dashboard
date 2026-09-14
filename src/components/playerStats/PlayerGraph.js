@@ -10,6 +10,7 @@ import {
 } from "@/lib/buildPlayerGraphData";
 
 const statOptions = PLAYER_GRAPH_STATS;
+const formatStatLabel = (stat) => stat.toUpperCase();
 const PlayerGraph = ({
   playerStats,
   selectedStat,
@@ -299,7 +300,7 @@ const PlayerGraph = ({
           >
             {statOptions.map((option) => (
               <option key={option} value={option} className="bg-[#0D1828] text-slate-100">
-                {option}
+                {formatStatLabel(option)}
               </option>
             ))}
           </select>
