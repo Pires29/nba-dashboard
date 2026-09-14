@@ -1,7 +1,8 @@
 "use client";
 
 import { useFavorites } from "@/hooks/useFavorites";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { getPropsReturnHref } from "@/lib/propsNavigation";
 import PlayerHeadshotImage from "@/components/PlayerHeadshotImage";
 import { useState } from "react";
 import FavoritesMobileList from "@/components/favorites/FavoritesMobileList";
@@ -17,6 +18,8 @@ const HIT_RATE_COLOR = (rate) => {
 export default function FavoritesPage() {
   const { favorites, loading, error, mutating, toggleFavorite, clearFavorites, fetchFavorites } = useFavorites();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const propsHref = getPropsReturnHref(searchParams);
 
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState(new Set());
@@ -63,7 +66,7 @@ export default function FavoritesPage() {
         <div className="flex flex-wrap items-center gap-3 flex-shrink-0">
           <button
             type="button"
-            onClick={() => router.push("/props")}
+            onClick={() => router.push(propsHref)}
             aria-label="Back to props"
             className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.03] text-slate-400 transition-colors hover:border-orange-500/35 hover:bg-orange-500/10 hover:text-orange-200"
           >
@@ -180,7 +183,7 @@ export default function FavoritesPage() {
                 here
               </p>
               <button
-                onClick={() => router.push("/props")}
+                onClick={() => router.push(propsHref)}
                 className="mt-2 px-4 py-2 rounded-lg bg-orange-500/10 border border-orange-500/30 text-orange-400 text-[11px] font-mono font-bold hover:bg-orange-500/20 transition-all"
               >
                 Go to Props →
@@ -192,7 +195,7 @@ export default function FavoritesPage() {
         {/* Table */}
         {favorites.length > 0 && (
           <>
-          <FavoritesMobileList favorites={favorites} mutating={mutating} onOpen={() => router.push("/props")} onRemove={removeFavorite} onToggleSelect={toggleSelect} selectMode={selectMode} selected={selected} />
+          <FavoritesMobileList favorites={favorites} mutating={mutating} onOpen={() => router.push(propsHref)} onRemove={removeFavorite} onToggleSelect={toggleSelect} selectMode={selectMode} selected={selected} />
           <div className="hidden flex-1 min-h-0 overflow-auto rounded-xl border border-white/[0.06] md:block">
             <table className="w-full text-left border-collapse">
               <thead className="sticky top-0 z-10 bg-[#0D1828]">
@@ -222,7 +225,7 @@ export default function FavoritesPage() {
                   <tr
                     key={fav.id}
                     onClick={() =>
-                      selectMode ? toggleSelect(fav.id) : router.push(`/props`)
+                      selectMode ? toggleSelect(fav.id) : router.push(propsHref)
                     }
                     className={`border-b border-white/[0.04] transition-colors cursor-pointer group
     ${selectMode && selected.has(fav.id) ? "bg-orange-500/5" : "hover:bg-white/[0.03]"}`}

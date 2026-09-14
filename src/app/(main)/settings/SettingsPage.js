@@ -5,9 +5,10 @@ import { useState } from "react";
 import { signOutWithBetaCleanup } from "@/lib/signOutWithBetaCleanup";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import PricingLink from "@/components/PricingLink";
 import { captureEvent } from "@/components/PostHogProvider";
+import { getPropsReturnHref } from "@/lib/propsNavigation";
 
 const SectionLabel = ({ children }) => (
   <div className="flex items-center gap-3 mb-6">
@@ -137,6 +138,8 @@ export default function SettingsPage({ session }) {
   const [seasonLoading, setSeasonLoading] = useState(false);
   const [actionError, setActionError] = useState("");
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const propsHref = getPropsReturnHref(searchParams);
 
   const user = session?.user;
   const isGoogle = !!(user?.image && user.image.includes("google"));
@@ -238,7 +241,7 @@ export default function SettingsPage({ session }) {
         <div className="mb-10 flex items-start gap-3">
           <button
             type="button"
-            onClick={() => router.push("/props")}
+            onClick={() => router.push(propsHref)}
             aria-label="Back to props"
             className="mt-1 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.03] text-slate-400 transition-colors hover:border-orange-500/35 hover:bg-orange-500/10 hover:text-orange-200"
           >

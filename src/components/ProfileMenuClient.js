@@ -4,11 +4,20 @@ import { useState, useRef, useEffect } from "react";
 import { signOutWithBetaCleanup } from "@/lib/signOutWithBetaCleanup";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
 import PricingLink from "./PricingLink";
+import { getPropsHref, withPropsReturnHref } from "@/lib/propsNavigation";
 
 const ProfileMenuClient = ({ session }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const propsHref = getPropsHref(searchParams);
+  const contextualHref = (destination) =>
+    pathname === "/props"
+      ? withPropsReturnHref(destination, propsHref)
+      : destination;
 
   // Close on outside click
   useEffect(() => {
@@ -103,7 +112,7 @@ const ProfileMenuClient = ({ session }) => {
           )}
 
           <Link
-            href="/favorites"
+            href={contextualHref("/favorites")}
             onClick={() => setOpen(false)}
             className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/[0.04] transition-colors group"
           >
@@ -159,7 +168,7 @@ const ProfileMenuClient = ({ session }) => {
 
             {/* Settings */}
             <Link
-              href="/settings"
+              href={contextualHref("/settings")}
               onClick={() => setOpen(false)}
               className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/[0.04] transition-colors group"
             >
