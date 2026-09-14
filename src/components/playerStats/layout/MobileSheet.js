@@ -23,6 +23,7 @@ const MobileSheet = ({
   setRangeMaxMinutes,
   hasMinuteFilter,
   resetMinuteFilter,
+  onResetAllFilters,
   onApplyFilters,
   teammateImpact = [],
   maxTeammates = 3,
@@ -50,7 +51,7 @@ const MobileSheet = ({
 
             <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-5 pb-4 pt-2">
               {/* HEADER */}
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <span className="text-[11px] font-mono font-bold uppercase tracking-widest text-slate-400">
                   Filters
                 </span>
@@ -237,13 +238,24 @@ const MobileSheet = ({
 
             </div>
 
-            <div className="border-t border-white/[0.08] bg-[#0D1828]/95 px-5 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-3 shadow-[0_-12px_24px_rgba(6,14,26,0.85)]">
+            <div className="flex gap-3 border-t border-white/[0.08] bg-[#0D1828]/95 px-5 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-3 shadow-[0_-12px_24px_rgba(6,14,26,0.85)]">
               <button
                 type="button"
                 onClick={onApplyFilters}
-                className="w-full rounded-xl bg-orange-500 px-4 py-3 font-mono text-[10px] font-black uppercase tracking-widest text-white shadow-[0_8px_24px_rgba(249,115,22,0.28)] transition-colors hover:bg-orange-400"
+                className="min-w-0 flex-1 rounded-xl bg-orange-500 px-4 py-3 font-mono text-[10px] font-black uppercase tracking-widest text-white shadow-[0_8px_24px_rgba(249,115,22,0.28)] transition-colors hover:bg-orange-400"
               >
                 Apply filters
+              </button>
+              <button
+                type="button"
+                onClick={onResetAllFilters}
+                aria-label="Reset all filters"
+                title="Reset all filters"
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-white/[0.12] bg-white/[0.06] text-white transition-colors hover:border-white/25 hover:bg-white/[0.12]"
+              >
+                <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none">
+                  <path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </button>
             </div>
           </div>

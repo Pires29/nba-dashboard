@@ -123,6 +123,15 @@ const PlayerSelectionControls = ({
     setDraftTeammateModes({});
   };
 
+  const resetMobileFilters = () => {
+    resetDraftMinuteFilter();
+    resetDraftTeammates();
+    setRangeMinMinutes(0);
+    setRangeMaxMinutes(minuteSliderMax);
+    setSelectedTeammateIds([]);
+    setTeammateModes({});
+  };
+
   const safeHomeRoster = useMemo(() => homeRoster ?? [], [homeRoster]);
   const safeAwayRoster = useMemo(() => awayRoster ?? [], [awayRoster]);
 
@@ -333,6 +342,7 @@ const PlayerSelectionControls = ({
           hasMinuteFilter={draftRangeMinMinutes !== 0 || draftRangeMaxMinutes !== minuteSliderMax}
           activeMobileFilterCount={activeMobileFilterCount}
           resetMinuteFilter={resetDraftMinuteFilter}
+          onResetAllFilters={resetMobileFilters}
           onApplyFilters={applyMobileFilters}
           teammateImpact={teammateImpact}
           maxTeammates={maxTeammates}
