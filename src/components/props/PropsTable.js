@@ -293,7 +293,7 @@ export default function PropsTable({
     if (selectedStat !== "points") {
       parts.push({
         key: "stat",
-        label: `Stat: ${selectedStat}`,
+        label: `Stat: ${STAT_LABELS[selectedStat] ?? selectedStat}`,
         onRemove: () => {
           setSelectedStat("points");
           updateUrl({ stat: "points" });
