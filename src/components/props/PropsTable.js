@@ -479,7 +479,7 @@ export default function PropsTable({
               <p className="mb-2 text-[9px] font-mono uppercase tracking-widest text-slate-600">
                 Select Stat
               </p>
-              <div className="grid grid-cols-3 gap-1">
+              <div className="flex flex-col gap-1">
                 {STATS.map((stat) => (
                   <button
                     type="button"
@@ -664,7 +664,7 @@ export default function PropsTable({
                               updateHitRateFilter(index, "min", e.target.value)
                             }
                             onBlur={() => normalizeDraftHitRateFilter(index)}
-                            className="w-full rounded border border-white/[0.06] bg-[#060E1A] py-1.5 pl-9 pr-2 text-right font-mono text-[11px] text-slate-300 [appearance:textfield] focus:border-orange-500/40 focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                            className="w-full rounded border border-white/[0.06] bg-[#060E1A] py-1.5 pl-9 pr-2 text-right font-mono text-base text-slate-300 [appearance:textfield] focus:border-orange-500/40 focus:outline-none sm:text-[11px] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                           />
                         </div>
                         <span className="text-slate-600 font-mono text-[10px]">
@@ -681,7 +681,7 @@ export default function PropsTable({
                               updateHitRateFilter(index, "max", e.target.value)
                             }
                             onBlur={() => normalizeDraftHitRateFilter(index)}
-                            className="w-full rounded border border-white/[0.06] bg-[#060E1A] py-1.5 pl-2 pr-9 font-mono text-[11px] text-slate-300 [appearance:textfield] focus:border-orange-500/40 focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                            className="w-full rounded border border-white/[0.06] bg-[#060E1A] py-1.5 pl-2 pr-9 font-mono text-base text-slate-300 [appearance:textfield] focus:border-orange-500/40 focus:outline-none sm:text-[11px] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                           />
                           <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-mono text-slate-600 pointer-events-none">
                             To
