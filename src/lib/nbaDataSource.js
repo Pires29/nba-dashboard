@@ -7,12 +7,19 @@ import getProps from "./getProps";
 import getRosters from "./getRosters";
 import getStandings from "./getStandings";
 import getTeamStats from "./getTeamStats";
+import { getProductionEnvironment } from "./productionEnvironment";
 import teams from "@/app/data/teams.json";
 
 const cleanEnv = (value) => value?.trim().replace(/^["']|["']$/g, "");
 
 const storageEnabled = () => cleanEnv(process.env.NBA_DATA_SOURCE) === "storage";
 const isBeta = () => cleanEnv(process.env.APP_PHASE) === "beta";
+// Static JSON snapshots are useful for local development and test fixtures,
+// but must never be presented as current data to production users.
+const allowsLocalFallback = () => {
+  if (process.env.RUN_INTEGRATION_TESTS === "true") return true;
+  return !getProductionEnvironment().isProduction;
+};
 const storageManifestPath = () => {
   if (isBeta()) return cleanEnv(process.env.NBA_BETA_STORAGE_MANIFEST) || "qa-current.json";
   return cleanEnv(process.env.NBA_STORAGE_MANIFEST) || "current.json";
@@ -80,6 +87,9 @@ function buildLocalData() {
 
 const loadNbaData = async () => {
   if (!storageEnabled()) {
+    if (!allowsLocalFallback()) {
+      throw new Error("NBA data storage is not enabled in production");
+    }
     return {
       ...buildLocalData(),
       error: `NBA_DATA_SOURCE is ${cleanEnv(process.env.NBA_DATA_SOURCE) || "unset"}`,
@@ -117,7 +127,11 @@ const loadNbaData = async () => {
       snapshotDate: manifest.qaDate ?? null,
     };
   } catch (error) {
-    console.error("NBA Storage unavailable; using local fallback", { message: error?.message });
+    console.error("NBA Storage unavailable", { message: error?.message });
+    if (!allowsLocalFallback()) {
+      throw new Error("NBA data is temporarily unavailable");
+    }
+    console.warn("Using local NBA fallback outside production");
     return {
       ...buildLocalData(),
       error: error?.message ?? "Unknown NBA Storage error",
