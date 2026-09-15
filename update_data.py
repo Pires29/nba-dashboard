@@ -74,7 +74,7 @@ NBA_SCHEDULE_TIMEZONE = ZoneInfo("America/New_York")
 QA_SNAPSHOT_DATE = os.getenv("NBA_QA_DATE", "").strip()
 REPLAY_START_DATE = os.getenv("NBA_REPLAY_START_DATE", "").strip()
 REPLAY_LAUNCH_DATE = os.getenv("NBA_REPLAY_LAUNCH_DATE", "").strip()
-NBA_PROXY_URL = os.getenv("NBA_PROXY_URL", "").strip() or None
+REPLAY_SOURCE_MANIFEST = os.getenv("NBA_REPLAY_SOURCE_MANIFEST", "qa-replay-source.json").strip() or "qa-replay-source.json"
 STORAGE_MANIFEST_PATH = os.getenv("NBA_STORAGE_MANIFEST", "current.json").strip() or "current.json"
 STORAGE_VERSION_ALIAS = os.getenv("NBA_STORAGE_VERSION", "").strip()
 SLEEP_BETWEEN_REQUESTS = (1.0, 2.0)
@@ -262,7 +262,7 @@ def load_pipeline_env():
 def configure_runtime_from_env():
     """Refresh runtime options after .env.pipeline has been loaded."""
     global SEASON, PREV_SEASON, ROSTER_SEASON
-    global QA_SNAPSHOT_DATE, REPLAY_START_DATE, REPLAY_LAUNCH_DATE, NBA_PROXY_URL
+    global QA_SNAPSHOT_DATE, REPLAY_START_DATE, REPLAY_LAUNCH_DATE, REPLAY_SOURCE_MANIFEST
     global STORAGE_MANIFEST_PATH, STORAGE_VERSION_ALIAS
 
     SEASON = os.getenv("NBA_STATS_SEASON", season_label(stats_season_start))
@@ -277,7 +277,7 @@ def configure_runtime_from_env():
     QA_SNAPSHOT_DATE = os.getenv("NBA_QA_DATE", "").strip()
     REPLAY_START_DATE = os.getenv("NBA_REPLAY_START_DATE", "").strip()
     REPLAY_LAUNCH_DATE = os.getenv("NBA_REPLAY_LAUNCH_DATE", "").strip()
-    NBA_PROXY_URL = os.getenv("NBA_PROXY_URL", "").strip() or None
+    REPLAY_SOURCE_MANIFEST = os.getenv("NBA_REPLAY_SOURCE_MANIFEST", "qa-replay-source.json").strip() or "qa-replay-source.json"
     STORAGE_MANIFEST_PATH = os.getenv("NBA_STORAGE_MANIFEST", "current.json").strip() or "current.json"
     STORAGE_VERSION_ALIAS = os.getenv("NBA_STORAGE_VERSION", "").strip()
 
@@ -317,19 +317,12 @@ def retry_request(label, fn, attempts=NBA_API_RETRIES):
             time.sleep(delay)
 
 
-def nba_proxy_mapping():
-    if not NBA_PROXY_URL:
-        return None
-    return {"http": NBA_PROXY_URL, "https": NBA_PROXY_URL}
-
-
 def nba_stats_get_json(endpoint, params):
     response = curl_requests.get(
         f"{NBA_STATS_BASE_URL}/{endpoint}",
         params=params,
         headers=NBA_HEADERS,
         impersonate="chrome",
-        proxies=nba_proxy_mapping(),
         timeout=REQUEST_TIMEOUT,
     )
     response.raise_for_status()
@@ -1326,6 +1319,139 @@ def delete_storage_files(paths, config):
             raise RuntimeError(f"Storage delete failed: HTTP {response.status_code}")
 
 
+def replay_source_manifest(config):
+    """Pin the pre-replay QA snapshot once, so daily replay runs need no NBA API."""
+    try:
+        return download_storage_json(REPLAY_SOURCE_MANIFEST, config)
+    except RuntimeError:
+        source = download_storage_json(STORAGE_MANIFEST_PATH, config)
+        if not source.get("version"):
+            raise RuntimeError(f"Replay source manifest {STORAGE_MANIFEST_PATH} has no version")
+        upload_storage_json(REPLAY_SOURCE_MANIFEST, source, config)
+        print(f"📌 Pinned replay source: {source['version']} ({REPLAY_SOURCE_MANIFEST})")
+        return source
+
+
+def log_minutes(value):
+    if isinstance(value, str) and ":" in value:
+        minutes, seconds = value.split(":", 1)
+        return float(minutes) + float(seconds) / 60
+    return float(value or 0)
+
+
+def build_replay_schedule(logs_by_player, cutoff):
+    by_abbr = {abbr: team_id for team_id, abbr in TEAM_ABBREV_MAP.items()}
+    games = {}
+    for logs in logs_by_player.values():
+        for log in logs:
+            if str(log.get("date", "")) != cutoff:
+                continue
+            team_abbr = str(log.get("matchup", "")).split(" ")[0]
+            opponent_abbr = log.get("opp") or parse_opponent_from_matchup(log.get("matchup", ""), team_abbr)
+            team_id, opponent_id = by_abbr.get(team_abbr), by_abbr.get(opponent_abbr)
+            game_id = log.get("gid")
+            if not game_id or not team_id or not opponent_id:
+                continue
+            games[str(game_id)] = {
+                "date": cutoff,
+                "visitor_team_id": opponent_id if log.get("isHome") else team_id,
+                "home_team_id": team_id if log.get("isHome") else opponent_id,
+                "status": "Final",
+            }
+    return list(games.values())
+
+
+def replay_stats_frame(logs_by_player):
+    rows = []
+    stat_keys = ("min", "pts", "reb", "ast", "stl", "blk", "tov", "fg3m", "fgm", "fga", "fg_pct", "fg3_pct", "ft_pct")
+    for player_id, logs in logs_by_player.items():
+        if not logs:
+            continue
+        totals = {key: 0.0 for key in stat_keys}
+        for log in logs:
+            for key in stat_keys:
+                value = log.get(key)
+                totals[key] += log_minutes(value) if key == "min" else float(value or 0)
+        games = len(logs)
+        rows.append({
+            "PLAYER_ID": int(player_id),
+            "GP": games,
+            "MIN": totals["min"],
+            "PTS": totals["pts"], "REB": totals["reb"], "AST": totals["ast"],
+            "STL": totals["stl"], "BLK": totals["blk"], "TOV": totals["tov"],
+            "FG3M": totals["fg3m"],
+            "FG_PCT": totals["fgm"] / totals["fga"] if totals["fga"] else 0,
+            "FG3_PCT": sum(float(log.get("fg3m") or 0) for log in logs) / sum(float(log.get("fg3a") or 0) for log in logs) if sum(float(log.get("fg3a") or 0) for log in logs) else 0,
+            "FT_PCT": sum(float(log.get("ftm") or 0) for log in logs) / sum(float(log.get("fta") or 0) for log in logs) if sum(float(log.get("fta") or 0) for log in logs) else 0,
+        })
+    return pd.DataFrame(rows)
+
+
+def replay_logs_frame(logs_by_player):
+    rows = []
+    for player_id, logs in logs_by_player.items():
+        for log in logs:
+            team_abbr = str(log.get("matchup", "")).split(" ")[0]
+            rows.append({
+                "PLAYER_ID": int(player_id),
+                "GAME_DATE": log.get("date"),
+                "TEAM_ABBREVIATION": team_abbr,
+                "MATCHUP": log.get("matchup", ""),
+                "PTS": log.get("pts"), "REB": log.get("reb"), "AST": log.get("ast"),
+                "STL": log.get("stl"), "BLK": log.get("blk"), "TOV": log.get("tov"), "FG3M": log.get("fg3m"),
+            })
+    return pd.DataFrame(rows)
+
+
+def replay_raw_rosters(rosters):
+    return {
+        int(team_id): [{"PLAYER_ID": player["id"]} for player in roster]
+        for team_id, roster in rosters.items()
+    }
+
+
+def run_replay_from_storage(storage):
+    cutoff = snapshot_date().date().isoformat()
+    source_manifest = replay_source_manifest(storage)
+    source_prefix = f"versions/{source_manifest['version']}"
+    print(f"\n🎞️  Building replay from Storage source {source_manifest['version']} through {cutoff}...")
+    names = ("players", "teams", "rosters", "team_stats", "analytics", "injuries", "standings")
+    source = {
+        name: download_storage_json(f"{source_prefix}/{name}.json", storage)
+        for name in names
+    }
+    player_ids = {
+        str(player["id"])
+        for roster in source["rosters"].values()
+        for player in roster
+        if player.get("id") is not None
+    }
+    current_logs, previous_logs, playoff_logs = {}, {}, {}
+    for player_id in sorted(player_ids):
+        bundle = download_storage_json(f"{source_prefix}/players/{player_id}.json", storage)
+        current_logs[player_id] = [log for log in bundle.get("current", []) if str(log.get("date", "")) <= cutoff]
+        previous_logs[player_id] = bundle.get("previous", [])
+        playoff_logs[player_id] = [log for log in bundle.get("playoffs", []) if str(log.get("date", "")) <= cutoff]
+
+    stats_frame = replay_stats_frame(current_logs)
+    schedule = build_replay_schedule(current_logs, cutoff)
+    props = build_props(
+        schedule,
+        replay_raw_rosters(source["rosters"]),
+        stats_frame,
+        replay_logs_frame(current_logs),
+        source["analytics"],
+    )
+    publish_storage_version({
+        "players": source["players"], "teams": source["teams"], "rosters": source["rosters"],
+        "season_stats": build_season_stats(stats_frame), "props": props,
+        "team_stats": source["team_stats"], "analytics": source["analytics"],
+        "injuries": source["injuries"], "schedule": schedule, "standings": source["standings"],
+        "game_logs_current": current_logs, "game_logs_prev": previous_logs,
+        "game_logs_playoffs": playoff_logs,
+    })
+
+
 def prune_storage_versions(config, keep=3):
     versions = sorted(
         (entry["name"] for entry in list_storage_entries("versions", config)),
@@ -1447,12 +1573,15 @@ def run():
     if active_snapshot_date:
         print(f"   Historical snapshot date: {active_snapshot_date.date().isoformat()}")
     print(f"   Storage manifest: {STORAGE_MANIFEST_PATH}")
-    print(f"   NBA proxy: {'enabled' if NBA_PROXY_URL else 'disabled'}")
     print(f"   Local JSON fallback updates: {'enabled' if write_local_data else 'disabled'}")
 
     storage = storage_config()
     validate_storage_access(storage)
     print("   Storage preflight: ok")
+
+    if is_replay_run():
+        run_replay_from_storage(storage)
+        return
 
     # ── 1. Fetch all raw data ──────────────────────────────────────────────
     df_player_stats       = fetch_raw_player_stats();     random_sleep()

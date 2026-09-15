@@ -33,7 +33,6 @@ jobs:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
       SUPABASE_STORAGE_BUCKET: ${{ secrets.SUPABASE_STORAGE_BUCKET }}
-      NBA_PROXY_URL: ${{ secrets.NBA_PROXY_URL }}
       NBA_WRITE_LOCAL_DATA: "false"
 
     steps:
@@ -94,5 +93,6 @@ jobs:
           NBA_PREV_SEASON: "2024-25"
           NBA_ROSTER_SEASON: "2025-26"
           NBA_STORAGE_MANIFEST: qa-current.json
+          NBA_REPLAY_SOURCE_MANIFEST: qa-replay-source.json
           NBA_STORAGE_VERSION: beta-replay-${{ github.run_id }}-${{ github.run_attempt }}
         run: python update_data.py
