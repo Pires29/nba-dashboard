@@ -1,8 +1,6 @@
 import HomeLanding from "@/components/home/HomeLanding";
 import PublicNavbar from "@/components/PublicNavbar";
-// Temporary performance diagnostic: the homepage renders with the anonymous
-// session context until this import and wrapper are restored.
-// import PublicSessionProvider from "@/components/home/PublicSessionProvider";
+import PublicSessionProvider from "@/components/home/PublicSessionProvider";
 
 export const metadata = {
   title: "NBA Player Props Research & Stats Dashboard",
@@ -27,10 +25,12 @@ export const metadata = {
 export default function Home() {
   return (
     <div className="flex min-h-screen flex-col bg-[#060E1A]">
-      <PublicNavbar />
-      <main className="flex min-h-0 flex-1 flex-col">
-        <HomeLanding />
-      </main>
+      <PublicSessionProvider>
+        <PublicNavbar />
+        <main className="flex min-h-0 flex-1 flex-col">
+          <HomeLanding />
+        </main>
+      </PublicSessionProvider>
     </div>
   );
 }
