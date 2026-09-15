@@ -10,7 +10,8 @@ import {
 } from "@/lib/buildPlayerGraphData";
 
 const statOptions = PLAYER_GRAPH_STATS;
-const formatStatLabel = (stat) => stat.toUpperCase();
+const formatStatLabel = (stat) =>
+  `${stat.charAt(0).toUpperCase()}${stat.slice(1).toLowerCase()}`;
 const PlayerGraph = ({
   playerStats,
   selectedStat,
@@ -296,7 +297,7 @@ const PlayerGraph = ({
             value={selectedStat}
             onChange={(event) => onStatChange(event.target.value)}
             style={{ colorScheme: "dark" }}
-            className="w-full appearance-none rounded-lg border border-white/[0.06] bg-white/[0.03] px-3 py-2 pr-9 text-[10px] font-mono font-bold uppercase tracking-widest text-slate-300"
+            className="w-full appearance-none rounded-lg border border-white/[0.06] bg-white/[0.03] px-3 py-2 pr-9 text-[10px] font-mono font-bold tracking-widest text-slate-300"
           >
             {statOptions.map((option) => (
               <option key={option} value={option} className="bg-[#0D1828] text-slate-100">
