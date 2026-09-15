@@ -53,7 +53,7 @@ export default function BetaAccessModal({
 }) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(initiallyOpen || initiallyRedeeming);
-  const [mode, setMode] = useState("code");
+  const [mode, setMode] = useState("waitlist");
   const [code, setCode] = useState("");
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState(INITIAL_STATUS);
@@ -309,17 +309,6 @@ export default function BetaAccessModal({
               <div className="mt-5 grid grid-cols-2 gap-2 rounded-lg border border-white/[0.07] bg-black/15 p-1">
                 <button
                   type="button"
-                  className={`rounded-md px-3 py-2 text-center font-mono text-[10px] font-black uppercase tracking-widest transition ${mode === "code" ? "bg-orange-500 text-white" : "text-slate-400 hover:text-white"}`}
-                  onClick={() => {
-                    setMode("code");
-                    setStatus(INITIAL_STATUS);
-                    setTurnstileToken("");
-                  }}
-                >
-                  I have a beta code
-                </button>
-                <button
-                  type="button"
                   className={`rounded-md px-3 py-2 text-center font-mono text-[10px] font-black uppercase tracking-widest transition ${mode === "waitlist" ? "bg-orange-500 text-white" : "text-slate-400 hover:text-white"}`}
                   onClick={() => {
                     setMode("waitlist");
@@ -328,6 +317,17 @@ export default function BetaAccessModal({
                   }}
                 >
                   Join the waitlist
+                </button>
+                <button
+                  type="button"
+                  className={`rounded-md px-3 py-2 text-center font-mono text-[10px] font-black uppercase tracking-widest transition ${mode === "code" ? "bg-orange-500 text-white" : "text-slate-400 hover:text-white"}`}
+                  onClick={() => {
+                    setMode("code");
+                    setStatus(INITIAL_STATUS);
+                    setTurnstileToken("");
+                  }}
+                >
+                  I have a beta code
                 </button>
               </div>
 
