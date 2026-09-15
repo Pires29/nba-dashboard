@@ -3,7 +3,9 @@ import { launchConfig } from "@/config/launch";
 import { ALL_FAQS } from "@/lib/faqs";
 import PricingLink from "@/components/PricingLink";
 import HomePricingSection from "./HomePricingSection";
-import DeferredProductShowcase from "./DeferredProductShowcase";
+// Temporary mobile-rendering diagnostic: re-enable once the below-the-fold
+// rendering test is complete.
+// import DeferredProductShowcase from "./DeferredProductShowcase";
 import PublicAccessButton from "./PublicAccessButton";
 
 const BENEFITS = [
@@ -47,7 +49,7 @@ export default function HomeLanding() {
         </div>
       </section>
 
-      <DeferredProductShowcase />
+      {/* <DeferredProductShowcase /> */}
 
       <section id="features" className="relative scroll-mt-20 border-y border-white/[0.06] bg-[#09111d]/80 py-24">
         <div className="mx-auto max-w-[1320px] px-6">
