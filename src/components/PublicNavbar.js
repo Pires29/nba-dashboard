@@ -52,7 +52,6 @@ export default function PublicNavbar() {
           </PricingLink>
           <PublicAccessButton
             requiresBetaCode={launchConfig.access.requiresBetaCode}
-            processBetaRedemption
             className={`${launchConfig.isBeta ? "hidden sm:inline-flex" : "inline-flex"} min-h-8 items-center justify-center rounded-lg border border-white/[0.08] bg-[#0D1828] px-3 py-1.5 font-mono text-[10px] font-bold uppercase leading-none tracking-widest text-slate-300 transition-all duration-150 hover:border-white/20 hover:text-white md:min-h-9 md:px-4 md:py-2 md:text-[11px]`}
           >
             {launchConfig.cta.navPrimary}

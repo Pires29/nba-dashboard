@@ -1,20 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import { usePublicSession } from "./PublicSessionProvider";
-
-const BetaAccessModal = dynamic(() => import("./BetaAccessModal"), {
-  ssr: false,
-});
+import { useBetaAccess } from "./BetaAccessProvider";
 
 export default function PublicAccessButton({
   className,
   requiresBetaCode = false,
   children,
-  processBetaRedemption = false,
 }) {
   const { user } = usePublicSession();
+  const { openBetaAccess } = useBetaAccess();
   const hasBetaAccess = Boolean(user?.betaAccessGrantedAt);
 
   if (!requiresBetaCode || hasBetaAccess) {
@@ -26,12 +22,13 @@ export default function PublicAccessButton({
   }
 
   return (
-    <BetaAccessModal
+    <button
+      type="button"
       aria-label="Open beta access"
       className={className}
-      processBetaRedemption={processBetaRedemption}
+      onClick={() => openBetaAccess()}
     >
       {children}
-    </BetaAccessModal>
+    </button>
   );
 }

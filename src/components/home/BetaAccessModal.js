@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { launchConfig } from "@/config/launch";
 import TurnstileWidget, { isTurnstileEnabled } from "@/components/TurnstileWidget";
-import { safeInternalPath } from "@/lib/security";
 import { signOutWithBetaCleanup } from "@/lib/signOutWithBetaCleanup";
 
 const INITIAL_STATUS = { type: "idle", message: "" };
@@ -44,26 +43,20 @@ function redemptionErrorDetails(error) {
 }
 
 export default function BetaAccessModal({
-  className = "",
-  children = launchConfig.cta.primary,
+  isOpen,
+  onClose,
   processBetaRedemption = false,
-  initiallyRedeeming = false,
-  initiallyOpen = false,
-  ...buttonProps
+  redirectTo = "/props",
 }) {
   const router = useRouter();
-  const [isOpen, setIsOpen] = useState(initiallyOpen || initiallyRedeeming);
   const [mode, setMode] = useState("waitlist");
   const [code, setCode] = useState("");
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState(INITIAL_STATUS);
   const [hasJoinedWaitlist, setHasJoinedWaitlist] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [redirectTo, setRedirectTo] = useState("/props");
   const [turnstileToken, setTurnstileToken] = useState("");
-  const [redemptionStage, setRedemptionStage] = useState(
-    initiallyRedeeming ? "processing" : "idle",
-  );
+  const [redemptionStage, setRedemptionStage] = useState("idle");
   const [redemptionError, setRedemptionError] = useState(null);
   const hasStartedRedemption = useRef(false);
 
@@ -93,23 +86,10 @@ export default function BetaAccessModal({
   }, []);
 
   useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const callbackUrl = searchParams.get("callbackUrl");
-    const destination = safeInternalPath(callbackUrl, "/props");
-    setRedirectTo(destination);
-    if (searchParams.get("beta") === "required") {
-      setIsOpen(true);
-    }
-
-    if (
-      processBetaRedemption &&
-      searchParams.get("beta") === "redeem" &&
-      !hasStartedRedemption.current
-    ) {
+    if (processBetaRedemption && !hasStartedRedemption.current) {
       hasStartedRedemption.current = true;
       setMode("code");
-      setIsOpen(true);
-      redeemBetaAccess(destination);
+      redeemBetaAccess(redirectTo);
     }
     try {
       setHasJoinedWaitlist(
@@ -118,7 +98,7 @@ export default function BetaAccessModal({
     } catch {
       // Local storage may be unavailable because of browser privacy settings.
     }
-  }, [processBetaRedemption, redeemBetaAccess]);
+  }, [processBetaRedemption, redirectTo, redeemBetaAccess]);
 
   async function submitBetaCode(event) {
     event.preventDefault();
@@ -188,21 +168,10 @@ export default function BetaAccessModal({
     setRedemptionStage("idle");
     setRedemptionError(null);
     setCode("");
-    router.replace(`/?beta=required&callbackUrl=${encodeURIComponent(redirectTo)}`);
   }
 
   return (
-    <>
-      <button
-        type="button"
-        className={className}
-        onClick={() => setIsOpen(true)}
-        {...buttonProps}
-      >
-        {children}
-      </button>
-
-      {isOpen ? (
+    isOpen ? (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 px-4 py-8"
           role="dialog"
@@ -255,7 +224,7 @@ export default function BetaAccessModal({
                     )}
                     <button
                       type="button"
-                      onClick={() => setIsOpen(false)}
+                      onClick={onClose}
                       className="font-mono text-[10px] font-bold uppercase tracking-widest text-slate-400 transition hover:text-white"
                     >
                       Close
@@ -278,7 +247,7 @@ export default function BetaAccessModal({
                 type="button"
                 aria-label="Close beta access modal"
                 className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/[0.08] text-slate-400 transition hover:border-white/20 hover:text-white"
-                onClick={() => setIsOpen(false)}
+                onClick={onClose}
               >
                 <svg
                   aria-hidden="true"
@@ -403,7 +372,6 @@ export default function BetaAccessModal({
             )}
           </div>
         </div>
-      ) : null}
-    </>
+    ) : null
   );
 }
