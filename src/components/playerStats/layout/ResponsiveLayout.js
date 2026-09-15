@@ -78,6 +78,7 @@ const ResponsiveLayout = ({
   const [teammateModes, setTeammateModes] = useState({});
   const [loadedTeammateData, setLoadedTeammateData] = useState({});
   const [selectedStat, setSelectedStat] = useState(initialStat || "points");
+  const [isBetaBannerVisible, setIsBetaBannerVisible] = useState(true);
   const hasMinuteFilter =
     rangeMinMinutes !== 0 || rangeMaxMinutes !== minuteSliderMax;
   const hasTeammateFilter = Object.keys(teammateModes).length > 0;
@@ -148,7 +149,10 @@ const ResponsiveLayout = ({
   return (
     <div className="relative z-10 mx-auto flex min-h-full w-full max-w-[1440px] flex-1 flex-col px-4 sm:px-5 lg:px-6">
       <div className="flex min-h-0 flex-1 flex-col gap-4 py-4 lg:gap-6 lg:py-6">
-        <BetaSeasonDataBanner updatedAt={dataStatus?.updatedAt} />
+        <BetaSeasonDataBanner
+          updatedAt={dataStatus?.updatedAt}
+          onVisibilityChange={setIsBetaBannerVisible}
+        />
 
         {(dataStatus?.source === "qa" ||
           dataStatus?.source === "unavailable" ||
@@ -160,7 +164,7 @@ const ResponsiveLayout = ({
           </div>
         )}
         <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 lg:gap-6">
-          <div className="grid min-h-0 min-w-0 flex-1 items-stretch gap-4 lg:h-max lg:flex-none lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-6">
+          <div className="grid min-h-0 min-w-0 flex-1 items-stretch gap-4 lg:grid-cols-[300px_minmax(0,1fr)] lg:grid-rows-[minmax(0,1fr)] lg:gap-6">
             <PlayerSelectionControls
               plan={plan}
               currentGame={currentGame}
@@ -188,6 +192,7 @@ const ResponsiveLayout = ({
               teammateModes={teammateModes}
               setSelectedTeammateIds={setSelectedTeammateIds}
               setTeammateModes={setTeammateModes}
+              isBetaBannerVisible={isBetaBannerVisible}
             />
 
             <div className="flex min-w-0 flex-col gap-4 pb-4 lg:gap-6 lg:pb-4">

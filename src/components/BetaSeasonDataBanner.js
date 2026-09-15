@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useLayoutEffect, useState, useSyncExternalStore } from "react";
 
 const DISMISSAL_STORAGE_KEY = "propinsight:beta-season-banner-dismissed:v1";
 
@@ -27,7 +27,7 @@ const formatSnapshotDate = (updatedAt) => {
   }).format(date);
 };
 
-const BetaSeasonDataBanner = ({ updatedAt }) => {
+const BetaSeasonDataBanner = ({ updatedAt, onVisibilityChange }) => {
   const [isDismissedLocally, setIsDismissedLocally] = useState(false);
   const isDismissedPersistently = useSyncExternalStore(
     subscribeToDismissal,
@@ -35,13 +35,18 @@ const BetaSeasonDataBanner = ({ updatedAt }) => {
     getServerDismissalSnapshot,
   );
   const snapshotDate = formatSnapshotDate(updatedAt);
+  const isVisible = !isDismissedLocally && !isDismissedPersistently;
+
+  useLayoutEffect(() => {
+    onVisibilityChange?.(isVisible);
+  }, [isVisible, onVisibilityChange]);
 
   const dismissBanner = () => {
     window.localStorage.setItem(DISMISSAL_STORAGE_KEY, "true");
     setIsDismissedLocally(true);
   };
 
-  if (isDismissedLocally || isDismissedPersistently) return null;
+  if (!isVisible) return null;
 
   return (
     <div className="rounded-lg border border-amber-400/15 bg-amber-400/[0.055] px-3 py-2.5 shadow-sm shadow-black/10 sm:px-4">

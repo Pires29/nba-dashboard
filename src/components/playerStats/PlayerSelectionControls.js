@@ -59,6 +59,7 @@ const PlayerSelectionControls = ({
   teammateModes = {},
   setSelectedTeammateIds,
   setTeammateModes,
+  isBetaBannerVisible,
 }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -204,19 +205,23 @@ const PlayerSelectionControls = ({
         anchor.getBoundingClientRect().top -
         scrollContainer.getBoundingClientRect().top +
         scrollContainer.scrollTop;
-      const available = isDesktopCardStuck
+      const isStuckNow =
+        anchor.getBoundingClientRect().top <
+        scrollContainer.getBoundingClientRect().top + 17;
+      const available = isStuckNow
         ? scrollContainer.clientHeight - 32
         : scrollContainer.clientHeight - anchorTop - 16;
 
-      setDesktopCardHeight(
-        Math.max(320, Math.floor(available)),
+      const nextHeight = Math.max(320, Math.floor(available));
+      setDesktopCardHeight((currentHeight) =>
+        currentHeight === nextHeight ? currentHeight : nextHeight,
       );
     };
 
     updateAvailableHeight();
     window.addEventListener("resize", updateAvailableHeight);
     return () => window.removeEventListener("resize", updateAvailableHeight);
-  }, [isDesktopCardStuck]);
+  }, [isBetaBannerVisible, isDesktopCardStuck]);
 
   useEffect(() => {
     desktopRosterListRef.current?.scrollTo({ top: 0, behavior: "auto" });
