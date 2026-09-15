@@ -141,13 +141,6 @@
   height: 100dvh;
 }
 
-/* Keep below-the-fold landing content in the initial HTML while letting the
- * browser postpone its rendering work until it approaches the viewport. */
-.landing-deferred-content {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 1200px;
-}
-
 /* Scrollbar customizada */
 ::-webkit-scrollbar {
   width: 4px;
