@@ -4,6 +4,7 @@ import { ALL_FAQS } from "@/lib/faqs";
 import PricingLink from "@/components/PricingLink";
 import HomePricingSection from "./HomePricingSection";
 import DeferredProductShowcase from "./DeferredProductShowcase";
+import LandingBelowFold from "./LandingBelowFold";
 import PublicAccessButton from "./PublicAccessButton";
 
 const BENEFITS = [
@@ -47,6 +48,7 @@ export default function HomeLanding() {
         </div>
       </section>
 
+      <LandingBelowFold fallback={<LandingBelowFoldSkeleton />}>
       <DeferredProductShowcase />
 
       <section id="features" className="relative scroll-mt-20 border-y border-white/[0.06] bg-[#09111d]/80 py-24">
@@ -62,10 +64,45 @@ export default function HomeLanding() {
       <FaqSection />
       <section className="relative px-6 py-24 text-center"><div className="absolute left-1/2 top-1/2 h-52 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-orange-500/10 blur-[100px]" /><div className="relative"><p className="font-mono text-[10px] uppercase tracking-[0.25em] text-orange-400">Your next slate starts here</p><h2 className="mx-auto mt-5 max-w-3xl text-4xl font-black tracking-tight sm:text-6xl">Stop guessing. Start researching.</h2><div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row"><PrimaryCta className="inline-flex items-center justify-center rounded-xl bg-orange-500 px-7 py-3.5 font-mono text-xs font-black uppercase leading-none tracking-widest hover:bg-orange-400" /><PricingLink className="inline-flex items-center justify-center rounded-xl border border-white/10 px-7 py-3.5 font-mono text-xs font-bold uppercase leading-none tracking-widest text-slate-300 hover:border-white/20">{launchConfig.cta.secondary}</PricingLink></div></div></section>
       <footer className="border-t border-white/[0.06]"><div className="mx-auto flex max-w-[1320px] flex-wrap items-center justify-between gap-5 px-6 py-7"><p className="font-mono text-[10px] text-slate-400">© {new Date().getFullYear()} PropInsight. Research responsibly.</p><div className="flex gap-5 font-mono text-[9px] uppercase tracking-widest text-slate-400"><a href="#features" className="hover:text-slate-300">Features</a><PricingLink className="hover:text-slate-300">Pricing</PricingLink><a href="#faq" className="hover:text-slate-300">FAQ</a><Link href="/privacy" className="hover:text-slate-300">Privacy</Link><Link href="/terms" className="hover:text-slate-300">Terms</Link></div></div></footer>
+      </LandingBelowFold>
     </div>
   );
 }
 
 function FaqSection() {
   return <section id="faq" className="scroll-mt-20 border-t border-white/[0.06] bg-[#09111d]/75 py-24"><div className="mx-auto max-w-3xl px-6"><div className="text-center"><p className="font-mono text-[10px] font-bold uppercase tracking-[0.25em] text-orange-400">FAQ</p><h2 className="mt-4 text-4xl font-black">Good questions. Clear answers.</h2></div><div className="mt-12 space-y-3">{ALL_FAQS.map((faq, index) => <details key={faq.id} className="group rounded-xl border border-white/[0.07] bg-[#0b1421] p-5 open:border-orange-500/20"><summary className="flex cursor-pointer list-none items-center justify-between gap-5 text-sm font-bold"><span><span className="mr-4 font-mono text-[9px] text-orange-400">0{index + 1}</span>{faq.question}</span><span className="font-mono text-lg font-light text-slate-500 transition group-open:rotate-45">+</span></summary><p className="ml-9 mt-4 max-w-2xl text-sm leading-6 text-slate-400">{faq.answer}</p></details>)}</div></div></section>;
+}
+
+function LandingBelowFoldSkeleton() {
+  return (
+    <div aria-busy="true" aria-label="Loading page content" className="bg-[#07101b]">
+      <section className="border-t border-white/[0.06] px-6 py-20">
+        <div className="mx-auto max-w-[1320px]">
+          <div className="h-3 w-32 animate-pulse rounded bg-orange-500/20" />
+          <div className="mt-5 h-11 max-w-xl animate-pulse rounded bg-white/[0.09]" />
+          <div className="mt-4 h-5 max-w-2xl animate-pulse rounded bg-white/[0.05]" />
+          <div className="mt-12 grid gap-4 lg:grid-cols-2">
+            <div className="h-[420px] animate-pulse rounded-2xl border border-white/[0.07] bg-white/[0.03]" />
+            <div className="h-[420px] animate-pulse rounded-2xl border border-white/[0.07] bg-white/[0.03]" />
+          </div>
+        </div>
+      </section>
+      <section className="border-y border-white/[0.06] bg-[#09111d]/80 px-6 py-20">
+        <div className="mx-auto max-w-[1320px]">
+          <div className="h-3 w-36 animate-pulse rounded bg-orange-500/20" />
+          <div className="mt-5 h-11 max-w-xl animate-pulse rounded bg-white/[0.09]" />
+          <div className="mt-12 grid gap-3 md:grid-cols-3">
+            {[0, 1, 2].map((item) => <div key={item} className="h-52 animate-pulse rounded-2xl border border-white/[0.07] bg-white/[0.03]" />)}
+          </div>
+        </div>
+      </section>
+      <section className="mx-auto max-w-[1320px] px-6 py-20">
+        <div className="mx-auto h-10 w-72 animate-pulse rounded bg-white/[0.09]" />
+        <div className="mx-auto mt-5 h-5 max-w-xl animate-pulse rounded bg-white/[0.05]" />
+        <div className="mt-12 grid gap-4 lg:grid-cols-3">
+          {[0, 1, 2].map((item) => <div key={item} className="h-[470px] animate-pulse rounded-2xl border border-white/[0.07] bg-white/[0.03]" />)}
+        </div>
+      </section>
+    </div>
+  );
 }
