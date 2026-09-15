@@ -14,6 +14,8 @@ const cleanEnv = (value) => value?.trim().replace(/^["']|["']$/g, "");
 
 const storageEnabled = () => cleanEnv(process.env.NBA_DATA_SOURCE) === "storage";
 const isBeta = () => cleanEnv(process.env.APP_PHASE) === "beta";
+const storageCacheOptions = (revalidate) =>
+  isBeta() ? { noStore: true } : { revalidate };
 // Static JSON snapshots are useful for local development and test fixtures,
 // but must never be presented as current data to production users.
 const allowsLocalFallback = () => {
@@ -44,7 +46,7 @@ async function fetchStorageJson(path, { revalidate = 300, noStore = false } = {}
 }
 
 const getStorageManifest = cache(() =>
-  fetchStorageJson(storageManifestPath(), { revalidate: 300 }),
+  fetchStorageJson(storageManifestPath(), storageCacheOptions(300)),
 );
 
 async function getStorageSnapshot() {
@@ -55,13 +57,13 @@ async function getStorageSnapshot() {
     "injuries", "schedule", "standings",
   ];
   const values = await Promise.all(
-    names.map((name) => fetchStorageJson(`${prefix}/${name}.json`, { revalidate: 86400 })),
+    names.map((name) => fetchStorageJson(`${prefix}/${name}.json`, storageCacheOptions(86400))),
   );
   let analytics = {};
   try {
     analytics = await fetchStorageJson(`${prefix}/analytics.json`, {
       revalidate: 86400,
-      noStore: process.env.NODE_ENV !== "production",
+      noStore: isBeta() || process.env.NODE_ENV !== "production",
     });
   } catch (error) {
     console.warn("NBA analytics snapshot unavailable; using empty context", {
@@ -143,7 +145,9 @@ const getCachedNbaData = unstable_cache(loadNbaData, ["nba-data-snapshot"], {
   revalidate: 300,
 });
 
-export const getNbaData = cache(getCachedNbaData);
+export const getNbaData = cache(async () =>
+  isBeta() ? loadNbaData() : getCachedNbaData(),
+);
 
 export async function getNbaPlayerLogs(playerId) {
   if (storageEnabled()) {
@@ -151,7 +155,7 @@ export async function getNbaPlayerLogs(playerId) {
       const manifest = await getStorageManifest();
       const bundle = await fetchStorageJson(
         `versions/${manifest.version}/players/${playerId}.json`,
-        { revalidate: 86400 },
+        storageCacheOptions(86400),
       );
       return {
         trends: bundle.trends ?? null,
