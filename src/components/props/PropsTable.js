@@ -455,7 +455,7 @@ export default function PropsTable({
                     e.currentTarget.blur();
                   }
                 }}
-                className="search-with-custom-clear min-h-10 w-full rounded-lg border border-white/[0.08] bg-[#0D1828] px-4 py-2.5 pr-10 text-[13px] font-mono text-slate-200 shadow-inner shadow-black/10 placeholder:text-slate-500 focus:border-orange-500/50 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                className="search-with-custom-clear min-h-10 w-full rounded-lg border border-white/[0.08] bg-[#0D1828] px-4 py-2.5 pr-10 text-base font-mono text-slate-200 shadow-inner shadow-black/10 placeholder:text-slate-500 focus:border-orange-500/50 focus:outline-none focus:ring-2 focus:ring-orange-500/20 sm:text-[13px]"
               />
               {search && (
                 <button
