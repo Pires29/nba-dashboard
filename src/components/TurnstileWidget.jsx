@@ -49,7 +49,7 @@ export default function TurnstileWidget({ onVerify, onExpire }) {
         strategy="afterInteractive"
         onLoad={renderWidget}
       />
-      <div ref={containerRef} className="min-h-[65px]" />
+      <div ref={containerRef} className="flex min-h-[65px] justify-center" />
     </>
   );
 }
