@@ -45,8 +45,22 @@ export async function DELETE(req) {
     // keep the local account so support can still identify the subscription.
     await removeStripeCustomerAndSubscriptions(stripe, user);
 
-    await prisma.user.delete({
-      where: { id: user.id },
+    await prisma.$transaction(async (tx) => {
+      // A referral use belongs to the account both when the user redeemed a
+      // code and when the user owns the code. Remove those rows explicitly so
+      // this also succeeds on databases that predate the cascading FK below.
+      await tx.referralUse.deleteMany({
+        where: {
+          OR: [
+            { referredUserId: user.id },
+            { referralCode: { is: { partnerId: user.id } } },
+          ],
+        },
+      });
+
+      await tx.user.delete({
+        where: { id: user.id },
+      });
     });
 
     return NextResponse.json({ success: true }, { status: 200 });

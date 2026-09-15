@@ -104,7 +104,7 @@ model ReferralUse {
   amountPaid      Int?
   stripeSessionId String?
   createdAt       DateTime     @default(now())
-  referralCode    ReferralCode @relation(fields: [referralCodeId], references: [id])
+  referralCode    ReferralCode @relation(fields: [referralCodeId], references: [id], onDelete: Cascade)
 }
 
 model StripeWebhookEvent {
