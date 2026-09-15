@@ -49,7 +49,7 @@ export function getLaunchConfig() {
     pricing: {
       checkoutEnabled: !isBeta,
       showEarlyAccessPricing: isBeta || isEarlyAccess,
-      showTrialPlan: isPublic,
+      showTrialPlan: isBeta || isPublic,
       badgeText: isBeta
         ? "Closed beta"
         : isEarlyAccess
