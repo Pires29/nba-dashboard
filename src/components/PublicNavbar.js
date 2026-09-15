@@ -43,6 +43,8 @@ export default function PublicNavbar({
             alt=""
             width={36}
             height={36}
+            loading="eager"
+            fetchPriority="high"
             aria-hidden="true"
             className="h-8 w-8 rounded-lg shadow-[0_0_12px_rgba(249,115,22,0.4)] md:h-9 md:w-9"
           />

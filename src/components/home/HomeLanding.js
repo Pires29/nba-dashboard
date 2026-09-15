@@ -4,7 +4,7 @@ import { ALL_FAQS } from "@/lib/faqs";
 import PricingLink from "@/components/PricingLink";
 import BetaAccessModal from "./BetaAccessModal";
 import HomePricingSection from "./HomePricingSection";
-import ProductShowcase from "./ProductShowcase";
+import DeferredProductShowcase from "./DeferredProductShowcase";
 
 const BENEFITS = [
   { number: "01", title: "See the trend, not just the average", text: "Compare L5, L10, L20, season, and head-to-head hit rates without jumping between tabs." },
@@ -52,7 +52,7 @@ export default function HomeLanding({ hasBetaAccess = false }) {
         </div>
       </section>
 
-      <ProductShowcase />
+      <DeferredProductShowcase />
 
       <section id="features" className="relative scroll-mt-20 border-y border-white/[0.06] bg-[#09111d]/80 py-24">
         <div className="mx-auto max-w-[1320px] px-6">

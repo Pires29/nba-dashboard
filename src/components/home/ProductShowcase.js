@@ -1,3 +1,5 @@
+"use client";
+
 const PROP_ROWS = [
   [201142, "Kevin Durant", "HOU", "DEN", "", "25.5", "Favorable", "60%", "50%", "45%", "50%", "25%"],
   [1628384, "OG Anunoby", "NYK", "UTA", "", "16.5", "Favorable", "60%", "50%", "50%", "49%", "50%"],
