@@ -204,6 +204,16 @@ const PlayerGraph = ({
     : isPlayoffs
       ? hasPlayoffGames
       : hasGames;
+  const emptyStateTitle = !hasValidArray
+    ? "Player logs unavailable"
+    : isFilteredView
+      ? "No stats found for these filters"
+      : "No stats available";
+  const emptyStateDescription = !hasValidArray
+    ? "We couldn't load this player's game logs right now"
+    : isFilteredView
+      ? "Adjust the minutes range or teammate rules to see results."
+      : `This player has no games in ${isPrev ? "the 2024-25 season" : isPlayoffs ? "the current playoffs" : "the current season"}`;
 
   const chartContent = !shouldRenderChart ? (
     <div className="h-full w-full rounded-xl border border-white/[0.06] bg-white/[0.02] animate-pulse" />
@@ -517,15 +527,9 @@ const PlayerGraph = ({
                   />
                 </svg>
               </div>
-              <p className="text-[12px] font-semibold text-slate-400">
-                {!hasValidArray
-                  ? "Player logs unavailable"
-                  : "No stats available"}
-              </p>
+              <p className="text-[12px] font-semibold text-slate-400">{emptyStateTitle}</p>
               <p className="text-[10px] font-mono text-slate-400 max-w-[200px]">
-                {!hasValidArray
-                  ? "We couldn't load this player's game logs right now"
-                  : `This player has no games in ${isPrev ? "the 2024-25 season" : isPlayoffs ? "the current playoffs" : "the current season"}`}
+                {emptyStateDescription}
               </p>
             </div>
           </div>
