@@ -8,8 +8,8 @@ export function usePublicSession() {
   return useContext(PublicSessionContext);
 }
 
-export default function PublicSessionProvider({ children }) {
-  const [user, setUser] = useState(null);
+export default function PublicSessionProvider({ children, initialUser = null }) {
+  const [user, setUser] = useState(initialUser);
 
   useEffect(() => {
     const controller = new AbortController();

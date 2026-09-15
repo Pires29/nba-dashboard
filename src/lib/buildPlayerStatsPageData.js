@@ -375,7 +375,9 @@ export async function buildPlayerStatsPageData({
 
   const initialSelectedName = (() => {
     if (playerId) {
-      const p = combinedRoster.find((player) => player.PLAYER_ID === playerId);
+      const p = combinedRoster.find(
+        (player) => String(player.PLAYER_ID) === String(playerId),
+      );
       if (p) return p.PLAYER;
     }
 
@@ -386,7 +388,11 @@ export async function buildPlayerStatsPageData({
   const initialActiveTeam = (() => {
     if (!playerId) return 0;
 
-    return homeRoster.some((player) => player.PLAYER_ID === playerId) ? 0 : 1;
+    return homeRoster.some(
+      (player) => String(player.PLAYER_ID) === String(playerId),
+    )
+      ? 0
+      : 1;
   })();
 
   const slimRoster = (roster) =>

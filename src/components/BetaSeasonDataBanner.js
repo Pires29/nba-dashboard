@@ -49,29 +49,29 @@ const BetaSeasonDataBanner = ({ updatedAt, snapshotDate, onVisibilityChange }) =
   if (!isVisible) return null;
 
   return (
-    <div className="rounded-lg border border-amber-400/15 bg-amber-400/[0.055] px-3 py-2.5 shadow-sm shadow-black/10 sm:px-4">
-      <div className="flex items-start justify-between gap-3">
+    <div className="relative rounded-lg border border-amber-400/15 bg-amber-400/[0.055] px-3 py-2.5 shadow-sm shadow-black/10 sm:px-4">
+      <div className="pr-8">
         <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
           <span className="font-mono text-[10px] font-black uppercase tracking-widest text-amber-300">
             Beta · 2025–26 season replay
           </span>
           <span className="hidden h-1 w-1 rounded-full bg-amber-300/40 sm:block" />
-          <p className="text-[11px] leading-5 text-slate-300 sm:text-xs">
+          <p className="text-[11px] leading-4 text-slate-300 sm:text-xs">
             You&apos;re exploring the 2025–26 NBA season as it unfolded
             {displayedSnapshotDate ? ` on ${displayedSnapshotDate}` : ""}. Injuries are a fixed beta snapshot.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={dismissBanner}
-          aria-label="Dismiss beta data notice"
-          className="-mr-1 -mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-amber-200/60 transition-colors hover:bg-amber-300/10 hover:text-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-300/40"
-        >
-          <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none">
-            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-        </button>
       </div>
+      <button
+        type="button"
+        onClick={dismissBanner}
+        aria-label="Dismiss beta data notice"
+        className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-amber-200/60 transition-colors hover:bg-amber-300/10 hover:text-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-300/40"
+      >
+        <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none">
+          <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      </button>
     </div>
   );
 };

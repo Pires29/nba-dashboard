@@ -63,6 +63,7 @@ const PlayerSelectionControls = ({
 }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const selectedPlayerId = searchParams.get("playerId");
   const [isPending, startTransition] = useTransition();
   const [selectedName, setSelectedName] = useState(initialSelectedName);
   const [activeTeam, setActiveTeam] = useState(initialActiveTeam);
@@ -76,6 +77,14 @@ const PlayerSelectionControls = ({
   const [desktopCardHeight, setDesktopCardHeight] = useState(null);
   const [isDesktopCardStuck, setIsDesktopCardStuck] = useState(false);
   const desktopRosterListRef = useRef(null);
+
+  useEffect(() => {
+    setSelectedName(initialSelectedName);
+  }, [initialSelectedName]);
+
+  useEffect(() => {
+    setActiveTeam(initialActiveTeam);
+  }, [initialActiveTeam]);
 
   const openMobileSheet = () => {
     setDraftRangeMinMinutes(rangeMinMinutes);
@@ -153,6 +162,7 @@ const PlayerSelectionControls = ({
       const stat = searchParams.get("stat") ?? "points";
       startTransition(() => router.push(
         `/playersStats?team1Id=${currentGame?.home_team_id}&team2Id=${currentGame?.visitor_team_id}&playerId=${selectedPlayer.PLAYER_ID}&stat=${stat}`,
+        { scroll: false },
       ));
     },
     [router, searchParams, currentGame?.home_team_id, currentGame?.visitor_team_id],
@@ -223,10 +233,6 @@ const PlayerSelectionControls = ({
     return () => window.removeEventListener("resize", updateAvailableHeight);
   }, [isBetaBannerVisible, isDesktopCardStuck]);
 
-  useEffect(() => {
-    desktopRosterListRef.current?.scrollTo({ top: 0, behavior: "auto" });
-  }, [activeTeam, desktopRoster.length, currentGame?.home_team_id, currentGame?.visitor_team_id]);
-
   return (
     <>
       <div ref={desktopAnchorRef} className="relative hidden min-h-0 lg:block lg:h-full lg:self-start">
@@ -289,6 +295,8 @@ const PlayerSelectionControls = ({
               setSelectedName={handleSelectPlayer}
               injuryMap={injuryStatusMap}
               selectedName={selectedName}
+              selectedPlayerId={selectedPlayerId}
+              scrollContainerRef={desktopRosterListRef}
             />
           ) : (
             <RosterLoadingPlaceholder />

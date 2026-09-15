@@ -219,6 +219,58 @@ html {
   outline-offset: 2px;
 }
 
+/*
+ * Make interactive controls discoverable with a consistent cursor across the
+ * app. Text-entry fields intentionally retain the browser's text cursor: a
+ * pointer there suggests navigation rather than typing.
+ */
+:where(
+  a[href],
+  button,
+  summary,
+  [role="button"],
+  [role="tab"],
+  [role="menuitem"],
+  [role="option"],
+  [role="switch"],
+  select,
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"],
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="range"],
+  input[type="file"],
+  input[type="color"],
+  input[type="image"]
+) {
+  cursor: pointer;
+}
+
+:where(button, input, select, textarea):disabled,
+:where([aria-disabled="true"]) {
+  cursor: not-allowed;
+}
+
+:where(
+  input:not([type]),
+  input[type="text"],
+  input[type="search"],
+  input[type="email"],
+  input[type="password"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="number"],
+  input[type="date"],
+  input[type="datetime-local"],
+  input[type="month"],
+  input[type="time"],
+  input[type="week"],
+  textarea
+) {
+  cursor: text;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

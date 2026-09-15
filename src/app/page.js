@@ -1,6 +1,7 @@
 import HomeLanding from "@/components/home/HomeLanding";
 import PublicNavbar from "@/components/PublicNavbar";
 import PublicSessionProvider from "@/components/home/PublicSessionProvider";
+import { getCurrentSession } from "@/lib/getCurrentSession";
 
 export const metadata = {
   title: "NBA Player Props Research & Stats Dashboard",
@@ -22,10 +23,12 @@ export const metadata = {
   },
 };
 
-export default function Home() {
+export default async function Home() {
+  const session = await getCurrentSession();
+
   return (
     <div className="flex min-h-screen flex-col bg-[#060E1A]">
-      <PublicSessionProvider>
+      <PublicSessionProvider initialUser={session?.user ?? null}>
         <PublicNavbar />
         <main className="flex min-h-0 flex-1 flex-col">
           <HomeLanding />

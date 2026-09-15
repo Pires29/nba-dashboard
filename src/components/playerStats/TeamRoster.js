@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 
 const INJURY_STYLES = {
   Out: "bg-red-500/15 text-red-400 border-red-500/30",
@@ -20,6 +20,7 @@ const PlayerRow = ({
   <button
     type="button"
     onClick={onClick}
+    data-selected-player={isSelected ? "true" : undefined}
     aria-label={player._isLocked ? `${player.PLAYER}, locked on Free` : `Open ${player.PLAYER}`}
     className={`
       group flex w-full items-center justify-between px-4 py-2.5 text-left
@@ -78,7 +79,9 @@ const TeamRoster = ({
   teamRoster = [],
   setSelectedName,
   selectedName,
+  selectedPlayerId,
   injuryMap,
+  scrollContainerRef,
 }) => {
   const sortedRoster = useMemo(() => {
     const safeRoster = Array.isArray(teamRoster) ? teamRoster : [];
@@ -89,18 +92,63 @@ const TeamRoster = ({
     });
   }, [teamRoster]);
 
+  useEffect(() => {
+    const rosterList = scrollContainerRef?.current;
+    if (!rosterList) return undefined;
+
+    const revealSelectedPlayer = () => {
+      const selectedRow = rosterList.querySelector('[data-selected-player="true"]');
+      if (!selectedRow) return;
+
+      const listBounds = rosterList.getBoundingClientRect();
+      const rowBounds = selectedRow.getBoundingClientRect();
+      const isVisible =
+        rowBounds.top >= listBounds.top && rowBounds.bottom <= listBounds.bottom;
+
+      if (isVisible) return;
+
+      rosterList.scrollTo({
+        top:
+          rosterList.scrollTop +
+          rowBounds.top -
+          listBounds.top -
+          (rosterList.clientHeight - selectedRow.offsetHeight) / 2,
+        behavior: "auto",
+      });
+    };
+
+    // The sticky card receives its final height after the roster first mounts.
+    // Wait for that layout work, then repeat whenever the scroll viewport resizes.
+    const firstFrame = requestAnimationFrame(() => {
+      requestAnimationFrame(revealSelectedPlayer);
+    });
+    const resizeObserver = new ResizeObserver(revealSelectedPlayer);
+    resizeObserver.observe(rosterList);
+
+    return () => {
+      cancelAnimationFrame(firstFrame);
+      resizeObserver.disconnect();
+    };
+  }, [scrollContainerRef, selectedName, selectedPlayerId, sortedRoster]);
+
   return (
     <div className="min-w-0">
-      {sortedRoster.map((player) => (
-        <PlayerRow
-          key={player.PLAYER_ID}
-          player={player}
-          isSelected={player.PLAYER === selectedName}
-          onClick={() => setSelectedName(player)}
-          clickable
-          injuryStatus={injuryMap?.[player.PLAYER]}
-        />
-      ))}
+      {sortedRoster.map((player) => {
+        const isSelected = selectedPlayerId
+          ? String(player.PLAYER_ID) === selectedPlayerId
+          : player.PLAYER === selectedName;
+
+        return (
+          <PlayerRow
+            key={player.PLAYER_ID}
+            player={player}
+            isSelected={isSelected}
+            onClick={() => setSelectedName(player)}
+            clickable
+            injuryStatus={injuryMap?.[player.PLAYER]}
+          />
+        );
+      })}
     </div>
   );
 };
