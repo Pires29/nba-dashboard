@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useRef, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import PropsFavoriteButton from "./PropsFavoriteButton";
 import { PropsFavoritesProvider } from "./PropsFavoritesProvider";
 import PropsPlayerHeadshot from "./PropsPlayerHeadshot";
@@ -80,12 +84,12 @@ function PeriodMetric({ label, hitRate, games }) {
   );
 }
 
-function MobilePropRow({ index, injuryStatus, player, prop, selectedStat }) {
+function MobilePropRow({ elementRef, index, injuryStatus, player, prop, selectedStat }) {
   const line = prop?.avg != null ? roundToBettingLine(prop.avg).toFixed(1) : "—";
   const href = playerHref(player, selectedStat);
 
   return (
-    <article className="border-b border-white/[0.07] px-3 py-3 last:border-b-0">
+    <article ref={elementRef} className="border-b border-white/[0.07] px-3 py-3 last:border-b-0">
       <div className="flex items-start gap-2.5">
         <Link href={href} prefetch={false} className="flex min-w-0 flex-1 cursor-pointer items-start gap-2.5 rounded-md text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/50" aria-label={`Open ${player.player_name} ${selectedStat} details`}>
           <span className="mt-0.5 h-9 w-9 flex-shrink-0 overflow-hidden rounded-lg border border-white/[0.08] bg-[#0D1828]">
@@ -132,11 +136,11 @@ function MobilePropRow({ index, injuryStatus, player, prop, selectedStat }) {
   );
 }
 
-function DesktopPropRow({ index, injuryStatus, player, prop, selectedStat }) {
+function DesktopPropRow({ elementRef, index, injuryStatus, player, prop, selectedStat }) {
   const href = playerHref(player, selectedStat);
 
   return (
-    <tr className="group border-b border-white/[0.05] transition-colors hover:bg-white/[0.04]">
+    <tr ref={elementRef} className="group border-b border-white/[0.05] transition-colors hover:bg-white/[0.04]">
       <td className="sticky left-0 z-[1] w-[205px] min-w-[205px] max-w-[205px] bg-[#091423] px-2 py-3 group-hover:bg-[#0d1928] md:w-[280px] md:min-w-[280px] md:max-w-[280px] md:px-4">
         <div className="flex items-center gap-2 md:gap-3">
           <Link href={href} prefetch={false} className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-md text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/50 md:gap-3" aria-label={`Open ${player.player_name} ${selectedStat} details`}>
@@ -185,6 +189,47 @@ export default function PropsResultsTable({
   totalPropsCount,
   visibleRows = enrichedProps.length,
 }) {
+  const router = useRouter();
+  const [isLoadingMore, startTransition] = useTransition();
+  const mobileResultsRef = useRef(null);
+  const desktopResultsRef = useRef(null);
+  const firstNewMobileRowRef = useRef(null);
+  const firstNewDesktopRowRef = useRef(null);
+  const pendingStartRowRef = useRef(null);
+
+  useEffect(() => {
+    const pendingStartRow = pendingStartRowRef.current;
+    if (pendingStartRow == null || visibleRows <= pendingStartRow) return;
+
+    const isDesktop = window.matchMedia("(min-width: 768px)").matches;
+    const resultsContainer = isDesktop ? desktopResultsRef.current : mobileResultsRef.current;
+    const firstNewRow = isDesktop ? firstNewDesktopRowRef.current : firstNewMobileRowRef.current;
+
+    if (!resultsContainer || !firstNewRow) return;
+
+    const frameId = window.requestAnimationFrame(() => {
+      const stickyHeaderHeight = isDesktop
+        ? resultsContainer.querySelector("thead")?.getBoundingClientRect().height ?? 0
+        : 0;
+      const targetTop =
+        firstNewRow.getBoundingClientRect().top -
+        resultsContainer.getBoundingClientRect().top +
+        resultsContainer.scrollTop -
+        stickyHeaderHeight;
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      resultsContainer.scrollTo({
+        top: targetTop,
+        behavior: reduceMotion ? "auto" : "smooth",
+      });
+      pendingStartRowRef.current = null;
+      firstNewMobileRowRef.current = null;
+      firstNewDesktopRowRef.current = null;
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [visibleRows]);
+
   if (enrichedProps.length === 0) {
     return (
       <div className="min-h-36 flex-1 overflow-hidden rounded-xl border border-white/[0.08] text-center">
@@ -206,18 +251,24 @@ export default function PropsResultsTable({
   const hasMoreRows = visibleRows < totalResults;
   const nextRows = Math.min(totalResults, visibleRows + INITIAL_VISIBLE_ROWS);
 
+  const loadMore = () => {
+    const href = loadMoreHref(basePath, searchParams, nextRows);
+    pendingStartRowRef.current = visibleRows;
+    startTransition(() => router.push(href, { scroll: false }));
+  };
+
   return (
     <PropsFavoritesProvider>
     <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-white/[0.08]">
-      <div className="min-h-0 flex-1 overflow-y-auto md:hidden">
+      <div ref={mobileResultsRef} className="min-h-0 flex-1 overflow-y-auto md:hidden">
         {enrichedProps.map((player, index) => {
           const prop = player.props?.[selectedStat];
           const injuryStatus = injuryMap[player.player_name];
-          return <MobilePropRow key={player.player_id} index={index} injuryStatus={injuryStatus} player={player} prop={prop} selectedStat={selectedStat} />;
+          return <MobilePropRow key={player.player_id} elementRef={index === pendingStartRowRef.current ? firstNewMobileRowRef : undefined} index={index} injuryStatus={injuryStatus} player={player} prop={prop} selectedStat={selectedStat} />;
         })}
       </div>
 
-      <div className="compact-horizontal-scrollbar hidden min-h-0 flex-1 overflow-x-auto overflow-y-auto md:block">
+      <div ref={desktopResultsRef} className="compact-horizontal-scrollbar hidden min-h-0 flex-1 overflow-x-auto overflow-y-auto md:block">
         <table className="min-w-[860px] w-full text-left border-collapse">
           <caption className="sr-only">NBA player props for {selectedStat}, sorted by {sortPeriod}</caption>
           <ResultsHeader basePath={basePath} searchParams={searchParams} sortDirection={sortDirection} sortPeriod={sortPeriod} />
@@ -225,7 +276,7 @@ export default function PropsResultsTable({
             {enrichedProps.map((player, index) => {
               const prop = player.props?.[selectedStat];
               const injuryStatus = injuryMap[player.player_name];
-              return <DesktopPropRow key={player.player_id} index={index} injuryStatus={injuryStatus} player={player} prop={prop} selectedStat={selectedStat} />;
+              return <DesktopPropRow key={player.player_id} elementRef={index === pendingStartRowRef.current ? firstNewDesktopRowRef : undefined} index={index} injuryStatus={injuryStatus} player={player} prop={prop} selectedStat={selectedStat} />;
             })}
           </tbody>
         </table>
@@ -233,13 +284,14 @@ export default function PropsResultsTable({
 
       {hasMoreRows && (
         <div className="border-t border-white/[0.08] bg-[#091423]/95 px-3 py-2 text-center">
-          <Link
-            href={loadMoreHref(basePath, searchParams, nextRows)}
-            scroll={false}
+          <button
+            type="button"
+            onClick={loadMore}
+            disabled={isLoadingMore}
             className="inline-flex min-h-9 items-center justify-center rounded-lg border border-white/[0.1] bg-white/[0.055] px-4 text-[11px] font-mono font-bold uppercase tracking-widest text-slate-200 transition-colors hover:border-orange-500/35 hover:bg-orange-500/10 hover:text-orange-200 focus:outline-none focus:ring-2 focus:ring-orange-500/30"
           >
-            Show {nextRows - visibleRows} more
-          </Link>
+            {isLoadingMore ? "Loading players…" : `Show ${nextRows - visibleRows} more`}
+          </button>
         </div>
       )}
     </div>
