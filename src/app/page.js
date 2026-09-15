@@ -1,10 +1,6 @@
 import HomeLanding from "@/components/home/HomeLanding";
 import PublicNavbar from "@/components/PublicNavbar";
-import { redirect } from "next/navigation";
-import { isClosedBetaEnabled } from "@/lib/betaAccess";
-import { getCurrentSession } from "@/lib/getCurrentSession";
-import { resolveBetaAccess } from "@/lib/resolveBetaAccess";
-import { safeInternalPath } from "@/lib/security";
+import PublicSessionProvider from "@/components/home/PublicSessionProvider";
 
 export const metadata = {
   title: "NBA Player Props Research & Stats Dashboard",
@@ -26,34 +22,15 @@ export const metadata = {
   },
 };
 
-export default async function Home({ searchParams }) {
-  const resolvedSearchParams = await searchParams;
-  const isClosedBeta = isClosedBetaEnabled();
-  const session = isClosedBeta ? await getCurrentSession() : null;
-  const hasBetaAccess = isClosedBeta
-    ? await resolveBetaAccess(session)
-    : true;
-  const isRedeemingBeta = resolvedSearchParams?.beta === "redeem";
-
-  if (hasBetaAccess && isRedeemingBeta) {
-    redirect(safeInternalPath(resolvedSearchParams.callbackUrl, "/props"));
-  }
-
+export default function Home() {
   return (
     <div className="flex min-h-screen flex-col bg-[#060E1A]">
-      <PublicNavbar
-        hasBetaAccess={hasBetaAccess}
-        profileUser={session?.user ? {
-          id: session.user.id,
-          image: session.user.image ?? null,
-          name: session.user.name ?? null,
-          email: session.user.email ?? null,
-        } : null}
-        initiallyRedeeming={isRedeemingBeta}
-      />
-      <main className="flex min-h-0 flex-1 flex-col">
-        <HomeLanding hasBetaAccess={hasBetaAccess} />
-      </main>
+      <PublicSessionProvider>
+        <PublicNavbar />
+        <main className="flex min-h-0 flex-1 flex-col">
+          <HomeLanding />
+        </main>
+      </PublicSessionProvider>
     </div>
   );
 }

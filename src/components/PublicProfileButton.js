@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { signOutWithBetaCleanup } from "@/lib/signOutWithBetaCleanup";
+import { usePublicSession } from "./home/PublicSessionProvider";
 
 function ProfileIcon() {
   return (
@@ -19,30 +20,10 @@ function ProfileIcon() {
   );
 }
 
-export default function PublicProfileButton({ initialUser = null }) {
-  const [user, setUser] = useState(initialUser);
+export default function PublicProfileButton() {
+  const { user } = usePublicSession();
   const [open, setOpen] = useState(false);
   const menuRef = useRef(null);
-
-  useEffect(() => {
-    if (initialUser?.id) return;
-
-    const controller = new AbortController();
-
-    async function loadSession() {
-      try {
-        const response = await fetch("/api/auth/session", { signal: controller.signal });
-        if (!response.ok) return;
-        const session = await response.json();
-        if (session?.user?.id) setUser(session.user);
-      } catch (error) {
-        if (error.name !== "AbortError") console.error("Unable to load session", error);
-      }
-    }
-
-    loadSession();
-    return () => controller.abort();
-  }, [initialUser]);
 
   useEffect(() => {
     function closeOnOutsideClick(event) {
