@@ -87,7 +87,7 @@ jobs:
         env:
           # One historic NBA day advances for each calendar day after beta launch.
           # Change only these two dates to restart or retime the replay.
-          NBA_REPLAY_START_DATE: "2025-10-21"
+          NBA_REPLAY_START_DATE: "2026-03-11"
           NBA_REPLAY_LAUNCH_DATE: "2026-09-15"
           NBA_STATS_SEASON: "2025-26"
           NBA_PREV_SEASON: "2024-25"
