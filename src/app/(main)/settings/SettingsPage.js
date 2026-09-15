@@ -129,7 +129,7 @@ const CancelModal = ({ onConfirm, onCancel, loading }) => (
   </div>
 );
 
-export default function SettingsPage({ session }) {
+export default function SettingsPage({ session, isBeta }) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
@@ -147,6 +147,7 @@ export default function SettingsPage({ session }) {
   const isPro = plan === "pro";
   const isTrial = plan === "trial";
   const hasSubscription = isPro || isTrial;
+  const hasBetaProAccess = Boolean(user?.hasBetaProAccess);
   const isSeasonPlan = isPro && user?.planInterval === "season";
 
   const renewsAt = user?.planRenewsAt
@@ -309,7 +310,7 @@ export default function SettingsPage({ session }) {
           {/* Plan */}
           <div className="relative rounded-2xl border border-white/6 bg-gradient-to-b from-[#162035] to-[#0F1828] p-6 overflow-hidden">
             <div
-              className={`absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r ${hasSubscription ? "from-orange-500 via-amber-400" : "from-slate-600 via-slate-500"} to-transparent`}
+              className={`absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r ${hasSubscription || hasBetaProAccess ? "from-orange-500 via-amber-400" : "from-slate-600 via-slate-500"} to-transparent`}
             />
             <SectionLabel>Plan</SectionLabel>
 
@@ -317,9 +318,11 @@ export default function SettingsPage({ session }) {
               <div>
                 <div className="mb-2 flex flex-wrap items-center gap-2">
                   <span
-                    className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold uppercase tracking-widest ${hasSubscription ? "bg-orange-500/15 text-orange-400 border border-orange-500/20" : "bg-slate-700/50 text-slate-400 border border-white/10"}`}
+                    className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold uppercase tracking-widest ${hasSubscription || hasBetaProAccess ? "bg-orange-500/15 text-orange-400 border border-orange-500/20" : "bg-slate-700/50 text-slate-400 border border-white/10"}`}
                   >
-                    {isTrial
+                    {hasBetaProAccess
+                      ? "Beta"
+                      : isTrial
                       ? "Trial"
                       : isSeasonPlan
                         ? "Season Pass"
@@ -330,6 +333,11 @@ export default function SettingsPage({ session }) {
                   {hasSubscription && !cancelled && (
                     <span className="text-[10px] font-mono text-slate-500">
                       Active plan
+                    </span>
+                  )}
+                  {hasBetaProAccess && (
+                    <span className="text-[10px] font-mono text-orange-300">
+                      Beta tester
                     </span>
                   )}
                   {cancelled && (
@@ -359,7 +367,11 @@ export default function SettingsPage({ session }) {
                     <span className="text-slate-300">{renewsAt}</span>
                   </p>
                 )}
-                {!hasSubscription && (
+                {hasBetaProAccess ? (
+                  <p className="text-[12px] font-mono text-slate-500">
+                    Full access during the beta
+                  </p>
+                ) : !hasSubscription && (
                   <p className="text-[12px] font-mono text-slate-500">
                     Upgrade to access all features
                   </p>
@@ -390,7 +402,7 @@ export default function SettingsPage({ session }) {
                   .
                 </p>
               </div>
-            ) : !hasSubscription ? (
+            ) : !hasSubscription && !isBeta ? (
               <PricingLink
                 className="block w-full py-2.5 rounded-xl text-center bg-orange-500 hover:bg-orange-400 text-white text-[11px] font-mono font-bold uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(249,115,22,0.25)] hover:shadow-[0_0_30px_rgba(249,115,22,0.4)]"
               >

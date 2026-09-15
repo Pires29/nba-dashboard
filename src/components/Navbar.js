@@ -6,6 +6,7 @@ import ProfileMenuClient from "./ProfileMenuClient";
 import { getQaContext } from "@/lib/qa/context";
 import { resolveQaPlan } from "@/lib/qa/plan";
 import SessionExpiredSignOut from "./SessionExpiredSignOut";
+import { getLaunchConfig } from "@/config/launch";
 
 const Navbar = async () => {
   const session = await getCurrentSession();
@@ -16,6 +17,7 @@ const Navbar = async () => {
   const qa = await getQaContext();
   const activePlan = resolveQaPlan(qa?.persona, session?.user?.plan);
   const isFreePlan = activePlan === "free";
+  const isBeta = getLaunchConfig().isBeta;
 
   return (
     <nav className="relative sticky top-0 z-50 border-b border-white/6 bg-gradient-to-b from-[#122040] to-[#0D1828]">
@@ -47,8 +49,8 @@ const Navbar = async () => {
               QA · {qa.persona} · {qa.scenario}
             </Link>
           )}
-          {/* Upgrade button — Free plan only */}
-          {isFreePlan && (
+          {/* Checkout is unavailable while the app is in its closed beta. */}
+          {isFreePlan && !isBeta && (
             <PricingLink
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-500/10 border border-orange-500/30 hover:bg-orange-500/20 hover:border-orange-500/50 transition-all duration-150 group"
             >
