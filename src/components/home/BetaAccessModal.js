@@ -48,10 +48,11 @@ export default function BetaAccessModal({
   children = launchConfig.cta.primary,
   processBetaRedemption = false,
   initiallyRedeeming = false,
+  initiallyOpen = false,
   ...buttonProps
 }) {
   const router = useRouter();
-  const [isOpen, setIsOpen] = useState(initiallyRedeeming);
+  const [isOpen, setIsOpen] = useState(initiallyOpen || initiallyRedeeming);
   const [mode, setMode] = useState("code");
   const [code, setCode] = useState("");
   const [email, setEmail] = useState("");

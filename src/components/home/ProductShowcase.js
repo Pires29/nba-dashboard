@@ -1,3 +1,7 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
 const PROP_ROWS = [
   [201142, "Kevin Durant", "HOU", "DEN", "", "25.5", "Favorable", "60%", "50%", "45%", "50%", "25%"],
   [1628384, "OG Anunoby", "NYK", "UTA", "", "16.5", "Favorable", "60%", "50%", "50%", "49%", "50%"],
@@ -301,6 +305,19 @@ function Chart({ compact = false }) {
 }
 
 function ShowcaseBlock({ type, eyebrow, title, body, points, reverse = false }) {
+  // Render the compact visual during SSR. On phones it remains the only visual,
+  // avoiding the hidden desktop DOM; desktop upgrades after hydration.
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(min-width: 1024px)");
+    const updateLayout = () => setIsDesktop(mediaQuery.matches);
+
+    updateLayout();
+    mediaQuery.addEventListener("change", updateLayout);
+    return () => mediaQuery.removeEventListener("change", updateLayout);
+  }, []);
+
   const mobileWidth = type === "player"
     ? "w-[52%] min-w-[330px] max-w-[470px]"
     : "w-[40%] min-w-[220px] max-w-[335px]";
@@ -309,15 +326,18 @@ function ShowcaseBlock({ type, eyebrow, title, body, points, reverse = false }) 
     : "right-2 lg:right-4 xl:-right-4";
   const visual = (
     <div className="min-w-0">
-      <div className={`relative hidden pb-16 lg:block ${type === "player" ? "lg:ml-auto lg:max-w-[760px] lg:pb-36" : "lg:pb-20"}`}>
-        {type === "props" ? <PropsDesktopMock /> : <PlayerStatsDesktopMock />}
-        <div className={`absolute -bottom-2 ${mobileWidth} ${mobilePosition}`}>
+      {isDesktop ? (
+        <div className={`relative pb-16 ${type === "player" ? "ml-auto max-w-[760px] pb-36" : "pb-20"}`}>
+          {type === "props" ? <PropsDesktopMock /> : <PlayerStatsDesktopMock />}
+          <div className={`absolute -bottom-2 ${mobileWidth} ${mobilePosition}`}>
+            {type === "props" ? <PropsMobileMock /> : <PlayerStatsMobileMock />}
+          </div>
+        </div>
+      ) : (
+        <div className="mx-auto block w-full max-w-[470px]">
           {type === "props" ? <PropsMobileMock /> : <PlayerStatsMobileMock />}
         </div>
-      </div>
-      <div className="mx-auto block w-full max-w-[470px] lg:hidden">
-        {type === "props" ? <PropsMobileMock /> : <PlayerStatsMobileMock />}
-      </div>
+      )}
     </div>
   );
 

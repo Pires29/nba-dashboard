@@ -1,7 +1,6 @@
 import { PRICING_PLANS } from "@/lib/pricingPlans";
 import { launchConfig } from "@/config/launch";
-import CheckoutButton from "./CheckoutButton";
-import ReferralBox from "./ReferralBox";
+import { DeferredCheckoutButton, DeferredReferralBox } from "./DeferredPricingInteractions";
 
 function Check() {
   return <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" className="mt-0.5 shrink-0"><circle cx="12" cy="12" r="10" fill="rgba(249,115,22,.15)" /><path d="m8 12 2.5 2.5L16 9" stroke="#fb923c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>;
@@ -34,7 +33,7 @@ export default function HomePricingSection() {
                 {item.details.map((detail) => <li key={detail} className="flex gap-2.5"><Check />{detail}</li>)}
               </ul>
               <div className="mt-auto pt-8">
-                <CheckoutButton
+                <DeferredCheckoutButton
                   billing={item.id}
                   disabled={!pricing.checkoutEnabled}
                   featured={featured}
@@ -44,7 +43,7 @@ export default function HomePricingSection() {
             </article>;
           })}
         </div>
-        <ReferralBox />
+        <DeferredReferralBox />
         <p className="mt-4 text-center font-mono text-[9px] text-slate-400">{pricing.footerText}</p>
     </section>
   );
