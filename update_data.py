@@ -83,6 +83,7 @@ NBA_API_RETRIES = 3
 NBA_API_RETRY_BASE_SLEEP = 20
 
 ESPN_INJURIES_URL = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/injuries"
+ESPN_SCOREBOARD_URL = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard"
 NBA_STATS_BASE_URL = "https://stats.nba.com/stats"
 
 NBA_HEADERS = {
@@ -1339,12 +1340,12 @@ def log_minutes(value):
     return float(value or 0)
 
 
-def build_replay_schedule(logs_by_player, cutoff):
+def build_replay_schedule_from_logs(logs_by_player, game_date):
     by_abbr = {abbr: team_id for team_id, abbr in TEAM_ABBREV_MAP.items()}
     games = {}
     for logs in logs_by_player.values():
         for log in logs:
-            if str(log.get("date", "")) != cutoff:
+            if str(log.get("date", "")) != game_date:
                 continue
             team_abbr = str(log.get("matchup", "")).split(" ")[0]
             opponent_abbr = log.get("opp") or parse_opponent_from_matchup(log.get("matchup", ""), team_abbr)
@@ -1353,12 +1354,56 @@ def build_replay_schedule(logs_by_player, cutoff):
             if not game_id or not team_id or not opponent_id:
                 continue
             games[str(game_id)] = {
-                "date": cutoff,
+                "date": game_date,
                 "visitor_team_id": opponent_id if log.get("isHome") else team_id,
                 "home_team_id": team_id if log.get("isHome") else opponent_id,
-                "status": "Final",
+                "status": "TBD ET",
             }
     return list(games.values())
+
+
+def format_tipoff_et(value):
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(
+            NBA_SCHEDULE_TIMEZONE,
+        ).strftime("%-I:%M %p ET")
+    except (AttributeError, TypeError, ValueError):
+        return "TBD ET"
+
+
+def fetch_replay_schedule(game_date, logs_by_player):
+    """Fetch real historic tip-off times while replay stats stay offline in Storage."""
+    print(f"\n📅 Fetching replay schedule and tip-off times ({game_date})...")
+    try:
+        response = requests.get(
+            ESPN_SCOREBOARD_URL,
+            params={"dates": game_date.replace("-", ""), "limit": "100"},
+            timeout=30,
+        )
+        response.raise_for_status()
+        games = []
+        for event in response.json().get("events", []):
+            competition = (event.get("competitions") or [{}])[0]
+            teams = {
+                competitor.get("homeAway"): ESPN_TEAM_NAME_TO_ID.get(
+                    (competitor.get("team") or {}).get("displayName", ""),
+                )
+                for competitor in competition.get("competitors", [])
+            }
+            if not teams.get("home") or not teams.get("away"):
+                continue
+            games.append({
+                "date": game_date,
+                "visitor_team_id": teams["away"],
+                "home_team_id": teams["home"],
+                "status": format_tipoff_et(event.get("date")),
+            })
+        if games:
+            return games
+        raise RuntimeError("ESPN scoreboard returned no NBA games")
+    except Exception as error:
+        print(f"  ⚠️ Historic schedule unavailable; using matchup fallback: {error}")
+        return build_replay_schedule_from_logs(logs_by_player, game_date)
 
 
 def replay_stats_frame(logs_by_player):
@@ -1411,10 +1456,11 @@ def replay_raw_rosters(rosters):
 
 
 def run_replay_from_storage(storage):
-    cutoff = snapshot_date().date().isoformat()
+    game_date = snapshot_date().date().isoformat()
+    stats_cutoff = (snapshot_date() - timedelta(days=1)).date().isoformat()
     source_manifest = replay_source_manifest(storage)
     source_prefix = f"versions/{source_manifest['version']}"
-    print(f"\n🎞️  Building replay from Storage source {source_manifest['version']} through {cutoff}...")
+    print(f"\n🎞️  Building replay for games on {game_date}; stats through {stats_cutoff}...")
     names = ("players", "teams", "rosters", "team_stats", "analytics", "injuries", "standings")
     source = {
         name: download_storage_json(f"{source_prefix}/{name}.json", storage)
@@ -1426,15 +1472,16 @@ def run_replay_from_storage(storage):
         for player in roster
         if player.get("id") is not None
     }
-    current_logs, previous_logs, playoff_logs = {}, {}, {}
+    source_current_logs, current_logs, previous_logs, playoff_logs = {}, {}, {}, {}
     for player_id in sorted(player_ids):
         bundle = download_storage_json(f"{source_prefix}/players/{player_id}.json", storage)
-        current_logs[player_id] = [log for log in bundle.get("current", []) if str(log.get("date", "")) <= cutoff]
+        source_current_logs[player_id] = bundle.get("current", [])
+        current_logs[player_id] = [log for log in source_current_logs[player_id] if str(log.get("date", "")) <= stats_cutoff]
         previous_logs[player_id] = bundle.get("previous", [])
-        playoff_logs[player_id] = [log for log in bundle.get("playoffs", []) if str(log.get("date", "")) <= cutoff]
+        playoff_logs[player_id] = [log for log in bundle.get("playoffs", []) if str(log.get("date", "")) <= stats_cutoff]
 
     stats_frame = replay_stats_frame(current_logs)
-    schedule = build_replay_schedule(current_logs, cutoff)
+    schedule = fetch_replay_schedule(game_date, source_current_logs)
     props = build_props(
         schedule,
         replay_raw_rosters(source["rosters"]),
