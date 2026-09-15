@@ -12,7 +12,11 @@ import teams from "@/app/data/teams.json";
 const cleanEnv = (value) => value?.trim().replace(/^["']|["']$/g, "");
 
 const storageEnabled = () => cleanEnv(process.env.NBA_DATA_SOURCE) === "storage";
-const storageManifestPath = () => cleanEnv(process.env.NBA_STORAGE_MANIFEST) || "current.json";
+const isBeta = () => cleanEnv(process.env.APP_PHASE) === "beta";
+const storageManifestPath = () => {
+  if (isBeta()) return cleanEnv(process.env.NBA_BETA_STORAGE_MANIFEST) || "qa-current.json";
+  return cleanEnv(process.env.NBA_STORAGE_MANIFEST) || "current.json";
+};
 
 const storageConfig = () => {
   const url = cleanEnv(process.env.SUPABASE_URL)?.replace(/\/$/, "");
@@ -110,6 +114,7 @@ const loadNbaData = async () => {
       source: "storage",
       version: manifest.version,
       updatedAt: manifest.updatedAt,
+      snapshotDate: manifest.qaDate ?? null,
     };
   } catch (error) {
     console.error("NBA Storage unavailable; using local fallback", { message: error?.message });

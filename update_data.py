@@ -72,6 +72,8 @@ PIPELINE_ENV_FILE = os.path.join(os.path.dirname(__file__), ".env.pipeline")
 SCHEDULE_DAYS_AHEAD = 2
 NBA_SCHEDULE_TIMEZONE = ZoneInfo("America/New_York")
 QA_SNAPSHOT_DATE = os.getenv("NBA_QA_DATE", "").strip()
+REPLAY_START_DATE = os.getenv("NBA_REPLAY_START_DATE", "").strip()
+REPLAY_LAUNCH_DATE = os.getenv("NBA_REPLAY_LAUNCH_DATE", "").strip()
 STORAGE_MANIFEST_PATH = os.getenv("NBA_STORAGE_MANIFEST", "current.json").strip() or "current.json"
 STORAGE_VERSION_ALIAS = os.getenv("NBA_STORAGE_VERSION", "").strip()
 SLEEP_BETWEEN_REQUESTS = (1.0, 2.0)
@@ -259,7 +261,8 @@ def load_pipeline_env():
 def configure_runtime_from_env():
     """Refresh runtime options after .env.pipeline has been loaded."""
     global SEASON, PREV_SEASON, ROSTER_SEASON
-    global QA_SNAPSHOT_DATE, STORAGE_MANIFEST_PATH, STORAGE_VERSION_ALIAS
+    global QA_SNAPSHOT_DATE, REPLAY_START_DATE, REPLAY_LAUNCH_DATE
+    global STORAGE_MANIFEST_PATH, STORAGE_VERSION_ALIAS
 
     SEASON = os.getenv("NBA_STATS_SEASON", season_label(stats_season_start))
     PREV_SEASON = os.getenv(
@@ -271,6 +274,8 @@ def configure_runtime_from_env():
         season_label(roster_season_start),
     )
     QA_SNAPSHOT_DATE = os.getenv("NBA_QA_DATE", "").strip()
+    REPLAY_START_DATE = os.getenv("NBA_REPLAY_START_DATE", "").strip()
+    REPLAY_LAUNCH_DATE = os.getenv("NBA_REPLAY_LAUNCH_DATE", "").strip()
     STORAGE_MANIFEST_PATH = os.getenv("NBA_STORAGE_MANIFEST", "current.json").strip() or "current.json"
     STORAGE_VERSION_ALIAS = os.getenv("NBA_STORAGE_VERSION", "").strip()
 
@@ -382,7 +387,7 @@ def fetch_raw_player_stats():
         lambda: nba_result_set_dataframe(
             nba_stats_get_json(
                 "leaguedashplayerstats",
-                {**PLAYER_STATS_PARAMS, "Season": SEASON},
+                {**PLAYER_STATS_PARAMS, **snapshot_date_params(), "Season": SEASON},
             ),
         ),
     )
@@ -395,7 +400,7 @@ def fetch_raw_team_stats():
         lambda: nba_result_set_dataframe(
             nba_stats_get_json(
                 "leaguedashteamstats",
-                {**TEAM_STATS_PARAMS, "Season": SEASON, "MeasureType": "Base"},
+                {**TEAM_STATS_PARAMS, **snapshot_date_params(), "Season": SEASON, "MeasureType": "Base"},
             ),
         ),
     )
@@ -405,7 +410,7 @@ def fetch_raw_team_stats():
         lambda: nba_result_set_dataframe(
             nba_stats_get_json(
                 "leaguedashteamstats",
-                {**TEAM_STATS_PARAMS, "Season": SEASON, "MeasureType": "Opponent"},
+                {**TEAM_STATS_PARAMS, **snapshot_date_params(), "Season": SEASON, "MeasureType": "Opponent"},
             ),
         ),
     )
@@ -419,7 +424,7 @@ def fetch_raw_analytics_stats():
         lambda: nba_result_set_dataframe(
             nba_stats_get_json(
                 "leaguedashplayerstats",
-                {**ADVANCED_PLAYER_STATS_PARAMS, "Season": SEASON},
+                {**ADVANCED_PLAYER_STATS_PARAMS, **snapshot_date_params(), "Season": SEASON},
             ),
         ),
     )
@@ -429,7 +434,7 @@ def fetch_raw_analytics_stats():
         lambda: nba_result_set_dataframe(
             nba_stats_get_json(
                 "leaguedashteamstats",
-                {**ADVANCED_TEAM_STATS_PARAMS, "Season": SEASON},
+                {**ADVANCED_TEAM_STATS_PARAMS, **snapshot_date_params(), "Season": SEASON},
             ),
         ),
     )
@@ -445,6 +450,7 @@ def fetch_raw_analytics_stats():
                     "leaguedashteamstats",
                     {
                         **TEAM_STATS_PARAMS,
+                        **snapshot_date_params(),
                         "Season": SEASON,
                         "MeasureType": "Opponent",
                         "PlayerPosition": position,
@@ -461,6 +467,7 @@ def fetch_raw_analytics_stats():
                     "leaguedashplayerstats",
                     {
                         **PLAYER_STATS_PARAMS,
+                        **snapshot_date_params(),
                         "Season": SEASON,
                         "PlayerPosition": position,
                     },
@@ -478,10 +485,16 @@ def fetch_raw_game_logs(season, season_type="Regular Season"):
         lambda: nba_result_set_dataframe(
             nba_stats_get_json(
                 "leaguegamelog",
-                {**GAME_LOG_PARAMS, "Season": season, "SeasonType": season_type},
+                {**GAME_LOG_PARAMS, **snapshot_date_params(), "Season": season, "SeasonType": season_type},
             ),
         ),
     )
+    active_snapshot_date = snapshot_date()
+    # NBA endpoints normally honor DateTo, but retaining this guard means a
+    # replay can never leak future games if that upstream filter changes.
+    if active_snapshot_date and "GAME_DATE" in df:
+        cutoff = pd.Timestamp(active_snapshot_date.date())
+        df = df[pd.to_datetime(df["GAME_DATE"], errors="coerce") <= cutoff]
     print(f"  📦 {len(df)} total game log rows")
     return df
 
@@ -538,11 +551,33 @@ def parse_qa_date(value):
         raise ValueError("NBA_QA_DATE must use YYYY-MM-DD format") from error
 
 
-def fetch_raw_schedule():
+def snapshot_date():
+    """Return the fixed QA date or the historic day currently shown in beta."""
     if QA_SNAPSHOT_DATE:
-        qa_date = parse_qa_date(QA_SNAPSHOT_DATE)
-        dates = [qa_date.strftime("%m/%d/%Y")]
-        print(f"\n📅 Fetching QA schedule ({QA_SNAPSHOT_DATE})...")
+        return parse_qa_date(QA_SNAPSHOT_DATE)
+    if not REPLAY_START_DATE and not REPLAY_LAUNCH_DATE:
+        return None
+    if not REPLAY_START_DATE or not REPLAY_LAUNCH_DATE:
+        raise ValueError("NBA_REPLAY_START_DATE and NBA_REPLAY_LAUNCH_DATE must be set together")
+    try:
+        replay_start = datetime.strptime(REPLAY_START_DATE, "%Y-%m-%d").date()
+        launch_date = datetime.strptime(REPLAY_LAUNCH_DATE, "%Y-%m-%d").date()
+    except ValueError as error:
+        raise ValueError("NBA replay dates must use YYYY-MM-DD format") from error
+    elapsed_days = max(0, (datetime.now(NBA_SCHEDULE_TIMEZONE).date() - launch_date).days)
+    return datetime.combine(replay_start + timedelta(days=elapsed_days), datetime.min.time())
+
+
+def snapshot_date_params():
+    date = snapshot_date()
+    return {"DateTo": date.strftime("%m/%d/%Y")} if date else {}
+
+
+def fetch_raw_schedule():
+    active_snapshot_date = snapshot_date()
+    if active_snapshot_date:
+        dates = [active_snapshot_date.strftime("%m/%d/%Y")]
+        print(f"\n📅 Fetching historical schedule ({active_snapshot_date.date().isoformat()})...")
     else:
         schedule_today = datetime.now(NBA_SCHEDULE_TIMEZONE)
         dates = [
@@ -606,6 +641,25 @@ def fetch_raw_injuries():
     )
     response.raise_for_status()
     return response.json()
+
+
+def is_replay_run():
+    return bool(REPLAY_START_DATE or REPLAY_LAUNCH_DATE)
+
+
+def load_replay_injuries():
+    """Reuse the first replay injury snapshot; historical ESPN injuries are unavailable."""
+    try:
+        config = storage_config()
+        manifest = download_storage_json(STORAGE_MANIFEST_PATH, config)
+        if manifest.get("injuriesFixed") and manifest.get("version"):
+            print("\n🏥 Reusing fixed beta injury snapshot...")
+            return download_storage_json(f"versions/{manifest['version']}/injuries.json", config)
+    except Exception as error:
+        print(f"\n🏥 No fixed beta injury snapshot yet: {error}")
+
+    print("\n🏥 Creating fixed beta injury snapshot...")
+    return build_injuries(fetch_raw_injuries())
 
 # ============================================================
 # BUILDERS  (raw data → optimized JSON shape)
@@ -1344,9 +1398,12 @@ def publish_storage_version(datasets):
         "files": sorted(small_datasets),
         "manifest": STORAGE_MANIFEST_PATH,
     }
-    if QA_SNAPSHOT_DATE:
-        manifest["qaDate"] = QA_SNAPSHOT_DATE
+    active_snapshot_date = snapshot_date()
+    if active_snapshot_date:
+        manifest["qaDate"] = active_snapshot_date.date().isoformat()
         manifest["sourceSeason"] = SEASON
+    if is_replay_run():
+        manifest["injuriesFixed"] = True
     upload_storage_json(f"{prefix}/manifest.json", manifest, config)
     upload_storage_json(STORAGE_MANIFEST_PATH, manifest, config)
     validated = download_storage_json(STORAGE_MANIFEST_PATH, config)
@@ -1376,8 +1433,9 @@ def run():
     write_local_data = os.getenv("NBA_WRITE_LOCAL_DATA", "false").lower() == "true"
     print(f"🚀 NBA data pipeline — {start.strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"   Season: {SEASON} | Prev: {PREV_SEASON}")
-    if QA_SNAPSHOT_DATE:
-        print(f"   QA snapshot date: {QA_SNAPSHOT_DATE}")
+    active_snapshot_date = snapshot_date()
+    if active_snapshot_date:
+        print(f"   Historical snapshot date: {active_snapshot_date.date().isoformat()}")
     print(f"   Storage manifest: {STORAGE_MANIFEST_PATH}")
     print(f"   Local JSON fallback updates: {'enabled' if write_local_data else 'disabled'}")
 
@@ -1392,7 +1450,7 @@ def run():
     raw_rosters           = fetch_raw_rosters()           # has its own sleep
     schedule              = fetch_raw_schedule()          # has its own sleep
     df_standings          = fetch_raw_standings();        random_sleep()
-    raw_injuries          = fetch_raw_injuries();         random_sleep()
+    injuries              = load_replay_injuries() if is_replay_run() else build_injuries(fetch_raw_injuries()); random_sleep()
     df_logs_current       = fetch_raw_game_logs(SEASON);  random_sleep()
     df_logs_prev          = fetch_raw_game_logs(PREV_SEASON); random_sleep()
     df_logs_playoffs      = fetch_raw_game_logs(SEASON, "Playoffs")
@@ -1425,7 +1483,6 @@ def run():
     if write_local_data: save_json(analytics, "analytics.json")
 
     # injuries.json
-    injuries = build_injuries(raw_injuries)
     if write_local_data: save_json(injuries, "injuries.json")
 
     # schedule.json / standings.json

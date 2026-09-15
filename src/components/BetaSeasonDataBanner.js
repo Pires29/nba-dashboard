@@ -27,14 +27,14 @@ const formatSnapshotDate = (updatedAt) => {
   }).format(date);
 };
 
-const BetaSeasonDataBanner = ({ updatedAt, onVisibilityChange }) => {
+const BetaSeasonDataBanner = ({ updatedAt, snapshotDate, onVisibilityChange }) => {
   const [isDismissedLocally, setIsDismissedLocally] = useState(false);
   const isDismissedPersistently = useSyncExternalStore(
     subscribeToDismissal,
     getDismissalSnapshot,
     getServerDismissalSnapshot,
   );
-  const snapshotDate = formatSnapshotDate(updatedAt);
+  const displayedSnapshotDate = formatSnapshotDate(snapshotDate ?? updatedAt);
   const isVisible = !isDismissedLocally && !isDismissedPersistently;
 
   useLayoutEffect(() => {
@@ -53,12 +53,12 @@ const BetaSeasonDataBanner = ({ updatedAt, onVisibilityChange }) => {
       <div className="flex items-start justify-between gap-3">
         <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
           <span className="font-mono text-[10px] font-black uppercase tracking-widest text-amber-300">
-            Beta · Previous season data
+            Beta · 2025–26 season replay
           </span>
           <span className="hidden h-1 w-1 rounded-full bg-amber-300/40 sm:block" />
           <p className="text-[11px] leading-5 text-slate-300 sm:text-xs">
-            You&apos;re exploring the 2025–26 NBA season. These stats are historical
-            {snapshotDate ? ` as of ${snapshotDate}` : ""} and do not reflect current matchups.
+            You&apos;re exploring the 2025–26 NBA season as it unfolded
+            {displayedSnapshotDate ? ` on ${displayedSnapshotDate}` : ""}. Injuries are a fixed beta snapshot.
           </p>
         </div>
         <button

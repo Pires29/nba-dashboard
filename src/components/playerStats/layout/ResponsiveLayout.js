@@ -151,6 +151,7 @@ const ResponsiveLayout = ({
       <div className="flex min-h-0 flex-1 flex-col gap-4 py-4 lg:gap-6 lg:py-6">
         <BetaSeasonDataBanner
           updatedAt={dataStatus?.updatedAt}
+          snapshotDate={dataStatus?.snapshotDate}
           onVisibilityChange={setIsBetaBannerVisible}
         />
 

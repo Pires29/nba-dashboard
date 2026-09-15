@@ -339,6 +339,7 @@ export default async function PropsPage({ searchParams }) {
       isFreePlan={!hasFullPlayerAccess(plan, { hasBetaProAccess })}
       dataStatus={{
         updatedAt: nbaData.updatedAt ?? null,
+        snapshotDate: nbaData.snapshotDate ?? null,
       }}
       initialFilters={{
         selectedStat,

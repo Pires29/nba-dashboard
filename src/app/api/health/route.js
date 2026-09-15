@@ -7,6 +7,7 @@ import { logError } from "@/lib/logger";
 
 const isProduction = process.env.NODE_ENV === "production";
 const allowsLocalNbaData = process.env.RUN_INTEGRATION_TESTS === "true";
+const MAX_NBA_DATA_AGE_MS = 36 * 60 * 60 * 1000;
 
 function publicError(message) {
   return isProduction ? "Unavailable" : message;
@@ -37,13 +38,20 @@ export async function GET() {
 
   try {
     const nbaData = await getNbaData();
-    const nbaDataHealthy = nbaData.source === "storage" || allowsLocalNbaData;
+    const updatedAtMs = new Date(nbaData.updatedAt ?? "").getTime();
+    const isStale = Number.isFinite(updatedAtMs)
+      && Date.now() - updatedAtMs > MAX_NBA_DATA_AGE_MS;
+    const nbaDataHealthy = (nbaData.source === "storage" && !isStale) || allowsLocalNbaData;
     health.nbaData = {
       status: nbaDataHealthy ? "ok" : "degraded",
       source: nbaData.source,
       version: nbaData.version ?? null,
       updatedAt: nbaData.updatedAt ?? null,
-      error: nbaData.error ? publicError(nbaData.error) : null,
+      error: nbaData.error
+        ? publicError(nbaData.error)
+        : isStale
+          ? publicError("NBA data is older than 36 hours")
+          : null,
     };
     if (!nbaDataHealthy) health.status = "degraded";
   } catch (error) {

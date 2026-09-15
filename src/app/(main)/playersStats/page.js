@@ -112,6 +112,7 @@ export default async function Page({ searchParams }) {
       dataStatus={{
         source: nbaData.source,
         updatedAt: nbaData.updatedAt ?? null,
+        snapshotDate: nbaData.snapshotDate ?? null,
         isStale: nbaData.updatedAt
           ? SERVER_STARTED_AT - new Date(nbaData.updatedAt).getTime() > 24 * 60 * 60 * 1000
           : false,

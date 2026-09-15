@@ -429,7 +429,10 @@ export default function PropsTable({
           </PropsUpgradeButton>
         )}
 
-        <BetaSeasonDataBanner updatedAt={dataStatus?.updatedAt} />
+        <BetaSeasonDataBanner
+          updatedAt={dataStatus?.updatedAt}
+          snapshotDate={dataStatus?.snapshotDate}
+        />
 
         {/* Filters */}
         <div className="flex flex-col gap-4 flex-shrink-0">
