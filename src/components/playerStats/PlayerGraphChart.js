@@ -133,7 +133,8 @@ const PlayerGraphChart = ({
             dataKey={selectedStat}
             radius={[3, 3, 0, 0]}
             maxBarSize={90}
-            isAnimationActive={false}
+            isAnimationActive
+            animationDuration={300}
           >
             {points.map((entry, index) => (
               <Cell
