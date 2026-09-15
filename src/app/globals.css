@@ -126,8 +126,19 @@
   body {
     @apply bg-background text-foreground;
     min-height: 100vh;
+    min-height: 100dvh;
     overflow-x: hidden;
   }
+}
+
+/*
+ * `100vh` on mobile Chrome may include the space used by the browser's address
+ * bar and tab bar. This keeps app shells aligned with the viewport currently
+ * visible to the user while retaining a fallback for older browsers.
+ */
+.dynamic-viewport-height {
+  height: 100vh;
+  height: 100dvh;
 }
 
 /* Scrollbar customizada */

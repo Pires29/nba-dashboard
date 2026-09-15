@@ -8,7 +8,7 @@ export default function AuthLoadingState({
   return (
     <div
       aria-label={label}
-      className="relative flex min-h-screen w-full overflow-x-hidden bg-gradient-to-b from-[#0D1B2E] to-[#060E1A] px-4 py-5 sm:py-10"
+      className="dynamic-viewport-height relative flex w-full overflow-x-hidden overflow-y-auto bg-gradient-to-b from-[#0D1B2E] to-[#060E1A] px-4 py-5 sm:py-10"
     >
       <div
         className="fixed inset-0 pointer-events-none opacity-10"
