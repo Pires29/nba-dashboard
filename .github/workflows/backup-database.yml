@@ -46,7 +46,7 @@ jobs:
           gzip "backups/nba-dashboard-${timestamp}.dump"
 
       - name: Upload backup artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: database-backup-${{ github.run_id }}
           path: backups/*.dump.gz
