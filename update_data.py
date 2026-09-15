@@ -74,6 +74,7 @@ NBA_SCHEDULE_TIMEZONE = ZoneInfo("America/New_York")
 QA_SNAPSHOT_DATE = os.getenv("NBA_QA_DATE", "").strip()
 REPLAY_START_DATE = os.getenv("NBA_REPLAY_START_DATE", "").strip()
 REPLAY_LAUNCH_DATE = os.getenv("NBA_REPLAY_LAUNCH_DATE", "").strip()
+NBA_PROXY_URL = os.getenv("NBA_PROXY_URL", "").strip() or None
 STORAGE_MANIFEST_PATH = os.getenv("NBA_STORAGE_MANIFEST", "current.json").strip() or "current.json"
 STORAGE_VERSION_ALIAS = os.getenv("NBA_STORAGE_VERSION", "").strip()
 SLEEP_BETWEEN_REQUESTS = (1.0, 2.0)
@@ -261,7 +262,7 @@ def load_pipeline_env():
 def configure_runtime_from_env():
     """Refresh runtime options after .env.pipeline has been loaded."""
     global SEASON, PREV_SEASON, ROSTER_SEASON
-    global QA_SNAPSHOT_DATE, REPLAY_START_DATE, REPLAY_LAUNCH_DATE
+    global QA_SNAPSHOT_DATE, REPLAY_START_DATE, REPLAY_LAUNCH_DATE, NBA_PROXY_URL
     global STORAGE_MANIFEST_PATH, STORAGE_VERSION_ALIAS
 
     SEASON = os.getenv("NBA_STATS_SEASON", season_label(stats_season_start))
@@ -276,6 +277,7 @@ def configure_runtime_from_env():
     QA_SNAPSHOT_DATE = os.getenv("NBA_QA_DATE", "").strip()
     REPLAY_START_DATE = os.getenv("NBA_REPLAY_START_DATE", "").strip()
     REPLAY_LAUNCH_DATE = os.getenv("NBA_REPLAY_LAUNCH_DATE", "").strip()
+    NBA_PROXY_URL = os.getenv("NBA_PROXY_URL", "").strip() or None
     STORAGE_MANIFEST_PATH = os.getenv("NBA_STORAGE_MANIFEST", "current.json").strip() or "current.json"
     STORAGE_VERSION_ALIAS = os.getenv("NBA_STORAGE_VERSION", "").strip()
 
@@ -314,12 +316,20 @@ def retry_request(label, fn, attempts=NBA_API_RETRIES):
             print(f"  ↪ Retrying in {delay}s...")
             time.sleep(delay)
 
+
+def nba_proxy_mapping():
+    if not NBA_PROXY_URL:
+        return None
+    return {"http": NBA_PROXY_URL, "https": NBA_PROXY_URL}
+
+
 def nba_stats_get_json(endpoint, params):
     response = curl_requests.get(
         f"{NBA_STATS_BASE_URL}/{endpoint}",
         params=params,
         headers=NBA_HEADERS,
         impersonate="chrome",
+        proxies=nba_proxy_mapping(),
         timeout=REQUEST_TIMEOUT,
     )
     response.raise_for_status()
@@ -1437,6 +1447,7 @@ def run():
     if active_snapshot_date:
         print(f"   Historical snapshot date: {active_snapshot_date.date().isoformat()}")
     print(f"   Storage manifest: {STORAGE_MANIFEST_PATH}")
+    print(f"   NBA proxy: {'enabled' if NBA_PROXY_URL else 'disabled'}")
     print(f"   Local JSON fallback updates: {'enabled' if write_local_data else 'disabled'}")
 
     storage = storage_config()
