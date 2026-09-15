@@ -165,7 +165,7 @@ const ResponsiveLayout = ({
           </div>
         )}
         <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 lg:gap-6">
-          <div className="grid min-h-0 min-w-0 flex-1 items-stretch gap-4 lg:grid-cols-[300px_minmax(0,1fr)] lg:grid-rows-[minmax(0,1fr)] lg:gap-6">
+          <div className="grid min-h-0 min-w-0 flex-1 items-stretch gap-4 lg:h-max lg:flex-none lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-6">
             <PlayerSelectionControls
               plan={plan}
               currentGame={currentGame}
