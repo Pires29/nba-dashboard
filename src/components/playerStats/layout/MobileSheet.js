@@ -26,7 +26,7 @@ const MobileSheet = ({
   onResetAllFilters,
   onApplyFilters,
   teammateImpact = [],
-  maxTeammates = 3,
+  maxTeammates = 5,
   selectedTeammateIds = [],
   teammateModes = {},
   onSetTeammateRule,

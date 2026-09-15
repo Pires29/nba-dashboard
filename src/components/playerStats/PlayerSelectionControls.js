@@ -53,7 +53,7 @@ const PlayerSelectionControls = ({
   hasMinuteFilter,
   activeMobileFilterCount = 0,
   teammateImpact = [],
-  maxTeammates = 3,
+  maxTeammates = 5,
   selectedTeammates = [],
   selectedTeammateIds = [],
   teammateModes = {},

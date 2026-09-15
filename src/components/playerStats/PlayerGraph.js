@@ -40,7 +40,7 @@ const PlayerGraph = ({
   rangeMaxMinutes,
   setRangeMinMinutes,
   setRangeMaxMinutes,
-  maxTeammates = 3,
+  maxTeammates = 5,
   teammateModes,
   setTeammateModes,
 }) => {
@@ -346,7 +346,7 @@ const PlayerGraph = ({
               <p className="font-mono text-[11px] font-bold uppercase tracking-widest text-slate-200">
                 Teammates
               </p>
-              <p className="mt-1 text-[10px] leading-relaxed text-slate-400">Select up to three teammates, then choose whether they played together or were all out.</p>
+              <p className="mt-1 text-[10px] leading-relaxed text-slate-400">Select up to five teammates, then choose whether they played together or were all out.</p>
             </div>
             {selectedTeammates.length > 0 && (
               <button
@@ -401,7 +401,7 @@ const PlayerGraph = ({
             </label>
             ) : (
               <span className="px-1 font-mono text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                3 teammate limit reached
+                5 teammate limit reached
               </span>
             )}
           </div>
@@ -571,7 +571,7 @@ const PlayerGraph = ({
               ) : (
                 <button type="button" onClick={() => setTeammateModalOpen(true)} className="mt-3 w-full rounded-lg border border-dashed border-white/[0.1] px-3 py-4 font-mono text-[9px] font-bold uppercase tracking-wider text-slate-500 hover:border-orange-400/25 hover:text-orange-200">+ Select teammates</button>
               )}
-              <p className="mt-2 font-mono text-[8px] text-slate-500">Up to 3 teammate rules.</p>
+              <p className="mt-2 font-mono text-[8px] text-slate-500">Up to 5 teammate rules.</p>
             </section>
 
             <section className="order-1 border-b border-white/[0.07] py-4">
@@ -651,7 +651,7 @@ const PlayerGraph = ({
             <div className="flex items-center justify-between border-b border-white/[0.08] px-4 py-3">
               <div>
                 <h2 id="teammate-modal-title" className="text-sm font-bold text-white">Filter by Teammate</h2>
-                <p className="mt-0.5 text-[10px] text-slate-400">Choose up to three players to include or exclude.</p>
+                <p className="mt-0.5 text-[10px] text-slate-400">Choose up to five players to include or exclude.</p>
               </div>
               <button type="button" onClick={() => setTeammateModalOpen(false)} aria-label="Close teammate list" className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/[0.1] text-xl text-slate-400 hover:bg-white/[0.06] hover:text-white">×</button>
             </div>

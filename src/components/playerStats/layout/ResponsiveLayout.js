@@ -71,7 +71,7 @@ const ResponsiveLayout = ({
   dataStatus,
 }) => {
   const minuteSliderMax = 48;
-  const maxTeammates = 3;
+  const maxTeammates = 5;
   const [rangeMinMinutes, setRangeMinMinutes] = useState(0);
   const [rangeMaxMinutes, setRangeMaxMinutes] = useState(minuteSliderMax);
   const [selectedTeammateIds, setSelectedTeammateIds] = useState([]);
