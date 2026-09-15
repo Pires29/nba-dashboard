@@ -10,6 +10,10 @@ export default function PropsFilterDropdown({
   onClear,
   onOpenChange,
   panelClassName = "",
+  maxHeight = 520,
+  mobileMaxHeight,
+  mobileHeight,
+  panelScrollable = true,
   children,
 }) {
   const [open, setOpen] = useState(false);
@@ -33,6 +37,11 @@ export default function PropsFilterDropdown({
     const viewportPadding = 12;
     const availableWidth = window.innerWidth - viewportPadding * 2;
     const minWidth = Math.min(280, availableWidth);
+    const isMobile = window.matchMedia("(max-width: 639px)").matches;
+    const panelMaxHeight =
+      mobileMaxHeight && isMobile
+        ? mobileMaxHeight
+        : maxHeight;
     const width = Math.max(rect.width, minWidth);
     const left = Math.min(
       Math.max(rect.left, viewportPadding),
@@ -44,9 +53,14 @@ export default function PropsFilterDropdown({
       top: rect.bottom + 8,
       minWidth: width,
       maxWidth: availableWidth,
-      maxHeight: `min(520px, calc(100vh - ${Math.ceil(rect.bottom + 20)}px))`,
+      maxHeight: `min(${panelMaxHeight}px, calc(100dvh - ${Math.ceil(rect.bottom + 20)}px))`,
+      ...(mobileHeight && isMobile
+        ? {
+            height: `min(${mobileHeight}px, calc(100dvh - ${Math.ceil(rect.bottom + 20)}px))`,
+          }
+        : {}),
     });
-  }, []);
+  }, [maxHeight, mobileHeight, mobileMaxHeight]);
 
   useEffect(() => {
     const handlePointerDown = (event) => {
@@ -146,7 +160,7 @@ export default function PropsFilterDropdown({
           ref={panelRef}
           id={panelId}
           style={panelStyle}
-          className={`fixed z-50 min-w-[min(280px,calc(100vw-24px))] overflow-y-auto rounded-xl border border-white/[0.08] bg-[#0D1828] p-3 shadow-[0_8px_32px_rgba(0,0,0,0.5)] ${panelClassName}`}
+          className={`fixed z-50 min-w-[min(280px,calc(100vw-24px))] rounded-xl border border-white/[0.08] bg-[#0D1828] p-3 shadow-[0_8px_32px_rgba(0,0,0,0.5)] ${panelScrollable ? "overflow-y-auto" : "flex flex-col overflow-hidden"} ${panelClassName}`}
         >
           {typeof children === "function" ? children(closeDropdown) : children}
         </div>,

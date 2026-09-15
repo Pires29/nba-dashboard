@@ -475,6 +475,7 @@ export default function PropsTable({
               accessibleLabel="Statistic"
               label={STAT_LABELS[selectedStat]}
               active={false}
+              mobileMaxHeight={300}
             >
               <p className="mb-2 text-[9px] font-mono uppercase tracking-widest text-slate-600">
                 Select Stat
@@ -497,6 +498,10 @@ export default function PropsTable({
             <PropsFilterDropdown
               accessibleLabel="Game"
               panelClassName="w-[min(340px,calc(100vw-24px))]"
+              maxHeight={480}
+              mobileMaxHeight={300}
+              mobileHeight={300}
+              panelScrollable={false}
               label={gameFilterLabel}
               active={gameActive}
               onOpenChange={(open) => {
@@ -504,12 +509,12 @@ export default function PropsTable({
               }}
             >
               {(closeDropdown) => (
-                <>
-                  <p className="text-[9px] font-mono text-slate-600 uppercase tracking-widest mb-2">
+                <div className="flex min-h-0 flex-1 flex-col">
+                  <p className="mb-2 shrink-0 text-[9px] font-mono uppercase tracking-widest text-slate-600">
                     Select Games · Times ET
                   </p>
-                  <div className="max-h-72 overflow-y-auto pr-1">
-                    <div className="flex flex-col gap-1">
+                  <div className="min-h-0 flex-1 overflow-auto pb-1 pr-1">
+                    <div className="flex min-w-[280px] flex-col gap-1">
                       {schedule.map((game) => {
                         const key = `${game.home_team_id}-${game.visitor_team_id}`;
                         const home =
@@ -592,7 +597,7 @@ export default function PropsTable({
                   >
                     Apply game filters
                   </button>
-                </>
+                </div>
               )}
             </PropsFilterDropdown>
 
