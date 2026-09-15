@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { captureEvent } from "@/components/PostHogProvider";
 import { PAID_PLAN_PRICES, PRICING_PLANS, REFERRAL_DISCOUNT } from "@/lib/pricingPlans";
+import { launchConfig } from "@/config/launch";
 
 function CheckIcon() {
   return (
@@ -22,6 +23,9 @@ function getDisplayPrice(plan, hasPromo) {
   return plan.price * (1 - REFERRAL_DISCOUNT);
 }
 
+const CLOSED_BETA_CHECKOUT_LABEL = "Early access opens soon";
+const CLOSED_BETA_PROMO_LABEL = "Promo codes available soon";
+
 export default function UpgradeModalProvider() {
   const router = useRouter();
   const plans = useMemo(() => PRICING_PLANS, []);
@@ -34,6 +38,7 @@ export default function UpgradeModalProvider() {
   const [error, setError] = useState("");
 
   const selectedPlan = plans.find((plan) => plan.id === selectedBilling) ?? plans[0];
+  const checkoutDisabled = !launchConfig.pricing.checkoutEnabled;
 
   const closeModal = () => {
     setIsOpen(false);
@@ -63,6 +68,8 @@ export default function UpgradeModalProvider() {
   }, [isOpen]);
 
   async function applyPromoCode() {
+    if (checkoutDisabled) return;
+
     const code = promoCode.trim().toUpperCase();
     if (!code) return;
 
@@ -263,13 +270,14 @@ export default function UpgradeModalProvider() {
                     applyPromoCode();
                   }
                 }}
-                placeholder="EX: BETA100"
-                className="min-w-0 flex-1 rounded-lg border border-white/10 bg-black/10 px-3 py-2.5 font-mono text-[10px] text-white placeholder:text-slate-500 focus:border-orange-500/40 focus:outline-none"
+                disabled={checkoutDisabled}
+                placeholder={checkoutDisabled ? CLOSED_BETA_PROMO_LABEL : "EX: BETA100"}
+                className="min-w-0 flex-1 rounded-lg border border-white/10 bg-black/10 px-3 py-2.5 font-mono text-[10px] text-white placeholder:text-slate-500 focus:border-orange-500/40 focus:outline-none disabled:cursor-not-allowed disabled:opacity-45"
               />
               <button
                 type="button"
                 onClick={applyPromoCode}
-                disabled={!promoCode.trim() || promoStatus === "loading"}
+                disabled={checkoutDisabled || !promoCode.trim() || promoStatus === "loading"}
                 className="shrink-0 rounded-lg border border-white/10 px-4 font-mono text-[9px] font-bold uppercase tracking-widest text-slate-300 transition hover:border-orange-500/35 hover:text-orange-300 disabled:cursor-not-allowed disabled:opacity-45"
               >
                 {promoStatus === "loading" ? "..." : "Apply"}
@@ -287,14 +295,20 @@ export default function UpgradeModalProvider() {
           <button
             type="button"
             onClick={startCheckout}
-            disabled={loading}
+            disabled={loading || checkoutDisabled}
             className="w-full cursor-pointer rounded-lg bg-orange-500 py-3.5 font-mono text-[10px] font-black uppercase tracking-widest text-white shadow-[0_0_22px_rgba(249,115,22,.25)] transition hover:bg-orange-400 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {loading ? "Redirecting..." : selectedPlan?.checkoutLabel ?? "Unlock everything"}
+            {loading
+              ? "Redirecting..."
+              : checkoutDisabled
+                ? CLOSED_BETA_CHECKOUT_LABEL
+                : selectedPlan?.checkoutLabel ?? "Unlock everything"}
           </button>
 
           <p className="mt-4 text-center font-mono text-[9px] text-slate-600">
-            Secure checkout via Stripe. Cancel monthly anytime.
+            {checkoutDisabled
+              ? launchConfig.pricing.footerText
+              : "Secure checkout via Stripe. Cancel monthly anytime."}
           </p>
         </div>
       </section>
