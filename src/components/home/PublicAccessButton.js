@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
 import { usePublicSession } from "./PublicSessionProvider";
 
 const BetaAccessModal = dynamic(() => import("./BetaAccessModal"), {
@@ -17,16 +16,6 @@ export default function PublicAccessButton({
 }) {
   const { user } = usePublicSession();
   const hasBetaAccess = Boolean(user?.betaAccessGrantedAt);
-  const [showModal, setShowModal] = useState(false);
-
-  useEffect(() => {
-    if (!processBetaRedemption) return;
-    const betaState = new URLSearchParams(window.location.search).get("beta");
-    if (betaState !== "required" && betaState !== "redeem") return;
-
-    const frame = window.requestAnimationFrame(() => setShowModal(true));
-    return () => window.cancelAnimationFrame(frame);
-  }, [processBetaRedemption]);
 
   if (!requiresBetaCode || hasBetaAccess) {
     return (
@@ -36,22 +25,13 @@ export default function PublicAccessButton({
     );
   }
 
-  if (showModal) {
-    return (
-      <BetaAccessModal
-        aria-label="Open beta access"
-        className={className}
-        initiallyOpen
-        processBetaRedemption={processBetaRedemption}
-      >
-        {children}
-      </BetaAccessModal>
-    );
-  }
-
   return (
-    <button type="button" aria-label="Open beta access" className={className} onClick={() => setShowModal(true)}>
+    <BetaAccessModal
+      aria-label="Open beta access"
+      className={className}
+      processBetaRedemption={processBetaRedemption}
+    >
       {children}
-    </button>
+    </BetaAccessModal>
   );
 }
