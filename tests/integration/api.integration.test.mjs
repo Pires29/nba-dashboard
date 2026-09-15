@@ -95,11 +95,12 @@ test("signup rejects oversized request bodies", async () => {
 test("critical APIs reject unauthenticated requests", async () => {
   const requests = [
     fetch(`${BASE_URL}/api/favorites`),
+    fetch(`${BASE_URL}/api/player-logs?playerId=1`),
     fetch(`${BASE_URL}/api/referral/validate`, { method: "POST", body: "{}" }),
     fetch(`${BASE_URL}/api/stripe/checkout`, { method: "POST", body: "{}" }),
     fetch(`${BASE_URL}/api/stripe/cancel`, { method: "POST" }),
     fetch(`${BASE_URL}/api/user/delete`, { method: "DELETE" }),
   ];
   const responses = await Promise.all(requests);
-  assert.deepEqual(responses.map((response) => response.status), [401, 401, 401, 401, 401]);
+  assert.deepEqual(responses.map((response) => response.status), [401, 401, 401, 401, 401, 401]);
 });

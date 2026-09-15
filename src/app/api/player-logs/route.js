@@ -4,7 +4,6 @@ import { authOptions } from "@/lib/authOptions";
 import { NextResponse } from "next/server";
 import { getNbaData, getNbaPlayerLogs } from "@/lib/nbaDataSource";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
-import { getRequestIp } from "@/lib/security";
 import { requireBetaApiAccess } from "@/lib/betaGate";
 
 export async function GET(req) {
@@ -12,11 +11,13 @@ export async function GET(req) {
   if (betaBlocked) return betaBlocked;
 
   const session = await getServerSession(authOptions);
-  const rateLimitKey = session?.user?.id
-    ? `player-logs:user:${session.user.id}`
-    : `player-logs:ip:${getRequestIp(req)}`;
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const rateLimitKey = `player-logs:user:${session.user.id}`;
   const rateLimit = await checkRateLimit(rateLimitKey, {
-    limit: session?.user?.id ? 120 : 30,
+    limit: 120,
     windowMs: 15 * 60 * 1000,
   });
   if (!rateLimit.allowed) return rateLimitResponse(rateLimit);
