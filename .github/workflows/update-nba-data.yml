@@ -13,9 +13,10 @@ on:
           - full
           - replay
   schedule:
-    # GitHub schedules use UTC. The job below gates execution by
-    # America/New_York time so daylight saving changes do not shift updates.
-    - cron: "0 0-1,14-23 * * *"
+    # Six daily refresh attempts. GitHub may start scheduled jobs a few minutes
+    # late; each one must still publish rather than being discarded.
+    # Times are 10:00, 15:00, 17:00, 18:00, 19:00 and 20:00 ET during EDT.
+    - cron: "0 0,14,19,21-23 * * *"
 
 permissions:
   contents: read
@@ -36,54 +37,31 @@ jobs:
       NBA_WRITE_LOCAL_DATA: "false"
 
     steps:
-      - name: Check update window
-        id: window
-        shell: bash
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "run_update=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          ny_hour="$(TZ=America/New_York date +%H)"
-          case "$ny_hour" in
-            10|15|17|18|19|20)
-              echo "run_update=true" >> "$GITHUB_OUTPUT"
-              ;;
-            *)
-              echo "run_update=false" >> "$GITHUB_OUTPUT"
-              echo "Skipping: current America/New_York hour is $ny_hour."
-              ;;
-          esac
-
       - name: Checkout
-        if: steps.window.outputs.run_update == 'true'
         uses: actions/checkout@v5
 
       - name: Setup Python
-        if: steps.window.outputs.run_update == 'true'
         uses: actions/setup-python@v6
         with:
           python-version: "3.11"
           cache: pip
 
       - name: Install Python dependencies
-        if: steps.window.outputs.run_update == 'true'
         run: pip install -r requirements.txt
 
       - name: Smoke test NBA API
-        if: steps.window.outputs.run_update == 'true' && inputs.mode == 'smoke'
+        if: inputs.mode == 'smoke'
         run: |
           python -c "from update_data import fetch_raw_player_stats; df = fetch_raw_player_stats(); print(f'NBA API smoke test passed: {len(df)} player rows')"
 
       - name: Publish NBA data snapshot
-        if: steps.window.outputs.run_update == 'true' && inputs.mode == 'full'
+        if: inputs.mode == 'full'
         env:
           NBA_STORAGE_MANIFEST: current.json
         run: python update_data.py
 
       - name: Publish beta season replay snapshot
-        if: steps.window.outputs.run_update == 'true' && (github.event_name == 'schedule' || inputs.mode == 'replay')
+        if: github.event_name == 'schedule' || inputs.mode == 'replay'
         env:
           # One historic NBA day advances for each calendar day after beta launch.
           # Change only these two dates to restart or retime the replay.

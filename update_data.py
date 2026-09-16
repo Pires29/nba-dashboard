@@ -81,6 +81,8 @@ SLEEP_BETWEEN_REQUESTS = (1.0, 2.0)
 REQUEST_TIMEOUT = 120
 NBA_API_RETRIES = 3
 NBA_API_RETRY_BASE_SLEEP = 20
+STORAGE_DOWNLOAD_RETRIES = 3
+STORAGE_DOWNLOAD_RETRY_BASE_SLEEP = 5
 
 ESPN_INJURIES_URL = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/injuries"
 ESPN_SCOREBOARD_URL = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard"
@@ -1251,14 +1253,41 @@ def upload_storage_json(path, data, config):
 
 def download_storage_json(path, config):
     url, secret, bucket = config
-    response = requests.get(
-        f"{url}/storage/v1/object/{bucket}/{path}",
-        headers={"apikey": secret, "Authorization": f"Bearer {secret}"},
-        timeout=30,
-    )
-    if not response.ok:
-        raise RuntimeError(f"Storage validation failed for {path}: HTTP {response.status_code}")
-    return response.json()
+    endpoint = f"{url}/storage/v1/object/{bucket}/{path}"
+    last_error = None
+
+    for attempt in range(1, STORAGE_DOWNLOAD_RETRIES + 1):
+        try:
+            response = requests.get(
+                endpoint,
+                headers={"apikey": secret, "Authorization": f"Bearer {secret}"},
+                timeout=REQUEST_TIMEOUT,
+            )
+            response.raise_for_status()
+            return response.json()
+        except requests.HTTPError as error:
+            # Retrying an absent or unauthorized object only delays a real
+            # configuration/data error. Server errors can be transient.
+            if error.response is not None and error.response.status_code < 500:
+                raise RuntimeError(
+                    f"Storage download failed for {path}: HTTP {error.response.status_code}"
+                ) from error
+            last_error = error
+        except (requests.RequestException, ValueError) as error:
+            last_error = error
+
+        if attempt < STORAGE_DOWNLOAD_RETRIES:
+            delay = STORAGE_DOWNLOAD_RETRY_BASE_SLEEP * attempt
+            print(
+                f"  ⚠️ Storage download failed for {path} "
+                f"({attempt}/{STORAGE_DOWNLOAD_RETRIES}): {last_error}"
+            )
+            print(f"  ↪ Retrying in {delay}s...")
+            time.sleep(delay)
+
+    raise RuntimeError(
+        f"Storage download failed for {path} after {STORAGE_DOWNLOAD_RETRIES} attempts: {last_error}"
+    ) from last_error
 
 
 def list_storage_entries(prefix, config):
