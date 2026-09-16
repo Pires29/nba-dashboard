@@ -83,6 +83,8 @@ NBA_API_RETRIES = 3
 NBA_API_RETRY_BASE_SLEEP = 20
 STORAGE_DOWNLOAD_RETRIES = 3
 STORAGE_DOWNLOAD_RETRY_BASE_SLEEP = 5
+STORAGE_UPLOAD_RETRIES = 3
+STORAGE_UPLOAD_RETRY_BASE_SLEEP = 5
 
 ESPN_INJURIES_URL = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/injuries"
 ESPN_SCOREBOARD_URL = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard"
@@ -1236,19 +1238,50 @@ def validate_storage_access(config):
 
 def upload_storage_json(path, data, config):
     url, secret, bucket = config
-    response = requests.post(
-        f"{url}/storage/v1/object/{bucket}/{path}",
-        headers={
-            "apikey": secret,
-            "Authorization": f"Bearer {secret}",
-            "Content-Type": "application/json",
-            "x-upsert": "true",
-        },
-        data=json.dumps(data, separators=(",", ":"), ensure_ascii=False).encode("utf-8"),
-        timeout=REQUEST_TIMEOUT,
-    )
-    if not response.ok:
-        raise RuntimeError(f"Storage upload failed for {path}: HTTP {response.status_code} {response.text[:200]}")
+    endpoint = f"{url}/storage/v1/object/{bucket}/{path}"
+    payload = json.dumps(data, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    headers = {
+        "apikey": secret,
+        "Authorization": f"Bearer {secret}",
+        "Content-Type": "application/json",
+        "x-upsert": "true",
+    }
+    last_error = None
+
+    # Storage writes use x-upsert, so retrying a timed-out or 5xx response is
+    # safe: a successful first write and its retry produce the same object.
+    for attempt in range(1, STORAGE_UPLOAD_RETRIES + 1):
+        try:
+            response = requests.post(
+                endpoint,
+                headers=headers,
+                data=payload,
+                timeout=REQUEST_TIMEOUT,
+            )
+            response.raise_for_status()
+            return
+        except requests.HTTPError as error:
+            status_code = error.response.status_code if error.response is not None else None
+            if status_code is not None and 400 <= status_code < 500 and status_code != 429:
+                raise RuntimeError(
+                    f"Storage upload failed for {path}: HTTP {status_code} {error.response.text[:200]}"
+                ) from error
+            last_error = error
+        except requests.RequestException as error:
+            last_error = error
+
+        if attempt < STORAGE_UPLOAD_RETRIES:
+            delay = STORAGE_UPLOAD_RETRY_BASE_SLEEP * attempt
+            print(
+                f"  ⚠️ Storage upload failed for {path} "
+                f"({attempt}/{STORAGE_UPLOAD_RETRIES}): {last_error}"
+            )
+            print(f"  ↪ Retrying in {delay}s...")
+            time.sleep(delay)
+
+    raise RuntimeError(
+        f"Storage upload failed for {path} after {STORAGE_UPLOAD_RETRIES} attempts: {last_error}"
+    ) from last_error
 
 
 def download_storage_json(path, config):
@@ -1595,7 +1628,9 @@ def publish_storage_version(datasets):
 
     print(f"\n☁️  Uploading {len(player_ids)} player files to Storage...")
     completed = 0
-    with ThreadPoolExecutor(max_workers=8) as executor:
+    # A modest pool avoids Cloudflare/Supabase 502s while still keeping the
+    # per-player upload phase fast enough for the workflow time limit.
+    with ThreadPoolExecutor(max_workers=4) as executor:
         futures = [executor.submit(upload_player, player_id) for player_id in player_ids]
         for future in as_completed(futures):
             future.result()
